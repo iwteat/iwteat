@@ -4016,6 +4016,7 @@ async function submitFinalOrder() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     restaurantId: rid,
+                    deliveryMethod: deliveryMethod,          // 'pickup' -> the number starts with IWS-, delivery -> IW-
                     items: cartItems.filter(i => i.restaurantId === rid).map(i => ({ dishId: i.dishId }))
                 })
             });
