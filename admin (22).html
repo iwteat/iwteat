@@ -1,0 +1,3222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IWTEAT — Restaurant Manager</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --top-inset: calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + var(--tg-content-safe-area-inset-top, 0px));
+    --paper: #F8F9FB;
+    --card: #FFFFFF;
+    --ink: #222222;
+    --muted: #888888;
+    --line: #EEEEEE;
+    --primary: #F47721;
+    --primary-dark: #DB6516;
+    --primary-tint: #FEF1E8;
+    --secondary: #FF9A52;
+    --ok: #12A150;
+    --ok-tint: #E8F7EE;
+    --brick: #E5484D;
+    --brick-tint: #FDECEC;
+    --mustard: #E08A00;
+    --mustard-tint: #FFF4DC;
+    --shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: 'Poppins', -apple-system, sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  .ico { display: inline-block; width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; line-height: 1; }
+  .ico svg { width: 100%; height: 100%; display: block; }
+  .ico-accent { color: var(--primary); }
+  .btn .ico, .btn-upload .ico, .btn-ghost .ico { font-size: 15px; }
+  button { font-family: inherit; }
+  input, textarea, select { font-family: inherit; }
+
+  /* ============ PIN GATE ============ */
+  #outside-gate {
+    min-height: 100vh;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .pin-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 36px 32px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .pin-card .ticket-icon {
+    width: 44px; height: 44px;
+    margin: 0 auto 16px;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .pin-card h1 { font-size: 21px; margin: 0 0 6px; font-weight: 600; }
+  .pin-card p { font-size: 13px; color: var(--muted); margin: 0 0 22px; line-height: 1.5; }
+
+  /* ============ RESTAURANT SETUP (first run for a brand-new restaurant) ============ */
+  #setup-gate {
+    position: fixed; inset: 0; z-index: 40;
+    display: none; flex-direction: column;
+    background: var(--card);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .setup-card {
+    width: 100%; max-width: 520px; margin: 0 auto; flex: 1;
+    display: flex; flex-direction: column;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 20px calc(22px + env(safe-area-inset-bottom, 0px));
+  }
+  .setup-step { display: flex; flex-direction: column; flex: 1; }
+  .setup-top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; margin-bottom: 8px; }
+  .setup-back { background: var(--paper); border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .setup-card h1 { font-size: 20px; margin: 2px 0 4px; font-weight: 700; letter-spacing: -0.2px; }
+  .setup-card p.intro { font-size: 12.5px; color: var(--muted); margin: 0 0 14px; line-height: 1.55; }
+  #setup-error { color: var(--brick); font-size: 12.5px; margin: 4px 0 10px; min-height: 16px; }
+  .setup-spacer { flex: 1; min-height: 12px; }
+  .skip-link { margin: 16px 0 0; text-align: right; font-size: 13px; color: var(--muted); text-decoration: underline; cursor: pointer; align-self: flex-end; background: none; border: none; padding: 4px 0; font-family: inherit; }
+  .handle-wrap { position: relative; }
+  .handle-wrap input { padding-right: 56px !important; }
+  .handle-wrap input.mono-input { font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; }
+  .handle-count { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); }
+  .handle-status { font-size: 11.5px; margin-top: 5px; min-height: 16px; color: var(--muted); display: flex; align-items: center; gap: 5px; line-height: 1.4; }
+  .handle-status.ok { color: var(--ok); } .handle-status.bad { color: var(--brick); }
+  .field input[readonly] { background: var(--paper); color: var(--muted); }
+  .map-box { height: 44vh; min-height: 240px; max-height: 380px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #EDEFF2; position: relative; z-index: 0; }
+  .map-box.small { height: 200px; }
+  .map-fallback { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 12.5px; }
+  .map-pin { width: 28px; height: 28px; background: var(--primary); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); position: relative; }
+  .map-pin::after { content: ''; position: absolute; width: 10px; height: 10px; background: #fff; border-radius: 50%; top: 7px; left: 7px; }
+  .btn.btn-wide { width: 100%; justify-content: center; padding: 13px; font-size: 14px; }
+  .btn.btn-outline-accent { background: var(--card); color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn.btn-outline-accent:hover { background: var(--primary-tint); }
+  .setup-steps { font-size: 11.5px; color: var(--primary); font-weight: 700; letter-spacing: .06em; }
+  .setup-logo-block { text-align: center; margin-bottom: 16px; }
+  .setup-logo-block .thumb-preview { width: 92px; height: 92px; border-radius: 50%; margin: 0 auto 8px; display: block; border: 3px solid var(--primary-tint); background: var(--primary-tint) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F47721' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7'/><path d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8'/><path d='M2 7h20'/></svg>") center/42% no-repeat; }
+  .setup-logo-block .upload-row { justify-content: center; margin-bottom: 0; }
+  .setup-actions { display: flex; gap: 10px; align-items: center; }
+  .setup-actions .btn-primary { flex: 1; justify-content: center; }
+  .pin-hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+  .pin-hint.error { color: var(--brick); font-weight: 600; }
+  .launch-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 18px; margin-top: 20px; }
+  .launch-card h3 { font-size: 15px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+  .launch-card h3 .ico { color: var(--primary); font-size: 18px; }
+  .launch-card p { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.5; }
+  .launch-bar { height: 8px; background: var(--paper); border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
+  .launch-bar > i { display: block; height: 100%; background: var(--primary); border-radius: 99px; transition: width .35s ease; }
+  .launch-progress { font-size: 12px; font-weight: 600; color: var(--ink); margin: 0 0 14px; }
+  .launch-card.done { border-color: var(--ok); background: var(--ok-tint); }
+  .launch-card.done .launch-bar { background: #CDEBD9; }
+  .launch-card.done .launch-bar > i { background: var(--ok); }
+  .launch-card.done .launch-progress { color: var(--ok); display: flex; align-items: center; gap: 8px; }
+  .launch-card.done h3 .ico { color: var(--ok); }
+  .launch-done-badge { width: 22px; height: 22px; border-radius: 50%; background: var(--ok); color: #fff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; animation: launchPop .4s ease; }
+  .launch-done-badge .ico { font-size: 13px; color: #fff; }
+  @keyframes launchPop { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  #launch-success { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
+  #launch-success.open { display: flex; }
+  #launch-success .box { background: var(--card); border-radius: 20px; padding: 30px 24px 24px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+  #launch-success .big { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 50%; background: var(--primary-tint); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  #launch-success h2 { margin: 0 0 8px; font-size: 20px; }
+  #launch-success p { margin: 0 0 20px; font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* ============ APP SHELL ============ */
+  #app { display: none; min-height: 100vh; flex-direction: column; }
+  header.top-bar {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .brand h1 { font-size: 17px; margin: 0; font-weight: 600; line-height: 1.2; }
+  .brand span { font-size: 11px; color: var(--muted); }
+
+  #sync-indicator {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--muted);
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  #sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.2s; }
+  #sync-indicator.saved #sync-dot { background: var(--primary); }
+  #sync-indicator.saving #sync-dot { background: var(--mustard); animation: pulse 0.9s infinite; }
+  #sync-indicator.error #sync-dot { background: var(--brick); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  /* Bottom tab bar — fixed to the viewport, thumb-reachable on a phone.
+     #app gets bottom padding (below) so content never sits under it. */
+  .tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    display: flex; justify-content: space-around;
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -6px 24px rgba(0,0,0,0.07);
+  }
+  .tab-btn {
+    flex: 1; max-width: 160px;
+    background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 6px 6px;
+    font-size: 11.5px; font-weight: 500; color: #7D7D7D;
+  }
+  .tab-btn .tab-icon { font-size: 26px; line-height: 1; display: flex; }
+  .tab-btn.active { color: var(--primary); font-weight: 600; }
+
+  main { flex: 1; padding: 20px 16px calc(100px + env(safe-area-inset-bottom, 0px)); max-width: 900px; width: 100%; margin: 0 auto; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; gap: 10px; flex-wrap: wrap;
+  }
+  .section-head h2 { font-size: 18px; margin: 0; font-weight: 600; }
+  .section-head p.hint { font-size: 12px; color: var(--muted); margin: 3px 0 0; }
+
+  .btn {
+    border: none; border-radius: 12px; cursor: pointer;
+    font-size: 13px; font-weight: 600; padding: 10px 16px;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: transform 0.06s ease;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-outline { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+  .btn-outline:hover { background: var(--paper); }
+  .btn-danger-ghost { background: var(--brick-tint); color: var(--brick); }
+  .btn-danger-ghost:hover { background: #f6d9d1; }
+  .btn-sm { padding: 7px 11px; font-size: 12px; border-radius: 10px; }
+  .btn-icon { padding: 7px 9px; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+
+  /* ---- ticket-style divider, the one signature motif ---- */
+  .ticket-divider {
+    height: 1px;
+    margin: 20px 0;
+    background-image: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 12px);
+  }
+
+  /* ---- category list ---- */
+  .cat-grid { display: flex; flex-direction: column; gap: 10px; }
+  .cat-row {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    cursor: grab;
+  }
+  .cat-row.dragging { opacity: 0.4; }
+  .cat-row .cat-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .cat-row .drag-handle { color: var(--muted); font-size: 15px; flex-shrink: 0; }
+  .cat-row .cat-icon { font-size: 22px; flex-shrink: 0; }
+  .cat-row .cat-text { min-width: 0; }
+  .cat-row .cat-name { font-size: 14.5px; font-weight: 600; }
+  .cat-row .cat-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .cat-row .cat-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--muted); font-size: 13.5px;
+    background: var(--card); border: 1px dashed var(--line); border-radius: 16px;
+  }
+  .empty-state .display { font-size: 17px; color: var(--ink); margin-bottom: 6px; }
+
+  /* ---- items view ---- */
+  .cat-chip-bar {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px;
+    scrollbar-width: none;
+  }
+  .cat-chip-bar::-webkit-scrollbar { display: none; }
+  .cat-chip-tab {
+    flex-shrink: 0; cursor: pointer; white-space: nowrap;
+    padding: 8px 14px; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--card);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+  }
+  .cat-chip-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .item-grid { display: flex; flex-direction: column; gap: 10px; }
+  .item-row {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .item-row:active { background: var(--primary-tint); }
+  .item-row .item-text { min-width: 0; }
+  .item-thumb.ph { display: flex; align-items: center; justify-content: center; background: var(--primary-tint); color: var(--primary); font-size: 24px; border: none; }
+  .item-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .item-info { flex: 1; min-width: 0; }
+  .stock-on { color: var(--ok); } .stock-off { color: var(--brick); }
+  .item-row .item-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .item-thumb {
+    width: 56px; height: 56px; border-radius: 12px; object-fit: cover;
+    border: 1px solid var(--line); flex-shrink: 0; background: var(--paper);
+  }
+  .item-name { font-size: 14px; font-weight: 600; }
+  .item-price { font-size: 12.5px; color: var(--primary); font-weight: 600; margin-top: 3px; }
+  .item-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; color: var(--mustard);
+    background: var(--mustard-tint); border-radius: 6px; padding: 1px 6px; margin-left: 6px;
+    vertical-align: middle;
+  }
+  .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* ---- settings view ---- */
+  .settings-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 18px; margin-bottom: 14px;
+  }
+  .settings-card h3 { font-size: 14.5px; margin: 0 0 4px; font-weight: 600; }
+  .settings-card p { font-size: 12px; color: var(--muted); margin: 0 0 14px; line-height: 1.5; }
+  .settings-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+
+
+  /* ---- Tax settings ---- */
+  .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: pointer; padding: 4px 0 2px; }
+  .switch-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .switch-text b { font-size: 13.5px; font-weight: 700; }
+  .switch-text small { font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+  .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+  .switch i { position: absolute; inset: 0; background: #D5D8DE; border-radius: 99px; transition: background .2s; }
+  .switch i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+  .switch input:checked + i { background: var(--primary); }
+  .switch input:checked + i::after { transform: translateX(20px); }
+  .switch input:focus-visible + i { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  /* ============ DRAWER (slide-over form) ============ */
+  .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(28,31,26,0.42);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 50;
+  }
+  .drawer-overlay.open { display: flex; }
+  .drawer {
+    background: var(--paper);
+    width: 100%; max-width: 560px;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    display: flex; flex-direction: column;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.2);
+  }
+  @media (min-width: 640px) {
+    .drawer-overlay { align-items: center; }
+    .drawer { border-radius: 20px; max-height: 88vh; }
+  }
+  .drawer-head {
+    padding: 18px 20px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; background: var(--card); border-radius: 20px 20px 0 0;
+  }
+  .drawer-head h3 { font-size: 16.5px; margin: 0; font-weight: 600; }
+  .drawer-close { background: none; border: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; }
+  .drawer-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+  .drawer-foot, .modal-bottom-actions {
+    position: sticky; bottom: 0; z-index: 100;
+    background: #ffffff;
+    padding: 12px 16px;
+    /* keeps the buttons clear of the Android/iOS system navigation bar (and Telegram's own bottom inset) */
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px), calc(var(--tg-safe-area-inset-bottom, 0px) + 12px));
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    display: flex; gap: 10px; flex-shrink: 0; border-radius: 0 0 20px 20px;
+  }
+  .drawer-foot .btn { flex: 1; justify-content: center; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+  .field .sub-hint { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 4px; line-height: 1.4; }
+  .important-note {
+    font-size: 12.5px; font-weight: 700; color: var(--primary-dark); background: var(--primary-tint);
+    border-radius: 10px; padding: 10px 12px; margin: -4px 0 18px; line-height: 1.4;
+  }
+  .group-add-row { display: flex; gap: 8px; margin-top: 10px; }
+  .group-add-row .btn { flex: 1; justify-content: center; }
+  .group-card {
+    background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    margin-bottom: 8px; cursor: pointer;
+  }
+  .group-card:active { background: var(--paper); }
+  .group-card.group-card-readonly { cursor: default; background: var(--paper); }
+  .group-card-top { display: flex; align-items: center; gap: 8px; }
+  .group-card-icon { font-size: 15px; flex-shrink: 0; }
+  .group-card-title { font-size: 13.5px; font-weight: 700; color: var(--ink); flex: 1; min-width: 0; }
+  .group-card-badge { font-size: 10px; font-weight: 700; border-radius: 20px; padding: 3px 9px; white-space: nowrap; }
+  .group-card-badge.badge-required { background: var(--brick-tint); color: var(--brick); }
+  .group-card-badge.badge-optional { background: var(--primary-tint); color: var(--primary-dark); }
+  .group-card-sub { font-size: 11.5px; color: var(--muted); margin-top: 4px; margin-left: 23px; }
+  .field input[type="text"], .field input[type="number"], .field input.price-input, .field input[type="url"], .field textarea, .field select {
+    width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+    font-size: 13.5px; background: #fff;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--primary); }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .thumb-preview {
+    width: 100%; height: 150px; border-radius: 12px; object-fit: cover;
+    border: 1px solid var(--line); background: var(--paper); margin-bottom: 10px;
+  }
+
+  .upload-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .btn-upload {
+    background: var(--primary-tint); color: var(--primary-dark); border: 1px solid var(--primary);
+    border-radius: 10px; padding: 8px 14px; font-size: 12.5px; font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-upload:disabled { opacity: 0.6; cursor: default; }
+  .upload-status { font-size: 11.5px; color: var(--muted); }
+  .upload-status.error { color: #c0392b; }
+
+  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip {
+    background: var(--primary-tint); color: var(--primary-dark); border-radius: 20px;
+    padding: 5px 8px 5px 12px; font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .chip button { background: none; border: none; color: var(--primary-dark); font-weight: 800; cursor: pointer; font-size: 13px; padding: 0; }
+  .chip-add-row { display: flex; gap: 6px; }
+  .chip-add-row input { flex: 1; }
+
+  .subform-block {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; margin-bottom: 12px;
+  }
+  .subform-block > .field:last-child { margin-bottom: 0; }
+  .size-price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; }
+  .size-price-grid .size-price-cell label { font-size: 10.5px; }
+
+  .option-block-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .option-block-head h4 { font-size: 13px; margin: 0; font-weight: 600; }
+  .option-row {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px; margin-bottom: 8px;
+  }
+  .option-row-top { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; }
+  .option-row-top input[type="text"] { flex: 1; }
+  .option-row-top button { flex-shrink: 0; }
+  .option-price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 6px; margin-bottom: 6px; }
+  .option-price-grid input, .option-row select { padding: 7px 8px; font-size: 12px; }
+  .option-price-grid label { font-size: 10px; }
+  .add-option-btn { width: 100%; justify-content: center; margin-bottom: 6px; }
+  .size-check-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 6px; background: var(--card);
+  }
+  .size-check-row .chk-label { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; flex: 1; min-width: 0; }
+  .size-check-row .chk-label input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; }
+  .size-check-row input[type="number"], .size-check-row input.price-input { width: 96px; flex: 0 0 auto; padding: 7px 8px; font-size: 12.5px; }
+  .size-check-row input[type="number"]:disabled, .size-check-row input.price-input:disabled { opacity: .4; }
+
+  .toast {
+    position: fixed; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 30px;
+    font-size: 13px; font-weight: 500; z-index: 100; width: max-content; max-width: calc(100vw - 32px); text-align: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  .cat-chip-tab{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .cat-chip-tab.add{border-style:dashed;color:var(--primary-dark);background:transparent}
+  .ctx-overlay{position:fixed;inset:0;z-index:90;display:none}
+  .ctx-overlay.open{display:block}
+  .ctx-menu{position:absolute;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);min-width:200px;padding:6px}
+  .ctx-menu button{display:flex;gap:10px;width:100%;background:none;border:none;padding:11px 12px;font-size:14px;border-radius:9px;cursor:pointer;text-align:left;color:var(--ink)}
+  .ctx-menu button:active{background:var(--paper)}
+  .ctx-menu button:disabled{opacity:.35}
+  .ctx-menu .danger{color:var(--brick)}
+  .cat-options-hint{font-size:12px;color:var(--muted);margin:2px 2px 12px;min-height:1px}
+  #item-drawer-overlay,#group-drawer-overlay{align-items:stretch}
+  #item-drawer-overlay .drawer,#group-drawer-overlay .drawer{max-width:none;max-height:none;height:100%;border-radius:0}
+  #item-drawer-overlay .drawer-head,#item-drawer-overlay .drawer-foot,#group-drawer-overlay .drawer-head,#group-drawer-overlay .drawer-foot{border-radius:0}
+  #item-drawer-overlay .drawer-body,#group-drawer-overlay .drawer-body{width:100%;max-width:560px;margin:0 auto}
+  #group-drawer-overlay{z-index:70}
+  .hero{display:flex;flex-direction:column;align-items:center;gap:16px;padding:12px 0 24px}
+  .hero-handle{font-size:12.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:-6px}
+  .hero-handle:empty{display:none}
+  .hero-logo{width:150px;height:150px;border-radius:50%;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:64px;color:var(--primary);overflow:hidden}
+  .hero-logo img{width:100%;height:100%;object-fit:cover}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn-ghost:active{background:var(--primary-tint)}
+  .item-row.sold{opacity:.55}
+  .tab-btn{position:relative}
+  .tab-badge{display:none;position:absolute;top:0;left:calc(50% + 8px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--brick);color:#fff;font-size:10px;font-weight:700;line-height:17px;text-align:center}
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:14px}
+  .seg button{flex:1;border:none;background:none;padding:9px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+  .seg button.active{background:var(--primary);color:#fff}
+  .stats{display:flex;gap:10px;margin-bottom:14px}
+  .stats div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .stats b{display:block;font-size:20px;font-weight:700}
+  .stats span{font-size:11px;color:var(--muted)}
+  .o-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+  .o-card.new{border-color:var(--brick);box-shadow:0 0 0 3px var(--brick-tint)}
+  details.o-card>summary{list-style:none;cursor:pointer}
+  .o-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .o-id{font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600}
+  .o-time{font-size:11px;color:var(--muted);margin-left:6px;font-weight:400}
+  .pill{font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px;white-space:nowrap}
+  .pill.new{background:var(--brick-tint);color:var(--brick)}
+  .pill.wait{background:var(--mustard-tint);color:var(--mustard)}
+  .pill.ok{background:var(--ok-tint);color:var(--ok)}
+  .pill.bad{background:var(--paper);color:var(--muted)}
+  .o-who{font-size:13.5px;font-weight:600;margin:10px 0 2px}
+  .o-who a{color:var(--primary-dark);text-decoration:none;font-weight:500;margin-left:6px}
+  .o-addr{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .o-note{background:var(--mustard-tint);border-radius:10px;padding:8px 10px;font-size:12.5px;margin-bottom:6px}
+  .o-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}
+  .o-foot b{color:var(--ink);font-size:14px}
+  .o-actions{display:flex;gap:8px;margin-top:12px}
+  .o-actions .btn{flex:1;justify-content:center;padding:12px}
+
+  /* ============ RESTAURANT STATUS (open / closed) ============ */
+  .closed-banner{display:none;align-items:center;gap:10px;background:var(--brick);color:#fff;border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;line-height:1.4}
+  .closed-banner .ico{font-size:18px}
+  .closed-banner span{flex:1}
+  .closed-banner button{background:#fff;color:var(--brick);border:0;border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
+
+
+  /* ============ TOP STATUS PILL + DROPDOWN ============ */
+  .status-bar{position:sticky;top:0;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(8px + var(--top-inset)) 16px 8px}
+  .status-brand{font-size:15px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .status-pill{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;border:1.5px solid var(--ok);background:var(--ok-tint);color:var(--ok);border-radius:999px;padding:6px 11px 6px 10px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;transition:background .2s,color .2s,border-color .2s}
+  .status-pill .dot,.sm-dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .status-pill svg{width:10px;height:10px;transition:transform .15s}
+  .status-pill[aria-expanded="true"] svg{transform:rotate(180deg)}
+  .status-pill.busy{border-color:var(--mustard);background:var(--mustard-tint);color:var(--mustard)}
+  .status-pill.closed{border-color:var(--brick);background:var(--brick-tint);color:var(--brick)}
+  .status-pill:disabled{opacity:.6;cursor:wait}
+  .status-overlay{position:fixed;inset:0;z-index:80;display:none;background:rgba(0,0,0,.18)}
+  .status-overlay.open{display:block}
+  .status-menu{position:absolute;top:calc(50px + var(--top-inset));right:12px;left:12px;max-width:340px;margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:6px;animation:popIn .15s ease-out}
+  .status-menu button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;border-radius:11px;padding:12px;text-align:left;cursor:pointer;color:var(--ink)}
+  .status-menu button.active{background:var(--paper)}
+  .status-menu button:active{background:var(--paper)}
+  .sm-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .sm-text b{font-size:14px;font-weight:700}
+  .sm-text small{font-size:11.5px;color:var(--muted);line-height:1.35}
+  .sm-dot.open{color:var(--ok)} .sm-dot.busy{color:var(--mustard)} .sm-dot.closed{color:var(--brick)}
+  .sm-check{margin-left:auto;font-weight:800;color:var(--primary);opacity:0}
+  .status-menu button.active .sm-check{opacity:1}
+
+  /* ============ ORDER CARD: status stripe + item box ============ */
+  .o-card.st-new,.o-card.st-prep,.o-card.st-ready{border-left-width:6px}
+  .o-card.st-prep{border-left-color:var(--primary)}
+  .o-card.st-ready{border-left-color:var(--ok)}
+  .o-item{font-size:14px;padding:7px 0;border-top:1px dashed var(--line)}
+  .o-opt{font-size:12px;color:var(--muted);margin-top:2px}
+
+
+  /* ============ SETTLEMENTS + AUDIT BADGES ============ */
+  .mchip{display:inline-block;font-size:10.5px;font-weight:600;border-radius:20px;padding:2px 8px;margin-left:8px;background:var(--paper);border:1px solid var(--line);color:var(--muted);vertical-align:middle}
+  .mchip.pickup{background:var(--primary-tint);border-color:#F9C79B;color:var(--primary-dark)}
+  .o-badges{margin-top:2px}
+  .sbadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:3px 10px 3px 8px;border-radius:999px;margin-top:8px}
+  .sbadge i{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .sbadge.unsettled{background:var(--primary-tint);color:var(--primary-dark)}
+  .sbadge.requested{background:#EEF2FF;color:#4F46E5}
+  .sbadge.settled{background:var(--ok-tint);color:var(--ok)}
+  .o-fin{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+  .settle-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .settle-label{font-size:12px;font-weight:600;color:var(--muted)}
+  .settle-big{font-size:28px;font-weight:800;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+  .settle-big small{font-size:14px;font-weight:600;color:var(--muted)}
+  .settle-sub{font-size:12px;color:var(--muted);line-height:1.5}
+  .settle-notice{margin-top:10px;background:#EEF2FF;color:#4F46E5;border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.4}
+  .settle-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 10px}
+  .settle-dates label{font-size:11.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  .settle-dates input{border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 10px;font-size:13px;color:var(--ink);font-family:inherit;min-width:0}
+  .settle-sel{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:12px;gap:8px}
+  .settle-sel b{font-variant-numeric:tabular-nums}
+  .settle-warn{color:var(--brick);font-size:12px;margin:-4px 0 10px}
+  .settle-submit{width:100%;justify-content:center;padding:13px;font-size:14px}
+  .settle-submit:disabled{opacity:.5;cursor:not-allowed}
+  .settle-h{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 10px;font-size:14px;font-weight:700}
+  .settle-search{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:10px;font-family:inherit;color:var(--ink)}
+  .batch{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+  .batch summary{list-style:none;cursor:pointer;padding:14px}
+  .batch summary::-webkit-details-marker{display:none}
+  .batch-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .batch-top b{font-size:14.5px}
+  .bstatus{font-size:10.5px;font-weight:700;border-radius:20px;padding:3px 9px}
+  .bstatus.settled{background:var(--ok-tint);color:var(--ok)}
+  .bstatus.requested{background:#EEF2FF;color:#4F46E5}
+  .batch-meta{font-size:12px;color:var(--muted);margin-top:3px}
+  .batch-line{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-top:8px;flex-wrap:wrap}
+  .batch-body{border-top:1px solid var(--line);padding:12px 14px 14px;background:var(--paper)}
+  .batch-pay{font-size:12.5px;margin-bottom:10px;line-height:1.5}
+  .batch-row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;padding:7px 0;border-top:1px dashed var(--line)}
+  .batch-row:first-of-type{border-top:0}
+  .batch-row .oid{font-family:'IBM Plex Mono',monospace;font-size:12px}
+  .batch-row .od{color:var(--muted);font-size:11.5px;margin-left:6px}
+  .kchip{font-size:10px;font-weight:700;border-radius:6px;padding:2px 6px;margin-left:6px;background:#fff;border:1px solid var(--line);color:var(--muted)}
+  .batch-foot{margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.7}
+  .batch-foot b{color:var(--ink)}
+  .batch-cancel{margin-top:12px;width:100%;justify-content:center}
+
+
+  /* ---- Compact share row ---- */
+  .share-row-card{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:10px 10px 10px 14px;margin-bottom:14px}
+  .share-label{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;min-width:0}
+  .share-label .ico{color:var(--muted);font-size:17px}
+  .share-tag{font-size:10.5px;font-weight:600;color:#B45309;background:var(--mustard-tint);border-radius:20px;padding:2px 8px;white-space:nowrap}
+  .share-btn{display:inline-flex;align-items:center;gap:6px;border:0;background:var(--primary);color:#fff;border-radius:11px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;touch-action:manipulation}
+  .share-btn:active{background:var(--primary-dark)}
+  .share-btn .ico{font-size:15px}
+
+  /* ---- Compact tax card ---- */
+  .tax-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .tax-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+  .tax-seg{display:none;margin-top:12px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:3px}
+  .tax-seg.show{display:flex}
+  .tax-seg button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;touch-action:manipulation}
+  .tax-seg button.active{background:var(--primary);color:#fff}
+  #tax-card.saving{opacity:.65;pointer-events:none}
+
+  /* Header (restaurant name + Open/Busy) is only for the Orders tab */
+  .no-top-bar .status-bar{display:none}
+  .no-top-bar main{padding-top:calc(var(--top-inset) + 16px)}
+
+  /* ============ PREP COUNTDOWN RING ============ */
+  .o-prep{margin:12px 0 4px;border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:8px 10px}
+  .prep-main{display:flex;align-items:center;gap:12px}
+  .prep-ring{position:relative;width:56px;height:56px;padding:0;border:0;background:none;border-radius:50%;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .prep-ring:disabled{cursor:default}
+  .prep-ring:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .prep-ring svg{width:100%;height:100%;transform:rotate(-90deg);display:block}
+  .prep-ring .trk{fill:#fff;stroke:var(--line);stroke-width:5}
+  .prep-ring .arc{fill:none;stroke:var(--primary);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .9s linear,stroke .3s}
+  .prep-ring.warn .arc{stroke:var(--mustard)}
+  .prep-ring.late .arc{stroke:var(--brick)}
+  .prep-ring.done .arc{stroke:var(--ok)}
+  .prep-ring.late{animation:prepPulse 1.4s ease-in-out infinite}
+  .prep-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;pointer-events:none}
+  .prep-txt b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+  .prep-txt small{font-size:8.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+  .prep-ring.late .prep-txt b,.prep-ring.late .prep-txt small{color:var(--brick)}
+  .prep-ring.done .prep-txt .ico{font-size:22px;color:var(--ok)}
+  .prep-ring .prep-txt svg{width:26px;height:26px;transform:none;color:var(--ok)}
+  .prep-label{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .prep-label b{font-size:13px;font-weight:600}
+  .prep-label small{font-size:11.5px;color:var(--muted)}
+  .prep-pop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);animation:popIn .16s ease-out}
+  .prep-pop button{flex:1;border:1.5px solid var(--primary);background:#fff;color:var(--primary-dark);border-radius:12px;padding:11px 0;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation}
+  .prep-pop button:active{background:var(--primary-tint)}
+  .prep-pop .prep-now{flex:0 0 auto;min-width:64px;text-align:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  @keyframes prepPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @keyframes popIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ OUTSIDE TELEGRAM ============ -->
+<!-- Owners sign in automatically inside Telegram (see autoLogin()); anywhere else there's nothing to do. -->
+<div id="outside-gate">
+  <div class="pin-card">
+    <div class="ticket-icon"><i class="ico " data-icon="lock"></i></div>
+    <p style="margin:0; font-size:15px; font-weight:600; color:var(--ink); line-height:1.5;">Please open this app through the official Telegram bot.</p>
+  </div>
+</div>
+
+<!-- ============ NOT APPROVED (shown when Telegram auto-login finds no restaurant for this ID) ============ -->
+<div id="not-approved-gate" style="display:none;">
+  <div class="pin-card">
+    <div class="ticket-icon"><i class="ico " data-icon="ban"></i></div>
+    <h1>Not approved yet</h1>
+    <p id="not-approved-message">This Telegram account isn't linked to a restaurant yet. If you'd like to list your restaurant, open the bot and tap "List My Restaurant".</p>
+    <a href="https://t.me/assichit_bot" target="_blank" rel="noopener" style="text-decoration:none; display:block;">
+      <button class="btn btn-primary" style="width:100%; justify-content:center;">Open Bot</button>
+    </a>
+  </div>
+</div>
+
+<!-- ============ RESTAURANT SETUP (shown once, for a brand-new restaurant) ============ -->
+<div id="setup-gate">
+  <div class="setup-card">
+
+    <!-- ---- Step 1: profile ---- -->
+    <div class="setup-step" id="setup-step-1">
+      <div class="setup-top"><span class="setup-steps">STEP 1 OF 2</span></div>
+      <h1>Welcome! Let's set up your restaurant</h1>
+      <p class="intro">Fill in every field to continue. You can change most of this later from Settings.</p>
+
+      <div class="setup-logo-block">
+        <img class="thumb-preview" id="setup-logo-preview" src="" alt="" onerror="this.style.opacity=0.6;" onload="this.style.opacity=1;">
+        <div class="upload-row">
+          <button type="button" class="btn-upload" id="setup-logo-upload-btn" onclick="document.getElementById('setup-logo-file-input').click()"><i class="ico" data-icon="camera"></i> Upload Logo</button>
+          <span class="upload-status" id="setup-logo-upload-status"></span>
+        </div>
+        <input type="file" id="setup-logo-file-input" accept="image/*" style="display:none" onchange="handleSetupLogoFileSelect(event)">
+        <input type="hidden" id="setup-logo-input">
+      </div>
+
+      <div class="field">
+        <label>Restaurant name</label>
+        <input type="text" id="setup-name-input" placeholder="e.g. Restaurant name">
+      </div>
+      <div class="field">
+        <label>Restaurant ID <span style="font-weight:400;">(unique — used for your shareable link)</span></label>
+        <div class="handle-wrap">
+          <input type="text" id="setup-handle-input" class="mono-input" placeholder="e.g. moon_cafe" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('setup')">
+          <span class="handle-count" id="setup-handle-count">0/20</span>
+        </div>
+        <div class="handle-status" id="setup-handle-status">4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later.</div>
+      </div>
+      <div class="field">
+        <label>Tagline / title <span style="font-weight:400;">(shown under your name to customers)</span></label>
+        <input type="text" id="setup-tagline-input" placeholder="e.g. A short line about your food">
+      </div>
+      <div class="field">
+        <label>Restaurant address</label>
+        <textarea id="setup-address-input" placeholder="Street, township, city — shown to customers at checkout"></textarea>
+      </div>
+
+      <div class="setup-spacer"></div>
+      <div id="setup-error"></div>
+      <button class="btn btn-primary btn-wide" id="setup-next-btn" onclick="completeSetup()" disabled>Next</button>
+    </div>
+
+    <!-- ---- Step 2: location pin (skippable) ---- -->
+    <div class="setup-step" id="setup-step-2" style="display:none;">
+      <div class="setup-top">
+        <button class="setup-back" aria-label="Back" onclick="backToStep1()"><i class="ico" data-icon="arrowLeft"></i></button>
+        <span class="setup-steps">STEP 2 OF 2</span>
+      </div>
+      <h1>Pin your location</h1>
+      <p class="intro">Riders and customers can find you easily with a location pin. Tap the map or drag the pin to fine-tune it.</p>
+
+      <div class="map-box" id="setup-map"></div>
+      <input type="hidden" id="setup-pin-input">
+      <div class="pin-hint" id="setup-pin-status">Stand at your restaurant when you tap the button for the most accurate pin.</div>
+      <button type="button" class="btn btn-outline-accent btn-wide" style="margin-top:12px;" onclick="useMyLocation('setup')"><i class="ico" data-icon="locate"></i> Use my current location</button>
+
+      <div class="setup-spacer"></div>
+      <button class="btn btn-primary btn-wide" id="setup-continue-btn" style="margin-top:18px;" onclick="finishSetup(true)" disabled>Continue to Menu</button>
+      <button class="skip-link" onclick="finishSetup(false)">Skip for now</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <nav class="tabs">
+    <button class="tab-btn active" id="tab-btn-orders" onclick="switchView('orders')"><span class="tab-icon"><i class="ico " data-icon="clipboard"></i></span><span>Orders</span><span class="tab-badge" id="orders-badge"></span></button>
+    <button class="tab-btn" id="tab-btn-items" onclick="switchView('items')"><span class="tab-icon"><i class="ico " data-icon="utensils"></i></span><span>Menu</span></button>
+    <button class="tab-btn" id="tab-btn-settings" onclick="switchView('settings')"><span class="tab-icon"><i class="ico " data-icon="gear"></i></span><span>Settings</span></button>
+  </nav>
+
+  <div class="status-bar">
+    <div class="status-brand" id="brand-restaurant-name">My Restaurant</div>
+    <button type="button" class="status-pill open" id="status-pill" onclick="toggleStatusMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-label="Restaurant status">
+      <span class="dot"></span><span id="status-pill-text">Open</span>
+      <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="status-overlay" id="status-overlay" onclick="closeStatusMenu()">
+    <div class="status-menu" role="menu" onclick="event.stopPropagation()">
+      <button type="button" role="menuitem" data-s="open" onclick="chooseStatus('open')"><span class="sm-dot open"></span><span class="sm-text"><b>Open for Orders</b><small>Taking new orders as normal</small></span><span class="sm-check">✓</span></button>
+      <button type="button" role="menuitem" data-s="busy" onclick="chooseStatus('busy')"><span class="sm-dot busy"></span><span class="sm-text"><b>Busy (+15 mins prep)</b><small>Still open — adds 15 min to prep estimates</small></span><span class="sm-check">✓</span></button>
+      <button type="button" role="menuitem" data-s="closed" onclick="chooseStatus('closed')"><span class="sm-dot closed"></span><span class="sm-text"><b>Closed / Paused</b><small>No new orders until you reopen</small></span><span class="sm-check">✓</span></button>
+    </div>
+  </div>
+
+  <main>
+    <!-- CLOSED BANNER (all tabs) -->
+    <div class="closed-banner" id="closed-banner" role="alert">
+      <i class="ico" data-icon="ban"></i>
+      <span><b>Your restaurant is closed.</b> Customers can't place new orders. Orders you already accepted carry on as normal.</span>
+      <button type="button" onclick="reopenRestaurant()">Reopen</button>
+    </div>
+    <!-- ITEMS VIEW -->
+    <div class="view active" id="view-orders">
+      <div class="seg">
+        <button class="active" id="seg-current" onclick="setOrdersScope('current')">Current</button>
+        <button id="seg-history" onclick="setOrdersScope('history')">History</button>
+        <button id="seg-settle" onclick="setOrdersScope('settlements')">Settlements</button>
+      </div>
+      <div id="history-summary" style="display:none">
+        <div class="cat-chip-bar">
+          <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)">Today</button>
+          <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)">7 days</button>
+          <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)">30 days</button>
+        </div>
+        <div class="stats"><div><b id="st-count">0</b><span>Delivered</span></div><div><b id="st-rev">0</b><span>Revenue (MMK)</span></div></div>
+      </div>
+      <div id="orders-list"></div>
+      <div id="settle-view" style="display:none"></div>
+    </div>
+
+    <!-- ITEMS VIEW -->
+    <div class="view" id="view-items">
+      <div class="cat-chip-bar" id="item-cat-tabs"></div>
+      <div class="cat-options-hint" id="cat-options-hint"></div>
+      <button class="btn btn-primary" id="add-item-btn" style="width:100%; padding:13px; font-size:14px; margin-bottom:14px;" onclick="openItemDrawer(null)"><i class="ico " data-icon="plus"></i> New Item</button>
+      <div class="item-grid" id="item-grid"></div>
+      <div class="launch-card" id="launch-card" style="display:none;"></div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view" id="view-settings">
+      <div class="section-head"><h2>Settings</h2></div>
+
+      <div class="hero" id="profile-hero">
+        <div class="hero-logo"><img id="hero-logo-img" alt="" style="display:none"><span id="hero-logo-fallback"><i class="ico " data-icon="store"></i></span></div>
+        <div class="hero-handle" id="hero-handle"></div>
+        <button class="btn-ghost" onclick="toggleProfileEdit(true)"><i class="ico " data-icon="edit"></i> Edit profile</button>
+      </div>
+      <!-- SHAREABLE LINK -->
+      <div class="share-row-card" id="share-box" style="display:none">
+        <div class="share-label"><i class="ico " data-icon="share"></i><span>Shareable Link</span><span class="share-tag" id="share-tag" style="display:none">Not live yet</span></div>
+        <button type="button" class="share-btn" onclick="shareRestaurantLink()"><i class="ico " data-icon="link"></i> Share Profile</button>
+      </div>
+      <div class="settings-card" id="profile-edit-card" style="display:none;">
+        <h3>Edit profile</h3>
+        <p>Shown to customers in the app.</p>
+        <div class="field">
+          <label>Restaurant name</label>
+          <input type="text" id="settings-name-input" placeholder="e.g. Restaurant name">
+        </div>
+        <div class="field">
+          <label>Restaurant ID</label>
+          <div class="handle-wrap">
+            <input type="text" id="settings-handle-input" class="mono-input" placeholder="e.g. moon_cafe" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('settings')">
+            <span class="handle-count" id="settings-handle-count">0/20</span>
+          </div>
+          <div class="handle-status" id="settings-handle-status"></div>
+        </div>
+        <div class="field">
+          <label>Tagline / title</label>
+          <input type="text" id="settings-tagline-input" placeholder="e.g. A short line about your food">
+        </div>
+        <div class="field">
+          <label>Logo</label>
+          <img class="thumb-preview" id="settings-logo-preview" src="" alt="" onerror="this.style.opacity=0.3;" onload="this.style.opacity=1;">
+          <div class="upload-row">
+            <button type="button" class="btn-upload" id="settings-logo-upload-btn" onclick="document.getElementById('settings-logo-file-input').click()"><i class="ico " data-icon="camera"></i> Upload Logo</button>
+            <span class="upload-status" id="settings-logo-upload-status"></span>
+          </div>
+          <input type="file" id="settings-logo-file-input" accept="image/*" style="display:none" onchange="handleSettingsLogoFileSelect(event)">
+          <input type="hidden" id="settings-logo-input">
+        </div>
+        <div class="field">
+          <label>Restaurant address</label>
+          <textarea id="settings-address-input" placeholder="Street, township, city"></textarea>
+        </div>
+        <div class="field">
+          <label>Location pin <span style="font-weight:400;">(optional)</span></label>
+          <div class="map-box small" id="settings-map"></div>
+          <input type="hidden" id="settings-pin-input">
+          <div class="pin-hint" id="settings-pin-status"></div>
+          <button type="button" class="btn btn-outline-accent btn-sm" style="margin-top:8px;" onclick="useMyLocation('settings')"><i class="ico " data-icon="locate"></i> Use my current location</button>
+        </div>
+        <div class="settings-row">
+          <button class="btn btn-primary btn-sm" onclick="saveSettingsProfile()">Save</button>
+          <button class="btn btn-outline btn-sm" onclick="renderSettingsProfileFields();toggleProfileEdit(false)">Cancel</button>
+        </div>
+      </div>
+
+      <div class="settings-card" id="tax-card">
+        <div class="tax-head">
+          <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> 5% Commercial Tax</span>
+          <span class="switch"><input type="checkbox" id="tax-enable-input" onchange="onTaxToggle()" aria-label="5% Commercial Tax"><i></i></span>
+        </div>
+        <div class="tax-seg" id="tax-mode-wrap" role="group" aria-label="Tax mode">
+          <button type="button" id="tax-opt-inclusive" onclick="setTaxMode('inclusive')">Tax Inclusive</button>
+          <button type="button" id="tax-opt-exclusive" onclick="setTaxMode('exclusive')">Tax Exclusive</button>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3><i class="ico ico-accent" data-icon="download"></i> Backup &amp; restore</h3>
+        <p>Export the full menu as a JSON file, or paste one back in to restore it. Useful before making big changes, or to copy a menu between restaurants later.</p>
+        <div class="settings-row">
+          <button class="btn btn-outline btn-sm" onclick="exportMenuBackup()">Export JSON</button>
+          <button class="btn btn-outline btn-sm" onclick="importMenuBackup()">Import JSON</button>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3><i class="ico ico-accent" data-icon="refresh"></i> Sync</h3>
+        <p>The menu is stored on your server, not in this browser — every device reads the same data. Use this if you suspect this tab is showing something stale.</p>
+        <div class="settings-row">
+          <button class="btn btn-outline btn-sm" onclick="loadMenu(true)">Reload from server</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============ CATEGORY DRAWER ============ -->
+<div class="drawer-overlay" id="cat-drawer-overlay">
+  <div class="drawer">
+    <div class="drawer-head">
+      <h3 id="cat-drawer-title">New Category</h3>
+      <button class="drawer-close" onclick="closeCategoryDrawer()">×</button>
+    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label>Category name</label>
+        <input type="text" id="cat-name-input" placeholder="e.g. Category name">
+      </div>
+
+      <p class="important-note">Adding sizes and options in the category will apply to all items under this category.</p>
+
+      <div class="field">
+        <label>Sizes</label>
+        <div class="chip-list" id="cat-size-chips"></div>
+        <div class="chip-add-row">
+          <input type="text" id="cat-new-size-input" placeholder="e.g. Small" oninput="toggleAddBtn('cat-new-size-input','cat-add-size-btn')" onkeydown="if(event.key==='Enter'){event.preventDefault(); addSizeChip();}">
+          <button class="btn btn-outline btn-sm" id="cat-add-size-btn" disabled onclick="addSizeChip()">Add Size</button>
+        </div>
+      </div>
+
+      <div class="field" id="cat-bulk-price-section">
+        <label>Price per size</label>
+        <div id="cat-bulk-price-inputs"></div>
+      </div>
+
+      <div class="field">
+        <label>Options</label>
+        <div id="cat-option-groups-list"></div>
+        <div class="group-add-row">
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'single')"><i class="ico " data-icon="circleDot"></i> Single-choice group</button>
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> Add-on group</button>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-foot modal-bottom-actions">
+      <button class="btn btn-outline" onclick="closeCategoryDrawer()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategoryDrawer()">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ITEM DRAWER ============ -->
+<div class="drawer-overlay" id="item-drawer-overlay">
+  <div class="drawer">
+    <div class="drawer-head">
+      <h3 id="item-drawer-title">New Item</h3>
+      <button class="drawer-close" onclick="closeItemDrawer()">×</button>
+    </div>
+    <div class="drawer-body">
+      <img class="thumb-preview" id="item-image-preview" src="" alt="" style="cursor:pointer" onclick="document.getElementById('item-image-file-input').click()" onerror="this.style.opacity=0.3;">
+      <div class="upload-row">
+        <button type="button" class="btn-upload" id="upload-photo-btn" onclick="document.getElementById('item-image-file-input').click()"><i class="ico " data-icon="camera"></i> Upload Photo</button>
+        <span class="upload-status" id="upload-status"></span>
+      </div>
+      <input type="file" id="item-image-file-input" accept="image/*" style="display:none" onchange="handleItemImageFileSelect(event)">
+      <div class="field" style="display:none;">
+        <label>Image URL</label>
+        <input type="url" id="item-image-input" placeholder="https://…" oninput="updateItemImagePreview()">
+      </div>
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="item-name-input" placeholder="e.g. Food name" oninput="updateItemSaveState()">
+      </div>
+      <div class="field">
+        <label>Description <span style="font-weight:400;">(max 150 characters)</span></label>
+        <div class="handle-wrap">
+          <input type="text" id="item-desc-input" maxlength="150" placeholder="What's in it, what makes it good…" oninput="updateDescCount(); updateItemSaveState()">
+          <span class="handle-count" id="item-desc-count">0/150</span>
+        </div>
+      </div>
+      <div class="field" id="item-price-field">
+        <label id="item-price-label">Price (MMK)</label>
+        <div id="item-price-inputs"></div>
+      </div>
+
+      <div class="field">
+        <label>Sizes <span style="font-weight:400">(optional)</span></label>
+        <div class="sub-hint" id="item-size-inherit-hint" style="margin-bottom:8px;"></div>
+        <div class="chip-list" id="item-size-chips"></div>
+        <div class="chip-add-row">
+          <input type="text" id="item-new-size-input" placeholder="e.g. Small" oninput="toggleAddBtn('item-new-size-input','item-add-size-btn')" onkeydown="if(event.key==='Enter'){event.preventDefault(); addItemSizeChip();}">
+          <button class="btn btn-outline btn-sm" id="item-add-size-btn" disabled onclick="addItemSizeChip()">Add</button>
+        </div>
+        <button class="btn btn-outline btn-sm" id="item-reset-sizes-btn" style="margin-top:8px; display:none;" onclick="resetItemSizesToCategory()"><i class="ico " data-icon="reset"></i> Use category's sizes instead</button>
+      </div>
+
+      <div class="field">
+        <label>Prep time</label>
+        <select id="item-time-input">
+          <option value="5 mins">5 mins</option>
+          <option value="10 mins">10 mins</option>
+          <option value="15 mins">15 mins</option>
+          <option value="20 mins">20 mins</option>
+          <option value="25 mins">25 mins</option>
+          <option value="30 mins">30 mins</option>
+          <option value="40 mins">40 mins</option>
+          <option value="50+ mins">50+ mins</option>
+        </select>
+      </div>
+
+      <div class="field" id="item-inherited-groups-field" style="display:none;">
+        <label>Options from this category</label>
+        <div id="item-inherited-groups-list"></div>
+      </div>
+
+      <div class="field">
+        <label>This item's own options</label>
+        <div id="item-option-groups-list"></div>
+        <div class="group-add-row">
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('item', null, 'single')"><i class="ico " data-icon="circleDot"></i> Single-choice group</button>
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('item', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> Add-on group</button>
+        </div>
+      </div>
+    </div>
+    <div class="drawer-foot modal-bottom-actions">
+      <button class="btn btn-outline" onclick="closeItemDrawer()">Cancel</button>
+      <button class="btn btn-primary" id="item-save-btn" onclick="saveItemDrawer()" disabled>Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ OPTION GROUP DRAWER ============ -->
+<!-- Opens on top of the Category or Item drawer (whichever is open underneath
+     stays in place) to add or edit one option group — e.g. "Crust Type" or
+     "Extra Toppings" — in its own focused page rather than inline in a long
+     scrolling form. -->
+<div class="drawer-overlay" id="group-drawer-overlay">
+  <div class="drawer">
+    <div class="drawer-head">
+      <h3 id="group-drawer-title">New Option Group</h3>
+      <button class="drawer-close" onclick="closeGroupDrawer()">×</button>
+    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label>Group title (shown to customers)</label>
+        <input type="text" id="group-title-input" placeholder="e.g. Group name">
+      </div>
+      <div class="field">
+        <label class="chk-label" style="font-weight:700; font-size:13.5px;">
+          <input type="checkbox" id="group-required-input"> Customer must choose <span id="group-required-hint" class="sub-hint" style="font-weight:400;"></span>
+        </label>
+      </div>
+      <div class="field">
+        <label>Options</label>
+        <div id="group-options-list"></div>
+        <button class="btn btn-outline btn-sm add-option-btn" onclick="addGroupOption()"><i class="ico " data-icon="plus"></i> Add option</button>
+      </div>
+    </div>
+    <div class="drawer-foot modal-bottom-actions">
+      <button class="btn btn-danger-ghost" id="group-delete-btn" style="display:none; margin-right:auto;" onclick="deleteGroupFromDrawer()">Delete</button>
+      <button class="btn btn-outline" onclick="closeGroupDrawer()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGroupDrawer()">Save Group</button>
+    </div>
+  </div>
+</div>
+
+<div class="ctx-overlay" id="ctx-overlay" onclick="closeCatMenu()">
+  <div class="ctx-menu" id="ctx-menu" onclick="event.stopPropagation()">
+    <button onclick="ctxAction('edit')"><i class="ico " data-icon="edit"></i> Edit category</button>
+    <button id="ctx-left" onclick="ctxAction('left')"><i class="ico " data-icon="arrowLeft"></i> Move left</button>
+    <button id="ctx-right" onclick="ctxAction('right')"><i class="ico " data-icon="arrowRight"></i> Move right</button>
+    <button class="danger" onclick="ctxAction('delete')"><i class="ico " data-icon="trash"></i> Delete category</button>
+  </div>
+</div>
+<div id="launch-success">
+  <div class="box">
+    <div class="big"><i class="ico " data-icon="checkCircle"></i></div>
+    <h2>Congratulations!</h2>
+    <p>Your restaurant is now live on the IWTEAT home screen. Customers can find you and start ordering.</p>
+    <button class="btn btn-primary btn-wide" onclick="document.getElementById('launch-success').classList.remove('open')">Done</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API_BASE = 'https://chitkool.pythonanywhere.com';
+
+  // ================= ICONS (inline SVG — replaces the old emojis) =================
+  const ICONS = {
+    receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+    clipboard: '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+    utensils: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+    gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+    copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+    share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    locate: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/>',
+    pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    arrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+    arrowRight: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+    edit: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+    refresh: '<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>',
+    reset: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    circleDot: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/>',
+    checkSquare: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+    trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>',
+    send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    store: '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-2-.9 2.7 2.7 0 0 1-4 0 2.7 2.7 0 0 1-4 0 2.7 2.7 0 0 1-4 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/>',
+    call: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    package: '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    bike: '<circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/>'
+  };
+  function icon(name, extraClass) {
+    return `<i class="ico ${extraClass || ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg></i>`;
+  }
+  function hydrateIcons(root) {
+    (root || document).querySelectorAll('i.ico[data-icon]').forEach(el => {
+      if (el.firstChild || !ICONS[el.dataset.icon]) return;
+      el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[el.dataset.icon]}</svg>`;
+    });
+  }
+  hydrateIcons();
+
+  // Present only when admin.html is opened inside Telegram (e.g. via the bot's
+  // "Open My Restaurant" button). Absent in a plain browser — that's how we
+  // tell the two contexts apart on load.
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();                                             // use the full Mini App height
+    try {                                                    // true full screen (Telegram 8.0+) — skipped on older apps
+      if (tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && tg.requestFullscreen && !tg.isFullscreen) tg.requestFullscreen();
+    } catch (e) {}
+    try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {}   // a downward swipe won't close the app
+    try { tg.onEvent('viewportChanged', () => { if (!tg.isExpanded) tg.expand(); }); } catch (e) {}
+  }
+
+  // Which restaurant this admin.html instance manages. Inside Telegram this is
+  // determined automatically by autoLogin() from who the user verifiably is —
+  // this stays null until that resolves. Outside Telegram (dev/testing only),
+  // it comes from a ?r=<id> URL param. There is no fallback restaurant id
+  // anymore — every real restaurant is created via the bot's approval flow,
+  // so a missing id just means "nothing to log into yet."
+  let currentRestaurantId = new URLSearchParams(window.location.search).get('r') || null;
+
+  let menuCategories = [];
+  let currentView = 'orders';
+  let dragSrcIndex = null;
+
+  // Which category's items are shown on the Items tab — replaces the old
+  // dropdown's selected value now that category selection is a chip bar.
+  let activeItemCategoryId = null;
+
+  // The current restaurant's profile — name/tagline/logo/address shown to
+  // customers. Populated on login (or session restore) from the server's
+  // response, not fetched separately.
+  let restaurantProfile = { name: '', handle: '', tagline: '', logoUrl: '', address: '', locationPin: '', isPublished: false, isOpen: true, enableTax: false, taxMode: 'inclusive' };
+
+  // Working state for the category drawer while it's open.
+  let catDraft = null; // { editIndex, name, icon, sizeNames: [], optionGroups: [], defaultPrices: [], defaultFlatPrice: null }
+  let catDraftSnapshot = null; // JSON string of the form's state right after opening — compared on close to warn about unsaved edits
+
+  // Working state for the item drawer while it's open.
+  let itemDraft = null; // { catIndex, editIndex, ...item fields, sizeNames snapshot from category, optionGroups: [] }
+
+  // Working state for the Option Group drawer (nested on top of the category
+  // or item drawer) while it's open.
+  let groupDraft = null;     // { id, kind: 'single'|'multi', title, required, options: [...] }
+  let groupDraftCtx = null;  // { scope: 'category' | 'item' }
+
+  let _groupIdCounter = 0;
+  function newGroupId() { return 'grp-' + Date.now() + '-' + (_groupIdCounter++); }
+
+  // One-time, in-memory upgrade of a category (and its items) saved before
+  // option groups existed: a category only ever had one unnamed shared
+  // single-choice list and one unnamed shared add-on list, and an item only
+  // ever had one titled single-choice list and one titled add-on list. Each
+  // becomes its own (Optional, by default) group here. Leaves everything
+  // else untouched, and does nothing if optionGroups is already present.
+  function migrateCategoryOptionGroups(cat) {
+    if (!cat.optionGroups) {
+      const groups = [];
+      if ((cat.categorySingleOptions || []).length) groups.push({ id: newGroupId(), kind: 'single', title: 'Options', required: false, options: cat.categorySingleOptions });
+      if ((cat.categoryMultiOptions || []).length) groups.push({ id: newGroupId(), kind: 'multi', title: 'Add-ons', required: false, options: cat.categoryMultiOptions });
+      cat.optionGroups = groups;
+      delete cat.categorySingleOptions;
+      delete cat.categoryMultiOptions;
+    }
+    (cat.items || []).forEach(migrateItemOptionGroups);
+  }
+  function migrateItemOptionGroups(item) {
+    if (item.optionGroups) return;
+    const groups = [];
+    if ((item.singleChoices || []).length) groups.push({ id: newGroupId(), kind: 'single', title: item.singleChoiceTitle || 'Select Option', required: false, options: item.singleChoices });
+    if ((item.extras || []).length) groups.push({ id: newGroupId(), kind: 'multi', title: item.extrasTitle || 'Add Extras', required: false, options: item.extras });
+    item.optionGroups = groups;
+    delete item.singleChoiceTitle; delete item.singleChoices;
+    delete item.extrasTitle; delete item.extras;
+  }
+
+  /* ================= LOGIN (automatic, through Telegram) ================= */
+
+  function applyLoginResult(restaurant) {
+    restaurantProfile = {
+      name: restaurant.name || '',
+      tagline: restaurant.tagline || '',
+      logoUrl: restaurant.logoUrl || '',
+      address: restaurant.address || '',
+      locationPin: restaurant.locationPin || '',
+      handle: restaurant.handle || '',
+      // Tax: off unless the server explicitly says on; an older server that doesn't send these = no tax.
+      enableTax: restaurant.enableTax === true,
+      taxMode: restaurant.taxMode === 'exclusive' ? 'exclusive' : 'inclusive',
+      // Only an explicit false hides the restaurant — an older server that
+      // doesn't send this field must not make everyone look unpublished.
+      isPublished: restaurant.isPublished !== false
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Inside Telegram: who is opening this page comes from Telegram itself (initDataUnsafe.user.id is the
+    // readable copy of it). What we SEND to the server is the signed initData, which the server checks
+    // cryptographically — a bare user id could be faked, the signed data can't.
+    if (tg && tg.initData && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
+      await autoLogin();
+    } else {
+      document.getElementById('outside-gate').style.display = 'flex';
+    }
+  });
+
+  // Verifies who opened this page via Telegram's Mini App identity data (see
+  // /api/admin/auto-login — the server cryptographically checks this, it
+  // isn't just taken on faith) and logs them straight into their restaurant.
+  async function autoLogin() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/auto-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: tg.initData })
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        showNotApproved();
+        return;
+      }
+      currentRestaurantId = result.restaurant.id;
+      applyLoginResult(result.restaurant);
+      showApp();
+    } catch (err) {
+      showNotApproved('Could not reach the server. Check your connection and try again.');
+    }
+  }
+
+  function showNotApproved(customMessage) {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('setup-gate').style.display = 'none';
+    document.getElementById('outside-gate').style.display = 'none';
+    if (customMessage) document.getElementById('not-approved-message').textContent = customMessage;
+    document.getElementById('not-approved-gate').style.display = 'flex';
+  }
+
+  async function showApp() {
+    document.getElementById('outside-gate').style.display = 'none';
+    document.getElementById('not-approved-gate').style.display = 'none';
+    applyBrandHeader();
+    renderSettingsProfileFields(); // keep Settings tab in sync regardless of which screen shows first
+    renderTaxSettings();
+    renderLaunchCard();
+
+    if (isFreshRestaurant()) {
+      showSetupGate();
+    } else {
+      document.getElementById('setup-gate').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+    }
+    loadMenu();
+    loadRestaurantStatus();
+    startOrders();
+  }
+
+  /* ================= RESTAURANT PROFILE (name/logo/tagline/address) ================= */
+  function isFreshRestaurant() {
+    // Every restaurant is created with a name already set (by the platform
+    // owner, via POST /api/platform/restaurants), so an empty name no longer
+    // signals "hasn't set up yet" the way it did with a single restaurant.
+    // A missing address is a better proxy: it's the detail the owner has to
+    // fill in themselves, so its absence means they haven't been through
+    // setup yet.
+    return !restaurantProfile.address;
+  }
+
+  function applyBrandHeader() {
+    renderHero();
+    const nameEl = document.getElementById('brand-restaurant-name');
+    const logoImg = document.getElementById('brand-logo-img');
+    const logoFallback = document.getElementById('brand-logo-fallback');
+    if (nameEl) nameEl.textContent = restaurantProfile.name || 'My Restaurant';
+    if (restaurantProfile.logoUrl && logoImg && logoFallback) {
+      logoImg.src = restaurantProfile.logoUrl;
+      logoImg.style.display = 'block';
+      logoFallback.style.display = 'none';
+      logoImg.onerror = () => { logoImg.style.display = 'none'; logoFallback.style.display = 'flex'; };
+    } else if (logoImg && logoFallback) {
+      logoImg.style.display = 'none';
+      logoFallback.style.display = 'flex';
+    }
+  }
+
+  let lastSaveError = '';
+  async function saveRestaurantProfile(profile) {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/restaurant-info`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantId: currentRestaurantId, ...profile })
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || `Server returned ${res.status}`);
+      restaurantProfile = Object.assign({}, restaurantProfile, profile);
+      lastSaveError = '';
+      return true;
+    } catch (err) {
+      lastSaveError = err.message;
+      showToast('Could not save: ' + err.message);
+      return false;
+    }
+  }
+
+  /* ---------- Restaurant ID (unique handle) ---------- */
+  const handleStatus = { setup: 'idle', settings: 'idle' };
+  const handleTimers = {};
+  function setHandleStatus(prefix, state, text) {
+    handleStatus[prefix] = state;
+    const el = document.getElementById(prefix + '-handle-status');
+    el.className = 'handle-status' + (state === 'ok' ? ' ok' : state === 'bad' ? ' bad' : '');
+    el.innerHTML = (state === 'ok' ? icon('check') + ' ' : '') + escapeHtml(text || '');
+  }
+  function handleLocked() { return !!restaurantProfile.handle; }
+  // Same rule as the server: 4–20 chars, first character a letter, then letters / numbers / underscore.
+  // Capitals are folded to lowercase, so "Mooncafe" and "mooncafe" are always the SAME ID.
+  const HANDLE_RE = /^[a-z][a-z0-9_]{3,19}$/;
+  function handleIdleText(prefix) {
+    return prefix === 'setup'
+      ? "4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later."
+      : '';
+  }
+  function onHandleInput(prefix) {
+    const input = document.getElementById(prefix + '-handle-input');
+    const cleaned = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+    if (input.value !== cleaned) input.value = cleaned;
+    document.getElementById(prefix + '-handle-count').textContent = cleaned.length + '/20';
+    clearTimeout(handleTimers[prefix]);
+    if (!cleaned) setHandleStatus(prefix, 'idle', handleIdleText(prefix));
+    else if (!/^[a-z]/.test(cleaned)) setHandleStatus(prefix, 'bad', 'The ID must start with a letter (not a number or _).');
+    else if (cleaned.length < 4) setHandleStatus(prefix, 'bad', 'Use at least 4 characters.');
+    else {
+      setHandleStatus(prefix, 'checking', 'Checking…');
+      handleTimers[prefix] = setTimeout(() => checkHandle(prefix, cleaned), 400);
+    }
+    if (prefix === 'setup') updateSetupNextState();
+  }
+  async function checkHandle(prefix, value) {
+    let state = 'bad', text = "Couldn't check right now — check your connection.";
+    if (!HANDLE_RE.test(value)) { setHandleStatus(prefix, 'bad', 'Use 4–20 characters, starting with a letter.'); if (prefix === 'setup') updateSetupNextState(); return; }
+    try {
+      const res = await fetch(`${API_BASE}/api/restaurant-handle/check?handle=${encodeURIComponent(value)}&restaurantId=${encodeURIComponent(currentRestaurantId)}`);
+      const d = await res.json();
+      if (d.available) { state = 'ok'; text = 'Available'; }
+      else text = d.reason || 'Not available.';
+    } catch (e) { /* keep the connection message */ }
+    if (document.getElementById(prefix + '-handle-input').value !== value) return;   // typed on since — stale answer
+    setHandleStatus(prefix, state, text);
+    if (prefix === 'setup') updateSetupNextState();
+  }
+  // Shows the ID field for a restaurant that already has one: read-only, with a short note.
+  function lockHandleField(prefix) {
+    const input = document.getElementById(prefix + '-handle-input');
+    input.value = restaurantProfile.handle;
+    input.readOnly = true;
+    document.getElementById(prefix + '-handle-count').textContent = restaurantProfile.handle.length + '/20';
+    setHandleStatus(prefix, 'idle', "This ID can't be changed — your shared links use it.");
+  }
+  function unlockHandleField(prefix) {
+    const input = document.getElementById(prefix + '-handle-input');
+    input.readOnly = false; input.value = '';
+    document.getElementById(prefix + '-handle-count').textContent = '0/20';
+    setHandleStatus(prefix, 'idle', prefix === 'setup' ? "4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later." : 'Pick a unique ID (4–20 characters, starts with a letter; letters, numbers or _). It can\'t be changed later.');
+  }
+
+  /* ---------- Map picker (Leaflet + OpenStreetMap) ---------- */
+  const pickers = {};
+  const DEFAULT_MAP_CENTER = [19.75, 96.1];   // central Myanmar until we know where the restaurant is
+  function parsePin(v) {
+    const m = /[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(v || '');
+    return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+  }
+  function pickerIds(key) { return { map: key + '-map', input: key + '-pin-input', status: key + '-pin-status' }; }
+  function initPicker(key) {
+    const ids = pickerIds(key);
+    const el = document.getElementById(ids.map);
+    if (!window.L) {
+      el.innerHTML = '<div class="map-fallback">The map preview couldn\'t load. Check your connection — you can still skip this step.</div>';
+      return;
+    }
+    let p = pickers[key];
+    if (!p) {
+      const map = L.map(el, { zoomControl: true, attributionControl: true }).setView(DEFAULT_MAP_CENTER, 5);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+      map.attributionControl.setPrefix(false);
+      p = pickers[key] = { map, marker: null };
+      map.on('click', e => setPickerPoint(key, e.latlng.lat, e.latlng.lng, false));
+    }
+    // The container was hidden until now, so Leaflet needs to re-measure it before drawing.
+    setTimeout(() => {
+      p.map.invalidateSize();
+      const pin = parsePin(document.getElementById(ids.input).value);
+      if (pin) setPickerPoint(key, pin[0], pin[1], true, true);
+    }, 60);
+  }
+  function setPickerPoint(key, lat, lng, recenter, quiet) {
+    const p = pickers[key]; if (!p) return;
+    const ids = pickerIds(key);
+    if (!p.marker) {
+      p.marker = L.marker([lat, lng], { draggable: true, icon: L.divIcon({ className: '', html: '<div class="map-pin"></div>', iconSize: [28, 28], iconAnchor: [14, 28] }) }).addTo(p.map);
+      p.marker.on('dragend', () => { const ll = p.marker.getLatLng(); setPickerPoint(key, ll.lat, ll.lng, false); });
+    } else p.marker.setLatLng([lat, lng]);
+    if (recenter) p.map.setView([lat, lng], 17);
+    document.getElementById(ids.input).value = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+    document.getElementById(ids.status).classList.remove('error');
+    document.getElementById(ids.status).textContent = quiet ? 'Drag the pin or tap the map to change it.' : 'Pin set — drag it or tap the map to fine-tune.';
+    if (key === 'setup') updateSetupPinState();
+  }
+  function useMyLocation(key) {
+    const ids = pickerIds(key);
+    const status = document.getElementById(ids.status);
+    status.classList.remove('error');
+    if (!navigator.geolocation) { status.textContent = "This device can't share its location — you can tap the map instead, or skip."; status.classList.add('error'); return; }
+    status.textContent = 'Getting your location…';
+    navigator.geolocation.getCurrentPosition(
+      pos => setPickerPoint(key, pos.coords.latitude, pos.coords.longitude, true),
+      () => { status.textContent = "Couldn't get your location. Allow location access, tap the map instead, or skip for now."; status.classList.add('error'); },
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
+
+  /* ---------- Setup (full-screen) ---------- */
+  function showSetupGate() {
+    document.getElementById('setup-name-input').value = restaurantProfile.name;
+    document.getElementById('setup-tagline-input').value = restaurantProfile.tagline;
+    document.getElementById('setup-logo-input').value = restaurantProfile.logoUrl;
+    document.getElementById('setup-address-input').value = restaurantProfile.address;
+    document.getElementById('setup-pin-input').value = restaurantProfile.locationPin || '';
+    document.getElementById('setup-logo-upload-status').textContent = '';
+    document.getElementById('setup-logo-upload-status').classList.remove('error');
+    document.getElementById('setup-error').textContent = '';
+    if (handleLocked()) lockHandleField('setup'); else unlockHandleField('setup');
+    updateSetupLogoPreview();
+    updateSetupNextState();
+    updateSetupPinState();
+    document.getElementById('setup-step-1').style.display = 'flex';
+    document.getElementById('setup-step-2').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('setup-gate').style.display = 'flex';
+    document.getElementById('setup-gate').scrollTop = 0;
+  }
+
+  function updateSetupLogoPreview() {
+    document.getElementById('setup-logo-preview').src = document.getElementById('setup-logo-input').value.trim();
+  }
+
+  // "Next" stays disabled until every field is filled in AND the restaurant ID is confirmed free.
+  function updateSetupNextState() {
+    const filled = ['setup-name-input', 'setup-tagline-input', 'setup-logo-input', 'setup-address-input']
+      .every(id => document.getElementById(id).value.trim() !== '');
+    const handleOk = handleLocked() || handleStatus.setup === 'ok';
+    document.getElementById('setup-next-btn').disabled = !(filled && handleOk);
+  }
+  ['setup-name-input', 'setup-tagline-input', 'setup-logo-input', 'setup-address-input'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateSetupNextState);
+  });
+
+  function updateSetupPinState() {
+    document.getElementById('setup-continue-btn').disabled = !document.getElementById('setup-pin-input').value.trim();
+  }
+
+  // Reads the whole setup form into one profile object (nothing is sent anywhere here).
+  function readSetupProfile() {
+    const profile = {
+      name: document.getElementById('setup-name-input').value.trim(),
+      tagline: document.getElementById('setup-tagline-input').value.trim(),
+      logoUrl: document.getElementById('setup-logo-input').value.trim(),
+      address: document.getElementById('setup-address-input').value.trim(),
+      locationPin: document.getElementById('setup-pin-input').value.trim()
+    };
+    if (!handleLocked()) profile.handle = document.getElementById('setup-handle-input').value.trim().toLowerCase();
+    return profile;
+  }
+
+  // Step 1 -> step 2. NOTHING is saved here — the logo, name, ID and the rest of the form
+  // stay in the form, so the owner can still come back and change any of it (including the ID).
+  // Everything is saved in one go by finishSetup(), when they leave for the menu.
+  function completeSetup() {
+    const profile = readSetupProfile();
+    if (!profile.name || !profile.tagline || !profile.logoUrl || !profile.address || (!handleLocked() && !profile.handle)) {
+      document.getElementById('setup-error').textContent = 'Please fill in every field.';
+      return;
+    }
+    if (!handleLocked() && (!HANDLE_RE.test(profile.handle) || handleStatus.setup !== 'ok')) {
+      document.getElementById('setup-error').textContent = 'Please choose an available restaurant ID.';
+      return;
+    }
+    document.getElementById('setup-error').textContent = '';
+    document.getElementById('setup-step-1').style.display = 'none';
+    document.getElementById('setup-step-2').style.display = 'flex';
+    document.getElementById('setup-gate').scrollTop = 0;
+    updateSetupPinState();
+    initPicker('setup');
+  }
+
+  function backToStep1() {
+    document.getElementById('setup-step-2').style.display = 'none';
+    document.getElementById('setup-step-1').style.display = 'flex';
+    if (handleLocked()) lockHandleField('setup');   // only locks once it has really been saved
+    updateSetupNextState();
+  }
+
+  // Step 2 -> the menu: the ONE place the setup form is saved. withPin=false is "Skip for now"
+  // (everything except the location pin is saved).
+  let setupSaving = false;
+  async function finishSetup(withPin) {
+    if (setupSaving) return;
+    const profile = readSetupProfile();
+    if (withPin) {
+      if (!profile.locationPin) return;
+    } else {
+      profile.locationPin = restaurantProfile.locationPin || '';   // skipping must not save a pin
+    }
+    if (!profile.name || !profile.tagline || !profile.logoUrl || !profile.address || (!handleLocked() && !profile.handle)) {
+      backToStep1();
+      document.getElementById('setup-error').textContent = 'Please fill in every field.';
+      return;
+    }
+    if (!handleLocked() && !HANDLE_RE.test(profile.handle)) {
+      backToStep1();
+      setHandleStatus('setup', 'bad', 'Use 4–20 characters, starting with a letter.');
+      updateSetupNextState();
+      return;
+    }
+    setupSaving = true;
+    const ok = await saveRestaurantProfile(profile);
+    setupSaving = false;
+    if (!ok) {
+      // The server is the final judge of the ID (someone may have taken it a moment ago) —
+      // if it refused, send the owner back to fix it; nothing was saved.
+      backToStep1();
+      document.getElementById('setup-error').textContent = lastSaveError || 'Could not save — check your connection and try again.';
+      if (/taken|already|ID/i.test(lastSaveError)) setHandleStatus('setup', 'bad', lastSaveError);
+      updateSetupNextState();
+      return;
+    }
+    applyBrandHeader();
+    renderSettingsProfileFields();
+    document.getElementById('setup-gate').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    switchView('items');
+    renderLaunchCard();
+    showToast('Profile saved — now add at least 5 menu items to launch.');
+  }
+
+  /* ================= TAX SETTINGS (5% Government Commercial Tax) ================= */
+  // Saved on the restaurant as { enableTax: boolean, taxMode: 'inclusive' | 'exclusive' }. index.html reads
+  // them from GET /api/restaurant-info, and the server re-calculates the tax on every order.
+  // The toggle and the Inclusive / Exclusive buttons save the moment they're tapped.
+  let taxDraft = { enableTax: false, taxMode: 'inclusive' }, taxSaving = false, taxResave = false;
+  function renderTaxSettings() {
+    taxDraft = { enableTax: !!restaurantProfile.enableTax, taxMode: restaurantProfile.taxMode === 'exclusive' ? 'exclusive' : 'inclusive' };
+    paintTax();
+  }
+  function paintTax() {
+    document.getElementById('tax-enable-input').checked = taxDraft.enableTax;
+    document.getElementById('tax-mode-wrap').classList.toggle('show', taxDraft.enableTax);   // choices only appear when ON
+    document.getElementById('tax-opt-inclusive').classList.toggle('active', taxDraft.taxMode === 'inclusive');
+    document.getElementById('tax-opt-exclusive').classList.toggle('active', taxDraft.taxMode === 'exclusive');
+    document.getElementById('tax-card').classList.toggle('saving', taxSaving);
+  }
+  function onTaxToggle() { taxDraft.enableTax = document.getElementById('tax-enable-input').checked; paintTax(); saveTaxSettings(); }
+  function setTaxMode(mode) { if (taxDraft.taxMode === mode) return; taxDraft.taxMode = mode; paintTax(); saveTaxSettings(); }
+
+  async function saveTaxSettings() {
+    if (taxSaving) { taxResave = true; return; }
+    taxSaving = true; paintTax();
+    const sent = { enableTax: taxDraft.enableTax, taxMode: taxDraft.taxMode };
+    // /api/admin/restaurant-info always wants the name; the other profile fields are sent back unchanged.
+    const ok = await saveRestaurantProfile({
+      name: restaurantProfile.name, tagline: restaurantProfile.tagline,
+      logoUrl: restaurantProfile.logoUrl, address: restaurantProfile.address,
+      enableTax: sent.enableTax, taxMode: sent.taxMode
+    });
+    taxSaving = false;
+    if (taxResave) { taxResave = false; paintTax(); return saveTaxSettings(); }   // changed again while saving
+    if (ok) showToast(sent.enableTax ? (sent.taxMode === 'exclusive' ? 'Tax on — added at checkout.' : 'Tax on — included in prices.') : 'Tax is off.');
+    else { showToast(lastSaveError || 'Could not save — check your connection.'); renderTaxSettings(); }   // put the controls back to what's really saved
+    paintTax();
+  }
+
+  /* ================= LAUNCH (publish) ================= */
+  const MIN_ITEMS_TO_PUBLISH = 5;
+  function countMenuItems() {
+    return menuCategories.reduce((n, c) => n + ((c.items || []).length), 0);
+  }
+  // Lives at the bottom of the Menu tab and is redrawn every time the menu changes
+  // (see renderItemsView / renderItemGrid), so the count is always current.
+  function renderLaunchCard() {
+    const card = document.getElementById('launch-card');
+    if (!card) return;
+    if (restaurantProfile.isPublished) {      // already live: nothing to show, ever
+      card.style.display = 'none';
+      card.innerHTML = '';
+      return;
+    }
+    const n = countMenuItems();
+    const ready = n >= MIN_ITEMS_TO_PUBLISH;
+    const pct = Math.min(100, Math.round(n / MIN_ITEMS_TO_PUBLISH * 100));
+    card.style.display = 'block';
+    card.classList.toggle('done', ready);
+    card.innerHTML = `
+      <h3>${icon(ready ? 'check' : 'send')} ${ready ? 'Congratulations! Your menu is ready' : "Your restaurant isn't published yet"}</h3>
+      <p>${ready ? 'You added all the items you need. Tap below to go live — customers will be able to see your restaurant.' : `Customers can't see it until you launch. Add at least ${MIN_ITEMS_TO_PUBLISH} menu items first.`}</p>
+      <div class="launch-bar"><i style="width:${pct}%"></i></div>
+      <div class="launch-progress">${ready
+        ? `<span class="launch-done-badge">${icon('check')}</span><span>${MIN_ITEMS_TO_PUBLISH} of ${MIN_ITEMS_TO_PUBLISH} items added — ready to launch!</span>`
+        : `${Math.min(n, MIN_ITEMS_TO_PUBLISH)} of ${MIN_ITEMS_TO_PUBLISH} items added — add ${MIN_ITEMS_TO_PUBLISH - n} more`}</div>
+      <button class="btn btn-primary btn-wide" id="launch-btn" onclick="startLaunching()" ${ready ? '' : 'disabled'}>Start launching</button>`;
+  }
+  async function startLaunching() {
+    if (countMenuItems() < MIN_ITEMS_TO_PUBLISH) { showToast(`Add at least ${MIN_ITEMS_TO_PUBLISH} items first.`); return; }
+    const btn = document.getElementById('launch-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Launching…'; }
+    try {
+      await saveMenu(); // make sure the server has the latest items before it counts them
+      const res = await fetch(`${API_BASE}/api/admin/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantId: currentRestaurantId })
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || `Server returned ${res.status}`);
+      restaurantProfile.isPublished = true;
+      renderShareLink();
+      renderLaunchCard();                                     // removes the card for good
+      document.getElementById('launch-success').classList.add('open');
+    } catch (err) {
+      showToast("Couldn't launch: " + err.message);
+      renderLaunchCard();
+    }
+  }
+
+
+  /* ================= SHAREABLE DEEP LINK ================= */
+  // Opens the Mini App straight on this restaurant: index.html reads the part after "startapp=".
+  const SHARE_LINK_BASE = 'https://t.me/assichit_bot/tgipizza?startapp=';
+  function shareLinkFor(handle) { return SHARE_LINK_BASE + encodeURIComponent(handle); }
+  function renderShareLink() {
+    const box = document.getElementById('share-box');
+    if (!box) return;
+    box.style.display = restaurantProfile.handle ? 'flex' : 'none';   // the link needs the owner-chosen Restaurant ID
+    document.getElementById('share-tag').style.display = restaurantProfile.isPublished !== false ? 'none' : 'inline-block';
+  }
+  // Opens the phone's own share sheet (Telegram, WhatsApp, Facebook, TikTok ...). Where that isn't available
+  // (some desktop/WebView apps) the link is copied instead.
+  function shareRestaurantLink() {
+    const handle = restaurantProfile.handle;
+    if (!handle) return;
+    const shareUrl = shareLinkFor(handle);
+    const restaurantName = restaurantProfile.name || 'Our restaurant';
+    if (navigator.share) {
+      navigator.share({ title: restaurantName, text: 'Check out our menu on IWTEAT!', url: shareUrl })
+        .catch(() => {});                       // closing the share sheet without choosing isn't an error
+    } else {
+      copyTextToClipboard(shareUrl).then(ok => showToast(ok ? 'Link copied to clipboard!' : 'Could not copy — ' + shareUrl));
+    }
+  }
+  async function copyTextToClipboard(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+    try {                                       // some Telegram apps block the clipboard API
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  function renderSettingsProfileFields() {
+    document.getElementById('settings-name-input').value = restaurantProfile.name;
+    document.getElementById('settings-tagline-input').value = restaurantProfile.tagline;
+    document.getElementById('settings-logo-input').value = restaurantProfile.logoUrl;
+    document.getElementById('settings-address-input').value = restaurantProfile.address;
+    document.getElementById('settings-pin-input').value = restaurantProfile.locationPin || '';
+    document.getElementById('settings-pin-status').textContent = '';
+    if (handleLocked()) lockHandleField('settings'); else unlockHandleField('settings');
+    document.getElementById('hero-handle').textContent = restaurantProfile.handle ? 'ID: ' + restaurantProfile.handle : '';
+    renderShareLink();
+    document.getElementById('settings-logo-upload-status').textContent = '';
+    document.getElementById('settings-logo-upload-status').classList.remove('error');
+    updateSettingsLogoPreview();
+  }
+
+  function updateSettingsLogoPreview() {
+    document.getElementById('settings-logo-preview').src = document.getElementById('settings-logo-input').value.trim();
+  }
+
+  async function saveSettingsProfile() {
+    const name = document.getElementById('settings-name-input').value.trim();
+    if (!name) { showToast('Restaurant name is required.'); return; }
+    const profile = {
+      name,
+      tagline: document.getElementById('settings-tagline-input').value.trim(),
+      logoUrl: document.getElementById('settings-logo-input').value.trim(),
+      address: document.getElementById('settings-address-input').value.trim(),
+      locationPin: document.getElementById('settings-pin-input').value.trim()
+    };
+    if (!handleLocked()) {
+      const chosen = document.getElementById('settings-handle-input').value.trim();
+      if (chosen) {
+        if (handleStatus.settings !== 'ok') { showToast('Pick an available restaurant ID first (or leave it empty).'); return; }
+        profile.handle = chosen;
+      }
+    }
+    const ok = await saveRestaurantProfile(profile);
+    if (ok) {
+      renderSettingsProfileFields();
+      toggleProfileEdit(false);
+      applyBrandHeader();
+      showToast('Restaurant profile updated.');
+    }
+  }
+
+  /* ================= SYNC (server load/save) ================= */
+  function setSyncStatus(state, text) {
+    // The header that used to show this was removed — kept as a no-op so
+    // every loadMenu()/saveMenu() call site doesn't need its own guard.
+    const el = document.getElementById('sync-indicator');
+    if (!el) return;
+    el.className = state;
+    const t = document.getElementById('sync-text');
+    if (t) t.textContent = text;
+  }
+
+  async function loadMenu(manual = false) {
+    setSyncStatus('saving', 'Loading…');
+    try {
+      const res = await fetch(`${API_BASE}/api/menu?restaurant=${encodeURIComponent(currentRestaurantId)}`);
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const data = await res.json();
+      menuCategories = Array.isArray(data) ? data : [];
+      menuCategories.forEach(migrateCategoryOptionGroups);
+      setSyncStatus('saved', manual ? 'Reloaded' : 'Synced');
+      renderAll();
+    } catch (err) {
+      setSyncStatus('error', 'Offline');
+      showToast('Could not reach the server: ' + err.message);
+      menuCategories = menuCategories || [];
+      renderAll();
+    }
+  }
+
+  async function saveMenu() {
+    setSyncStatus('saving', 'Saving…');
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/menu-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantId: currentRestaurantId, menu: menuCategories })
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) throw new Error(result.error || `Server returned ${res.status}`);
+      setSyncStatus('saved', 'Saved · live for everyone');
+    } catch (err) {
+      setSyncStatus('error', 'Save failed');
+      showToast('Could not save: ' + err.message);
+    }
+  }
+
+  /* ================= NAV ================= */
+  function switchView(view) {
+    currentView = view;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`view-${view}`).classList.add('active');
+    document.getElementById(`tab-btn-${view}`).classList.add('active');
+    document.getElementById('app').classList.toggle('no-top-bar', view !== 'orders');   // name + Open/Busy pill: Orders tab only
+    if (typeof closeStatusMenu === 'function') closeStatusMenu();
+    if (view === 'items') renderItemsView();
+    if (view === 'orders') loadOrders();
+  }
+
+  function renderAll() {
+    renderItemsView();
+    renderLaunchCard();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+  }
+
+  function deleteCategory(index) {
+    const cat = menuCategories[index];
+    if (!confirm(`Delete "${cat.name}" and all ${cat.items.length} item(s) inside it? This can't be undone.`)) return;
+    menuCategories.splice(index, 1);
+    saveMenu();
+    renderAll();
+  }
+
+  /* ---- Category drawer ---- */
+  /* ================= SLIDE-OVER FORMS: scroll reset + Telegram Back button ================= */
+  const DRAWER_IDS = ['group-drawer-overlay', 'item-drawer-overlay', 'cat-drawer-overlay'];   // top-most first
+  const openDrawerIds = () => DRAWER_IDS.filter(id => document.getElementById(id).classList.contains('open'));
+
+  // The form must always open at the top. This runs AFTER the drawer is shown — a hidden element has no
+  // scroll position to reset, which is why resetting before opening wasn't enough.
+  function resetDrawerScroll(id) {
+    const ov = document.getElementById(id);
+    if (!ov) return;
+    const reset = () => {
+      ov.scrollTop = 0;
+      const drawer = ov.querySelector('.drawer'); if (drawer) drawer.scrollTop = 0;
+      const body = ov.querySelector('.drawer-body'); if (body) body.scrollTop = 0;
+    };
+    reset();
+    requestAnimationFrame(reset);
+  }
+  // Telegram's own Back arrow is visible exactly while a form is open.
+  function syncBackButton() {
+    if (!tg || !tg.BackButton) return;
+    if (openDrawerIds().length) tg.BackButton.show(); else tg.BackButton.hide();
+  }
+  function afterDrawerOpen(id) { resetDrawerScroll(id); syncBackButton(); }
+  // Back closes the top-most form only (an option group opens on top of an item/category). The category form
+  // still asks before throwing away unsaved changes; if you say no it simply stays open.
+  function handleTelegramBack() {
+    const top = openDrawerIds()[0];
+    if (top === 'group-drawer-overlay') closeGroupDrawer();
+    else if (top === 'item-drawer-overlay') closeItemDrawer();
+    else if (top === 'cat-drawer-overlay') closeCategoryDrawer();
+    syncBackButton();
+  }
+  if (tg && tg.BackButton) tg.BackButton.onClick(handleTelegramBack);
+
+  function openCategoryDrawer(index = null) {
+    if (index === null) {
+      catDraft = { editIndex: null, name: '', icon: '🍽️', sizeNames: [], optionGroups: [], defaultPrices: [], defaultFlatPrice: null };
+      document.getElementById('cat-drawer-title').textContent = 'New Category';
+    } else {
+      const cat = menuCategories[index];
+      const hasSizes = (cat.sizeNames || []).length > 0;
+      catDraft = {
+        editIndex: index,
+        name: cat.name, icon: cat.icon || '🍽️',
+        sizeNames: [...(cat.sizeNames || [])],
+        optionGroups: JSON.parse(JSON.stringify(cat.optionGroups || [])),
+        defaultPrices: hasSizes ? (cat.defaultPrices ? [...cat.defaultPrices] : cat.sizeNames.map(() => null)) : [],
+        defaultFlatPrice: hasSizes ? null : (cat.defaultFlatPrice != null ? cat.defaultFlatPrice : null)
+      };
+      document.getElementById('cat-drawer-title').textContent = `Edit "${cat.name}"`;
+    }
+    document.getElementById('cat-name-input').value = catDraft.name;
+    document.getElementById('cat-new-size-input').value = '';
+    document.getElementById('cat-add-size-btn').disabled = true;
+    renderCatSizeChips();
+    renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+    renderCatBulkPriceInputs();
+    // A previous category's drawer may have been left scrolled halfway down — reset so it always opens fresh.
+    document.getElementById('cat-drawer-overlay').classList.add('open');
+    afterDrawerOpen('cat-drawer-overlay');
+    catDraftSnapshot = JSON.stringify(collectCategoryFormState());
+  }
+  function toggleAddBtn(inputId, btnId) {
+    document.getElementById(btnId).disabled = !document.getElementById(inputId).value.trim();
+  }
+
+  // Everything a person can change on this drawer, gathered into one plain
+  // object — compared against a snapshot taken on open to warn before an
+  // unsaved edit is lost. Name/icon are read straight from the inputs since
+  // catDraft itself isn't updated until Save; everything else is already
+  // kept live on catDraft by the add/remove/update functions above.
+  function collectCategoryFormState() {
+    return {
+      name: document.getElementById('cat-name-input').value.trim(),
+      sizeNames: catDraft.sizeNames,
+      defaultPrices: catDraft.defaultPrices,
+      defaultFlatPrice: catDraft.defaultFlatPrice,
+      optionGroups: catDraft.optionGroups
+    };
+  }
+
+  function closeCategoryDrawer(force) {
+    if (!force && catDraft && catDraftSnapshot != null && JSON.stringify(collectCategoryFormState()) !== catDraftSnapshot) {
+      if (!confirm('You have unsaved changes to this category. Leave without saving?')) return;
+    }
+    document.getElementById('cat-drawer-overlay').classList.remove('open');
+    catDraft = null;
+    catDraftSnapshot = null;
+    syncBackButton();
+  }
+
+  function renderCatSizeChips() {
+    const box = document.getElementById('cat-size-chips');
+    if (catDraft.sizeNames.length === 0) {
+      box.innerHTML = `<span class="sub-hint">No sizes — items use one flat price.</span>`;
+      return;
+    }
+    box.innerHTML = catDraft.sizeNames.map((s, i) => `
+      <span class="chip">${escapeHtml(s)}<button onclick="removeSizeChip(${i})">×</button></span>
+    `).join('');
+  }
+  function addSizeChip() {
+    const input = document.getElementById('cat-new-size-input');
+    const name = input.value.trim();
+    if (!name) return;
+    if (catDraft.sizeNames.some(s => s.toLowerCase() === name.toLowerCase())) {
+      showToast('That size already exists.');
+      return;
+    }
+    catDraft.sizeNames.push(name);
+    if (!catDraft.defaultPrices) catDraft.defaultPrices = [];
+    catDraft.defaultPrices.push(null);
+    syncOptionGroupSizes(catDraft.optionGroups, catDraft.sizeNames);
+    input.value = '';
+    toggleAddBtn('cat-new-size-input', 'cat-add-size-btn');
+    renderCatSizeChips();
+    renderCatBulkPriceInputs();
+    renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+  }
+  function removeSizeChip(i) {
+    catDraft.sizeNames.splice(i, 1);
+    if (catDraft.defaultPrices) catDraft.defaultPrices.splice(i, 1);
+    syncOptionGroupSizes(catDraft.optionGroups, catDraft.sizeNames);
+    renderCatSizeChips();
+    renderCatBulkPriceInputs();
+    renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+  }
+
+  // Keeps every option's per-size `prices` array the same length/shape as
+  // the given sizeNames list whenever a size is added or removed, preserving
+  // prices for sizes that still exist. Shared by category and item drafts.
+  function syncOptionGroupSizes(groups, sizeNames) {
+    const n = sizeNames.length;
+    groups.forEach(g => {
+      g.options.forEach(opt => {
+        if (n > 0) {
+          const old = opt.prices || [];
+          opt.prices = sizeNames.map((_, i) => (old[i] !== undefined ? old[i] : null));
+          delete opt.price;
+        } else {
+          const firstSet = (opt.prices || []).find(p => p != null);
+          opt.price = firstSet != null ? firstSet : (opt.price || 0);
+          delete opt.prices;
+        }
+      });
+    });
+  }
+
+  // Compact card list shared by the category drawer and the item drawer —
+  // tapping a card reopens it in the Option Group drawer for editing.
+  function renderOptionGroupsList(containerId, groups, scope) {
+    const box = document.getElementById(containerId);
+    if (!groups.length) { box.innerHTML = `<p class="sub-hint">None yet.</p>`; return; }
+    box.innerHTML = groups.map(g => `
+      <div class="group-card" onclick="openGroupDrawer('${scope}','${g.id}')">
+        <div class="group-card-top">
+          <span class="group-card-icon">${icon(g.kind === 'single' ? 'circleDot' : 'checkSquare')}</span>
+          <span class="group-card-title">${escapeHtml(g.title || 'Untitled group')}</span>
+          <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? 'Required' : 'Optional'}</span>
+        </div>
+        <div class="group-card-sub">${g.options.length} option${g.options.length === 1 ? '' : 's'}</div>
+      </div>
+    `).join('');
+  }
+
+  // Writes catDraft's fields into menuCategories (creating the category if
+  // it's new) and returns the resulting category object, or null if the name
+  // is missing. Used by saveCategoryDrawer(), which also applies any
+  // checked "Price per size" defaults to the category's existing items.
+  function commitCategoryDraft() {
+    const name = document.getElementById('cat-name-input').value.trim();
+    if (!name) { showToast('Category name is required.'); return null; }
+    const icon = (catDraft.editIndex !== null && menuCategories[catDraft.editIndex] && menuCategories[catDraft.editIndex].icon) || '🍽️';   // no icon field any more: keep whatever an old category already has
+
+    let cat;
+    if (catDraft.editIndex === null) {
+      cat = {
+        id: 'cat-' + Date.now(),
+        name, icon,
+        sizeNames: catDraft.sizeNames,
+        optionGroups: catDraft.optionGroups,
+        defaultPrices: catDraft.defaultPrices,
+        defaultFlatPrice: catDraft.defaultFlatPrice,
+        items: []
+      };
+      menuCategories.push(cat);
+      activeItemCategoryId = cat.id;
+      catDraft.editIndex = menuCategories.length - 1;
+    } else {
+      cat = menuCategories[catDraft.editIndex];
+      cat.name = name;
+      cat.icon = icon;
+      cat.sizeNames = catDraft.sizeNames;
+      cat.optionGroups = catDraft.optionGroups;
+      cat.defaultPrices = catDraft.defaultPrices;
+      cat.defaultFlatPrice = catDraft.defaultFlatPrice;
+      // Keep every item's own `sizes` array in sync with the category's size
+      // names. A size with a price checked above always wins there — that's
+      // the point of checking it — otherwise the item keeps whatever price
+      // it already had (0 for a brand-new size). Items with their own
+      // customSizeNames override are left alone entirely.
+      cat.items.forEach(item => {
+        if (item.customSizeNames && item.customSizeNames.length) return;
+        if (cat.sizeNames.length === 0) {
+          if (cat.defaultFlatPrice != null) item.price = cat.defaultFlatPrice;
+          item.sizes = [];
+        } else {
+          const oldSizes = item.sizes || [];
+          item.sizes = cat.sizeNames.map((n, i) => {
+            const existing = oldSizes.find(s => s.name === n);
+            const def = (cat.defaultPrices || [])[i];
+            return { name: n, price: def != null ? def : (existing ? existing.price : 0) };
+          });
+          item.price = item.sizes[0].price;
+        }
+      });
+    }
+    return cat;
+  }
+
+  function saveCategoryDrawer() {
+    const cat = commitCategoryDraft();
+    if (!cat) return;
+    saveMenu();
+    closeCategoryDrawer(true);
+    renderAll();
+    showToast('Category saved.');
+  }
+
+  /* ---- Price per size (this category's default, and every new item's starting price) ---- */
+  /* ---- Price per size (this category's default, and every new item's starting price) ---- */
+  function renderCatBulkPriceInputs() {
+    const box = document.getElementById('cat-bulk-price-inputs');
+    if (catDraft.sizeNames.length === 0) {
+      const checked = catDraft.defaultFlatPrice != null;
+      box.innerHTML = `
+        <div class="size-check-row">
+          <label class="chk-label"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCatFlatPriceChk(this.checked)">Starting price for every item</label>
+          <input type="text" inputmode="numeric" class="price-input" id="cat-bulk-flat-price" placeholder="MMK" value="${checked ? priceText(catDraft.defaultFlatPrice) : ''}" ${checked ? '' : 'disabled'} oninput="updateCatFlatPrice(this.value)">
+        </div>`;
+    } else {
+      box.innerHTML = catDraft.sizeNames.map((n, i) => {
+        const val = (catDraft.defaultPrices || [])[i];
+        const checked = val != null;
+        return `
+          <div class="size-check-row">
+            <label class="chk-label"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCatSizePriceChk(${i},this.checked)">${escapeHtml(n)}</label>
+            <input type="text" inputmode="numeric" class="price-input cat-bulk-size-price" data-size-index="${i}" placeholder="MMK" value="${checked ? priceText(val) : ''}" ${checked ? '' : 'disabled'} oninput="updateCatDefaultPrice(${i},this.value)">
+          </div>`;
+      }).join('');
+    }
+  }
+  function toggleCatFlatPriceChk(on) {
+    catDraft.defaultFlatPrice = on ? 0 : null;
+    renderCatBulkPriceInputs();
+  }
+  function updateCatFlatPrice(value) {
+    catDraft.defaultFlatPrice = value === '' ? 0 : (parseInt(value, 10) || 0);
+  }
+  function toggleCatSizePriceChk(i, on) {
+    if (!catDraft.defaultPrices) catDraft.defaultPrices = catDraft.sizeNames.map(() => null);
+    catDraft.defaultPrices[i] = on ? 0 : null;
+    renderCatBulkPriceInputs();
+  }
+  function updateCatDefaultPrice(i, value) {
+    catDraft.defaultPrices[i] = value === '' ? 0 : (parseInt(value, 10) || 0);
+  }
+
+  /* ================= ITEMS VIEW ================= */
+  function renderItemsView() {
+    const tabsEl = document.getElementById('item-cat-tabs');
+    const addBtn = document.getElementById('add-item-btn');
+    if (menuCategories.length === 0) {
+      tabsEl.innerHTML = ADD_CHIP;
+      addBtn.disabled = true;
+      document.getElementById('cat-options-hint').textContent = '';
+      document.getElementById('item-grid').innerHTML = `<div class="empty-state"><div class="display">No categories yet</div>Tap “＋ Category” above to create your first one.</div>`;
+      renderLaunchCard();
+      return;
+    }
+    addBtn.disabled = false;
+    // Keep whichever category was already active if it still exists; otherwise
+    // default to the first one (covers first load and a deleted category).
+    if (!activeItemCategoryId || !menuCategories.some(c => c.id === activeItemCategoryId)) {
+      activeItemCategoryId = menuCategories[0].id;
+    }
+    tabsEl.innerHTML = menuCategories.map(c => `
+      <button class="cat-chip-tab ${c.id === activeItemCategoryId ? 'active' : ''}" data-id="${c.id}" onclick="selectItemCategory('${c.id}')">${escapeHtml(c.name)}</button>
+    `).join('') + ADD_CHIP;
+    renderCatOptionsHint();
+    renderItemGrid();
+  }
+  // Small line under the category bar: how many shared options (crust types,
+  // add-ons, etc.) the active category applies to every item inside it.
+  function renderCatOptionsHint() {
+    const hint = document.getElementById('cat-options-hint');
+    const cat = getSelectedCategory();
+    if (!cat) { hint.textContent = ''; return; }
+    const n = (cat.optionGroups || []).length;
+    hint.innerHTML = n > 0 ? `${icon('circleDot')} ${n} shared option group${n === 1 ? '' : 's'} apply to every item in "${escapeHtml(cat.name)}"` : '';
+  }
+  function selectItemCategory(catId) {
+    if (longPressed) { longPressed = false; return; }
+    activeItemCategoryId = catId;
+    renderItemsView();
+  }
+
+  function getSelectedCategory() {
+    return menuCategories.find(c => c.id === activeItemCategoryId) || menuCategories[0] || null;
+  }
+
+  const fmtMMK = n => Number(n || 0).toLocaleString('en-US');
+  function renderItemGrid() {
+    const cat = getSelectedCategory();
+    const grid = document.getElementById('item-grid');
+    if (!cat) { grid.innerHTML = ''; renderLaunchCard(); return; }
+    if (cat.items.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><div class="display">No items in "${escapeHtml(cat.name)}" yet</div>Tap "+ New Item" above to add the first dish.</div>`;
+      renderLaunchCard();
+      return;
+    }
+    grid.innerHTML = cat.items.map((item, i) => {
+      let priceLabel;
+      if (item.sizes && item.sizes.length > 0) {
+        const prices = item.sizes.map(s => s.price);
+        priceLabel = `${fmtMMK(Math.min(...prices))}–${fmtMMK(Math.max(...prices))} MMK`;
+      } else {
+        priceLabel = `${fmtMMK(item.price)} MMK`;
+      }
+      const optCount = (item.optionGroups || []).length;
+      return `
+        <div class="item-row ${item.soldOut ? 'sold' : ''}" onclick="openItemDrawer(${i})">
+          <div class="item-info">
+            ${item.image ? `<img class="item-thumb" src="${escapeHtml(item.image)}" onerror="this.style.opacity=0.25;">` : `<div class="item-thumb ph">${icon('utensils')}</div>`}
+            <div class="item-text">
+              <div class="item-name">${escapeHtml(item.name)}${optCount ? `<span class="item-badge">${optCount} option group${optCount===1?'':'s'}</span>` : ''}</div>
+              ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ''}
+              <div class="item-price">${priceLabel}</div>
+            </div>
+          </div>
+          <div class="item-actions">
+            <button class="btn btn-outline btn-icon btn-sm ${item.soldOut ? 'stock-off' : 'stock-on'}" title="${item.soldOut ? 'Sold out — tap to restock' : 'In stock — tap to mark sold out'}" onclick="event.stopPropagation(); toggleSoldOut(${i})">${icon(item.soldOut ? 'ban' : 'check')}</button>
+            <button class="btn btn-danger-ghost btn-icon btn-sm" title="Delete" onclick="event.stopPropagation(); deleteItem(${i})">${icon('trash')}</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    renderLaunchCard();
+  }
+
+  function deleteItem(itemIndex) {
+    const cat = getSelectedCategory();
+    if (!cat) return;
+    if (!confirm(`Delete "${cat.items[itemIndex].name}"?`)) return;
+    cat.items.splice(itemIndex, 1);
+    saveMenu();
+    renderItemGrid();
+  }
+
+  /* ---- Price fields: digits only, never starting with 0, always an "MMK" placeholder ---- */
+  // 0 / empty is shown as an empty box (the "MMK" placeholder) so a price can never be displayed starting with 0.
+  function priceText(v) { return v ? String(v) : ''; }
+  // Runs in the capture phase, i.e. BEFORE each field's own oninput, so those handlers always read the cleaned value.
+  document.addEventListener('input', e => {
+    const el = e.target;
+    if (!el || !el.classList || !el.classList.contains('price-input')) return;
+    const cleaned = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9);
+    if (el.value !== cleaned) el.value = cleaned;
+  }, true);
+  const PRICE_OK = /^[1-9]\d{0,8}$/;
+
+  /* ---- Item drawer ---- */
+  function openItemDrawer(itemIndex) {
+    const cat = getSelectedCategory();
+    if (!cat) { showToast('Create a category first.'); return; }
+    const catSizeNames = cat.sizeNames || [];
+
+    if (itemIndex === null) {
+      // New items start pre-filled with this category's "Price per size"
+      // defaults (set in the category drawer), so a restaurant doesn't have
+      // to retype the same prices for every dish in a category.
+      const catDefaults = cat.defaultPrices || [];
+      itemDraft = {
+        catId: cat.id, editIndex: null, usingCustomSizes: false, sizeNames: [...catSizeNames],
+        name: '', description: '', image: '', time: '15 mins',
+        price: cat.defaultFlatPrice != null ? cat.defaultFlatPrice : 0,
+        sizes: catSizeNames.map((n, i) => ({ name: n, price: catDefaults[i] != null ? catDefaults[i] : 0 })),
+        optionGroups: []
+      };
+      document.getElementById('item-drawer-title').textContent = 'New Item';
+    } else {
+      const item = cat.items[itemIndex];
+      const usingCustomSizes = !!(item.customSizeNames && item.customSizeNames.length);
+      const effectiveSizeNames = usingCustomSizes ? item.customSizeNames : catSizeNames;
+      itemDraft = {
+        catId: cat.id, editIndex: itemIndex, usingCustomSizes, sizeNames: [...effectiveSizeNames],
+        name: item.name, description: item.description || '', image: item.image || '',
+        time: item.time || '15 mins',
+        price: item.price || 0,
+        sizes: effectiveSizeNames.map(n => {
+          const existing = (item.sizes || []).find(s => s.name === n);
+          return { name: n, price: existing ? existing.price : 0 };
+        }),
+        optionGroups: JSON.parse(JSON.stringify(item.optionGroups || []))
+      };
+      document.getElementById('item-drawer-title').textContent = `Edit "${item.name}"`;
+    }
+
+    document.getElementById('item-image-input').value = itemDraft.image;
+    document.getElementById('item-name-input').value = itemDraft.name;
+    document.getElementById('item-desc-input').value = itemDraft.description;
+    setPrepTimeSelect(itemDraft.time);
+    updateDescCount();
+    document.getElementById('item-new-size-input').value = '';
+    document.getElementById('item-add-size-btn').disabled = true;
+    document.getElementById('upload-status').textContent = '';
+    document.getElementById('upload-status').classList.remove('error');
+    updateItemImagePreview();
+    renderItemSizeChips();
+    renderItemPriceInputs();
+    renderInheritedGroups();
+    renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+    // A previous item's drawer may have been left scrolled halfway down — reset so New Item always opens fresh.
+    document.getElementById('item-drawer-overlay').classList.add('open');
+    afterDrawerOpen('item-drawer-overlay');
+  }
+  // Fixed prep-time choices; an older item whose saved time isn't one of them keeps it as an extra option.
+  function setPrepTimeSelect(value) {
+    const sel = document.getElementById('item-time-input');
+    sel.querySelectorAll('option[data-extra]').forEach(o => o.remove());
+    if (value && ![...sel.options].some(o => o.value === value)) {
+      const o = document.createElement('option');
+      o.value = value; o.textContent = value + ' (current)'; o.setAttribute('data-extra', '1');
+      sel.appendChild(o);
+    }
+    sel.value = value || '15 mins';
+  }
+  const ITEM_DESC_MAX = 150;
+  function updateDescCount() {
+    const len = document.getElementById('item-desc-input').value.length;
+    const el = document.getElementById('item-desc-count');
+    el.textContent = len + '/' + ITEM_DESC_MAX;
+    el.style.color = len > ITEM_DESC_MAX ? 'var(--brick)' : '';
+  }
+  // "Save Item" stays disabled until the name, the description and EVERY price box are filled in.
+  function itemFormComplete() {
+    if (!document.getElementById('item-name-input').value.trim()) return false;
+    if (!document.getElementById('item-desc-input').value.trim()) return false;
+    const prices = [...document.querySelectorAll('#item-price-inputs .price-input')];
+    return prices.length > 0 && prices.every(inp => PRICE_OK.test(inp.value.trim()));
+  }
+  function updateItemSaveState() {
+    const btn = document.getElementById('item-save-btn');
+    if (btn) btn.disabled = !itemFormComplete();
+  }
+  document.getElementById('item-price-inputs').addEventListener('input', updateItemSaveState);
+  function closeItemDrawer() {
+    document.getElementById('item-drawer-overlay').classList.remove('open');
+    itemDraft = null;
+    syncBackButton();
+  }
+  function updateItemImagePreview() {
+    const url = document.getElementById('item-image-input').value.trim();
+    const img = document.getElementById('item-image-preview');
+    img.style.opacity = 1;
+    img.src = url;
+  }
+
+  // Read-only preview of the category's own option groups, shown in the item
+  // drawer so a restaurant can see what's already offered on every item in
+  // this category without having to leave and check the Category drawer.
+  // Editing them happens only in the Category drawer — one source of truth
+  // for anything shared across every item.
+  function renderInheritedGroups() {
+    const cat = menuCategories.find(c => c.id === itemDraft.catId);
+    const groups = (cat && cat.optionGroups) || [];
+    const field = document.getElementById('item-inherited-groups-field');
+    const box = document.getElementById('item-inherited-groups-list');
+    if (!groups.length) { field.style.display = 'none'; return; }
+    field.style.display = '';
+    box.innerHTML = groups.map(g => `
+      <div class="group-card group-card-readonly">
+        <div class="group-card-top">
+          <span class="group-card-icon">${icon(g.kind === 'single' ? 'circleDot' : 'checkSquare')}</span>
+          <span class="group-card-title">${escapeHtml(g.title || 'Untitled group')}</span>
+          <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? 'Required' : 'Optional'}</span>
+        </div>
+        <div class="group-card-sub">${g.options.length} option${g.options.length === 1 ? '' : 's'} · edit in this category's settings</div>
+      </div>
+    `).join('');
+  }
+
+  /* ---- Item-level size override (overwrites the category's sizes for just this item) ---- */
+  function renderItemSizeChips() {
+    const box = document.getElementById('item-size-chips');
+    const hintEl = document.getElementById('item-size-inherit-hint');
+    const resetBtn = document.getElementById('item-reset-sizes-btn');
+    const cat = menuCategories.find(c => c.id === itemDraft.catId);
+    const catSizeNames = (cat && cat.sizeNames) || [];
+
+    box.innerHTML = itemDraft.sizeNames.length === 0
+      ? `<span class="sub-hint">No sizes — flat price.</span>`
+      : itemDraft.sizeNames.map((s, i) => `<span class="chip">${escapeHtml(s)}<button onclick="removeItemSizeChip(${i})">×</button></span>`).join('');
+
+    if (itemDraft.usingCustomSizes) {
+      hintEl.textContent = catSizeNames.length
+        ? `Using this item's own sizes instead of the category's (${catSizeNames.join(', ') || 'none'}).`
+        : `Using this item's own sizes.`;
+      resetBtn.style.display = catSizeNames.length ? 'inline-flex' : 'none';
+    } else {
+      hintEl.textContent = catSizeNames.length
+        ? `Currently using this category's sizes. Add a size below to override it just for this item.`
+        : `This category has no sizes — add one below to give just this item its own sizes.`;
+      resetBtn.style.display = 'none';
+    }
+  }
+
+  // Reads whatever is currently typed in the price/option inputs into itemDraft
+  // before the size list changes and those inputs get rebuilt — otherwise any
+  // unsaved prices the admin just typed would be lost the moment they add or
+  // remove a size chip.
+  function captureItemPricingFromDom() {
+    if (itemDraft.sizeNames.length === 0) {
+      const flat = document.getElementById('item-flat-price');
+      if (flat) itemDraft.price = parseInt(flat.value, 10) || 0;
+    } else {
+      document.querySelectorAll('.item-size-price').forEach((inp, i) => {
+        if (itemDraft.sizes[i]) itemDraft.sizes[i].price = parseInt(inp.value, 10) || 0;
+      });
+    }
+  }
+
+  function syncItemSizesArray() {
+    itemDraft.sizes = itemDraft.sizeNames.map(n => {
+      const existing = itemDraft.sizes.find(s => s.name === n);
+      return { name: n, price: existing ? existing.price : 0 };
+    });
+    syncOptionGroupSizes(itemDraft.optionGroups, itemDraft.sizeNames);
+  }
+
+  function refreshItemSizeDependentUI() {
+    renderItemSizeChips();
+    renderItemPriceInputs();
+    renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+  }
+
+  function addItemSizeChip() {
+    const input = document.getElementById('item-new-size-input');
+    const name = input.value.trim();
+    if (!name) return;
+    if (itemDraft.sizeNames.some(s => s.toLowerCase() === name.toLowerCase())) {
+      showToast('That size already exists.');
+      return;
+    }
+    captureItemPricingFromDom();
+    itemDraft.usingCustomSizes = true;
+    itemDraft.sizeNames.push(name);
+    syncItemSizesArray();
+    input.value = '';
+    toggleAddBtn('item-new-size-input', 'item-add-size-btn');
+    refreshItemSizeDependentUI();
+  }
+  function removeItemSizeChip(i) {
+    captureItemPricingFromDom();
+    itemDraft.usingCustomSizes = true;
+    itemDraft.sizeNames.splice(i, 1);
+    syncItemSizesArray();
+    refreshItemSizeDependentUI();
+  }
+  function resetItemSizesToCategory() {
+    const cat = menuCategories.find(c => c.id === itemDraft.catId);
+    itemDraft.usingCustomSizes = false;
+    itemDraft.sizeNames = [...((cat && cat.sizeNames) || [])];
+    syncItemSizesArray();
+    refreshItemSizeDependentUI();
+  }
+
+  // ---------------------------------------------------------------------
+  // Direct photo upload (menu items AND restaurant logo), via Cloudinary's
+  // unsigned upload API. CLOUD_NAME and UPLOAD_PRESET are not secret —
+  // they're meant to be used from client-side code like this; Cloudinary
+  // enforces what an unsigned preset is allowed to do (file size/type
+  // limits, target folder) on their end, not via a hidden key here.
+  //
+  // On success, the returned secure_url is written straight into whichever
+  // URL field this upload is for, so saving (saveItemDrawer,
+  // saveRestaurantProfile) doesn't need to know or care whether the image
+  // was uploaded or pasted in — it's just a URL string either way.
+  // ---------------------------------------------------------------------
+  const CLOUDINARY_CLOUD_NAME = 'kskw3szk';
+  const CLOUDINARY_UPLOAD_PRESET = 'menu_item_upload';
+
+  async function uploadImageFile(file, { previewElId, urlInputElId, statusElId, btnElId }) {
+    const img = document.getElementById(previewElId);
+    const statusEl = statusElId ? document.getElementById(statusElId) : null;
+    const btn = btnElId ? document.getElementById(btnElId) : null;
+
+    // Show the picked photo immediately via a local object URL, so there's
+    // no blank/stale thumbnail while the upload is in flight.
+    img.style.opacity = 1;
+    img.src = URL.createObjectURL(file);
+
+    if (statusEl) { statusEl.textContent = 'Uploading…'; statusEl.classList.remove('error'); }
+    if (btn) btn.disabled = true;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.secure_url) {
+        throw new Error((data.error && data.error.message) || 'Upload failed');
+      }
+
+      const urlInput = document.getElementById(urlInputElId);
+      urlInput.value = data.secure_url;
+      urlInput.dispatchEvent(new Event('input'));
+      img.src = data.secure_url;
+      if (statusEl) statusEl.textContent = '✓ Uploaded';
+    } catch (err) {
+      console.error('Cloudinary upload failed:', err);
+      if (statusEl) { statusEl.textContent = 'Upload failed — try again.'; statusEl.classList.add('error'); }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function handleItemImageFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    uploadImageFile(file, { previewElId: 'item-image-preview', urlInputElId: 'item-image-input', statusElId: 'upload-status', btnElId: 'upload-photo-btn' });
+    event.target.value = ''; // allows re-selecting the same file if retrying
+  }
+
+  function handleSetupLogoFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    uploadImageFile(file, { previewElId: 'setup-logo-preview', urlInputElId: 'setup-logo-input', statusElId: 'setup-logo-upload-status', btnElId: 'setup-logo-upload-btn' });
+    event.target.value = '';
+  }
+
+  function handleSettingsLogoFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    uploadImageFile(file, { previewElId: 'settings-logo-preview', urlInputElId: 'settings-logo-input', statusElId: 'settings-logo-upload-status', btnElId: 'settings-logo-upload-btn' });
+    event.target.value = '';
+  }
+
+  function renderItemPriceInputs() {
+    const label = document.getElementById('item-price-label');
+    const box = document.getElementById('item-price-inputs');
+    if (itemDraft.sizeNames.length === 0) {
+      label.textContent = 'Price (MMK)';
+      box.innerHTML = `<input type="text" inputmode="numeric" class="price-input" id="item-flat-price" placeholder="MMK" autocomplete="off" value="${priceText(itemDraft.price)}">`;
+    } else {
+      label.textContent = 'Price per size (MMK)';
+      box.innerHTML = `<div class="size-price-grid">` + itemDraft.sizeNames.map((n, i) => `
+        <div class="size-price-cell">
+          <label>${escapeHtml(n)}</label>
+          <input type="text" inputmode="numeric" data-size-index="${i}" class="price-input item-size-price" placeholder="MMK" autocomplete="off" value="${priceText(itemDraft.sizes[i].price)}">
+        </div>
+      `).join('') + `</div>`;
+    }
+    updateItemSaveState();
+  }
+
+  function saveItemDrawer() {
+    const name = document.getElementById('item-name-input').value.trim();
+    if (!name) { showToast('Item name is required.'); return; }
+    if (!itemFormComplete()) { showToast('Fill in the name, description and price first.'); return; }
+    const descText = document.getElementById('item-desc-input').value.trim();
+    if (descText.length > ITEM_DESC_MAX) { showToast(`Description must be ${ITEM_DESC_MAX} characters or fewer (now ${descText.length}).`); return; }
+    const cat = menuCategories.find(c => c.id === itemDraft.catId);
+    if (!cat) return;
+
+    const item = {
+      id: itemDraft.editIndex === null ? Date.now() : cat.items[itemDraft.editIndex].id,
+      name,
+      soldOut: itemDraft.editIndex === null ? false : !!cat.items[itemDraft.editIndex].soldOut,
+      description: descText,
+      image: document.getElementById('item-image-input').value.trim(),
+      time: document.getElementById('item-time-input').value || '15 mins',
+      optionGroups: itemDraft.optionGroups
+    };
+
+    // Only stamp customSizeNames when this item actually overrides the
+    // category's sizes — its absence is what lets the item keep inheriting
+    // the category's sizes automatically in the future (see saveCategoryDrawer).
+    if (itemDraft.usingCustomSizes) {
+      item.customSizeNames = [...itemDraft.sizeNames];
+    }
+
+    if (itemDraft.sizeNames.length === 0) {
+      item.price = parseInt(document.getElementById('item-flat-price').value, 10) || 0;
+      item.sizes = [];
+    } else {
+      const sizeInputs = document.querySelectorAll('.item-size-price');
+      const sizes = itemDraft.sizeNames.map((n, i) => ({ name: n, price: parseInt(sizeInputs[i].value, 10) || 0 }));
+      item.sizes = sizes;
+      item.price = sizes[0].price;
+    }
+
+    if (itemDraft.editIndex === null) cat.items.push(item);
+    else cat.items[itemDraft.editIndex] = item;
+
+    saveMenu();
+    closeItemDrawer();
+    renderItemGrid();
+    showToast('Item saved.');
+  }
+
+  /* ================= OPTION GROUP DRAWER ================= */
+  // Opened from either the Category drawer or the Item drawer (see
+  // groupDraftCtx.scope) to add or edit one option group in its own page,
+  // on top of whichever drawer is open underneath. Saving here only writes
+  // into that parent drawer's in-memory draft — nothing reaches the server
+  // until the parent's own Save button is pressed.
+  function groupDraftSizeNames() {
+    return groupDraftCtx.scope === 'category' ? catDraft.sizeNames : itemDraft.sizeNames;
+  }
+  function openGroupDrawer(scope, groupId, kindIfNew) {
+    const parentDraft = scope === 'category' ? catDraft : itemDraft;
+    groupDraftCtx = { scope };
+    if (groupId === null) {
+      groupDraft = { id: newGroupId(), kind: kindIfNew, title: '', required: false, options: [] };
+      document.getElementById('group-drawer-title').textContent = kindIfNew === 'single' ? 'New Single-choice Group' : 'New Add-on Group';
+      document.getElementById('group-delete-btn').style.display = 'none';
+    } else {
+      const existing = parentDraft.optionGroups.find(g => g.id === groupId);
+      if (!existing) return;
+      groupDraft = JSON.parse(JSON.stringify(existing));
+      document.getElementById('group-drawer-title').textContent = `Edit "${existing.title || 'Option Group'}"`;
+      document.getElementById('group-delete-btn').style.display = '';
+    }
+    document.getElementById('group-title-input').value = groupDraft.title;
+    document.getElementById('group-required-input').checked = !!groupDraft.required;
+    document.getElementById('group-required-hint').textContent =
+      groupDraft.kind === 'single' ? '(customer must pick exactly one)' : '(customer must pick at least one)';
+    renderGroupOptionsList();
+    document.getElementById('group-drawer-overlay').classList.add('open');
+    afterDrawerOpen('group-drawer-overlay');
+  }
+  function closeGroupDrawer() {
+    document.getElementById('group-drawer-overlay').classList.remove('open');
+    groupDraft = null;
+    groupDraftCtx = null;
+    syncBackButton();
+  }
+  function renderGroupOptionsList() {
+    const box = document.getElementById('group-options-list');
+    const sizeNames = groupDraftSizeNames();
+    if (!groupDraft.options.length) { box.innerHTML = `<p class="sub-hint">None yet.</p>`; return; }
+    const hasSizes = sizeNames.length > 0;
+    box.innerHTML = groupDraft.options.map((opt, i) => {
+      const priceInputs = hasSizes
+        ? `<div>` + sizeNames.map((n, si) => {
+            const val = opt.prices ? opt.prices[si] : null;
+            const checked = val != null;
+            return `
+              <div class="size-check-row">
+                <label class="chk-label"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleGroupOptionSizeChk(${i},${si},this.checked)">${escapeHtml(n)}</label>
+                <input type="text" inputmode="numeric" class="price-input" placeholder="MMK" value="${checked ? priceText(val) : ''}" ${checked ? '' : 'disabled'} oninput="updateGroupOptionPrice(${i},${si},this.value)">
+              </div>`;
+          }).join('') + `</div>`
+        : `<div class="option-price-grid"><div><label>Price (MMK)</label><input type="text" inputmode="numeric" class="price-input" placeholder="MMK" value="${priceText(opt.price)}" oninput="updateGroupOptionFlatPrice(${i},this.value)"></div></div>`;
+      return `
+        <div class="option-row">
+          <div class="option-row-top">
+            <input type="text" value="${escapeHtml(opt.name)}" placeholder="Option name" oninput="updateGroupOptionName(${i},this.value)">
+            <button class="btn btn-danger-ghost btn-icon btn-sm" onclick="removeGroupOption(${i})">${icon('trash')}</button>
+          </div>
+          ${priceInputs}
+        </div>
+      `;
+    }).join('');
+  }
+  function addGroupOption() {
+    const sizeNames = groupDraftSizeNames();
+    groupDraft.options.push(sizeNames.length ? { name: '', prices: sizeNames.map(() => null) } : { name: '', price: 0 });
+    renderGroupOptionsList();
+  }
+  function updateGroupOptionName(i, value) { groupDraft.options[i].name = value; }
+  function updateGroupOptionFlatPrice(i, value) { groupDraft.options[i].price = parseInt(value, 10) || 0; }
+  function toggleGroupOptionSizeChk(i, si, on) {
+    const opt = groupDraft.options[i];
+    if (!opt.prices) opt.prices = groupDraftSizeNames().map(() => null);
+    opt.prices[si] = on ? 0 : null;
+    renderGroupOptionsList();
+  }
+  function updateGroupOptionPrice(i, si, value) {
+    const opt = groupDraft.options[i];
+    if (!opt.prices) opt.prices = groupDraftSizeNames().map(() => null);
+    opt.prices[si] = value === '' ? 0 : (parseInt(value, 10) || 0);
+  }
+  function removeGroupOption(i) {
+    groupDraft.options.splice(i, 1);
+    renderGroupOptionsList();
+  }
+  function saveGroupDrawer() {
+    const title = document.getElementById('group-title-input').value.trim();
+    if (!title) { showToast('Group title is required.'); return; }
+    groupDraft.title = title;
+    groupDraft.required = document.getElementById('group-required-input').checked;
+
+    const parentDraft = groupDraftCtx.scope === 'category' ? catDraft : itemDraft;
+    const idx = parentDraft.optionGroups.findIndex(g => g.id === groupDraft.id);
+    if (idx >= 0) parentDraft.optionGroups[idx] = groupDraft;
+    else parentDraft.optionGroups.push(groupDraft);
+
+    const scope = groupDraftCtx.scope;
+    closeGroupDrawer();
+    if (scope === 'category') renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+    else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+  }
+  function deleteGroupFromDrawer() {
+    if (!confirm('Delete this option group?')) return;
+    const parentDraft = groupDraftCtx.scope === 'category' ? catDraft : itemDraft;
+    parentDraft.optionGroups = parentDraft.optionGroups.filter(g => g.id !== groupDraft.id);
+    const scope = groupDraftCtx.scope;
+    closeGroupDrawer();
+    if (scope === 'category') renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+    else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+  }
+
+  /* ================= SETTINGS ================= */
+  function exportMenuBackup() {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(menuCategories, null, 2));
+    const anchor = document.createElement('a');
+    anchor.setAttribute('href', dataStr);
+    anchor.setAttribute('download', 'menu_backup.json');
+    anchor.click();
+  }
+  function importMenuBackup() {
+    const jsonStr = prompt('Paste your exported JSON here:');
+    if (!jsonStr) return;
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (!Array.isArray(parsed)) throw new Error('Expected a JSON array of categories.');
+      menuCategories = parsed;
+      saveMenu();
+      renderAll();
+      showToast('Menu imported.');
+    } catch (e) {
+      showToast('Invalid JSON: ' + e.message);
+    }
+  }
+  /* ================= ORDERS ================= */
+  let ordersData = [], ordersScope = 'current', historyRange = 1, seenOrders = new Set(), ordersFirst = true, ordersTimer = null;
+  const CURRENT = ['restaurant_pending', 'awaiting_rider', 'rider_assigned'];
+  const STATUS = { restaurant_pending: ['New', 'new'], awaiting_rider: ['Finding rider', 'wait'], rider_assigned: ['Rider assigned', 'wait'],
+                   delivered: ['Delivered', 'ok'], order_rejected: ['Rejected', 'bad'], user_canceled: ['Canceled', 'bad'] };
+  const money = n => (Number(n) || 0).toLocaleString();
+
+  function adminHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (tg && tg.initData) h['X-Telegram-Init-Data'] = tg.initData;
+    return h;
+  }
+  function startOrders() {
+    loadOrders(); clearInterval(ordersTimer);
+    ordersTimer = setInterval(() => { if (!document.hidden) loadOrders(); }, 10000);
+  }
+  async function loadOrders() {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/orders?days=30`, { headers: adminHeaders() });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+      if (ordersScope === 'settlements') loadSettlements(true);
+      if (d.serverNow) serverOffset = d.serverNow - Date.now() / 1000;
+      ordersData = d.orders;
+      reapplyPendingPrep();
+      const fresh = ordersData.filter(o => o.status === 'restaurant_pending' && !seenOrders.has(o.orderId));
+      fresh.forEach(o => seenOrders.add(o.orderId));
+      if (fresh.length && !ordersFirst) { beep(); tg?.HapticFeedback?.notificationOccurred('success'); showToast('New order ' + fresh[0].orderId); }
+      ordersFirst = false;
+      const n = ordersData.filter(o => o.status === 'restaurant_pending').length, b = document.getElementById('orders-badge');
+      b.textContent = n; b.style.display = n ? 'block' : 'none';
+      renderOrders();
+    } catch (e) {
+      if (ordersFirst) document.getElementById('orders-list').innerHTML = `<div class="empty-state"><div class="display">Can't load orders</div>${escapeHtml(String(e.message || e))}</div>`;
+    }
+  }
+  function beep() {
+    try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
+      o.connect(g); g.connect(c.destination); o.frequency.value = 880; g.gain.value = 0.15; o.start(); o.stop(c.currentTime + 0.25); } catch (e) {}
+  }
+  function setOrdersScope(sc) {
+    ordersScope = sc;
+    document.getElementById('seg-current').classList.toggle('active', sc === 'current');
+    document.getElementById('seg-history').classList.toggle('active', sc === 'history');
+    document.getElementById('seg-settle').classList.toggle('active', sc === 'settlements');
+    document.getElementById('history-summary').style.display = sc === 'history' ? 'block' : 'none';
+    document.getElementById('orders-list').style.display = sc === 'settlements' ? 'none' : '';
+    document.getElementById('settle-view').style.display = sc === 'settlements' ? 'block' : 'none';
+    if (sc === 'settlements') loadSettlements(); else renderOrders();
+  }
+  function setHistoryRange(r) {
+    historyRange = r;
+    document.querySelectorAll('#history-summary .cat-chip-tab').forEach(b => b.classList.toggle('active', +b.dataset.r === r));
+    renderOrders();
+  }
+  function ago(ts) {
+    const m = Math.max(0, Math.round((Date.now() / 1000 - ts) / 60));
+    if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; if (m < 1440) return Math.floor(m / 60) + ' h ago';
+    return new Date(ts * 1000).toLocaleDateString();
+  }
+  function orderBody(o) {
+    const items = o.items.map(i => `<div class="o-item"><b>${i.quantity}×</b> ${escapeHtml(i.name)}${i.options && i.options !== 'Standard' ? `<div class="o-opt">${escapeHtml(i.options).replace(/ \| /g, ' · ')}</div>` : ''}</div>`).join('');
+    const phone = o.customerPhone ? `<a href="tel:${escapeHtml(o.customerPhone)}">${icon('call')} ${escapeHtml(o.customerPhone)}</a>` : '';
+    return `<div class="o-who">${escapeHtml(o.customerName)}${phone}</div>
+      <div class="o-addr">${o.address ? icon('pin') + ' ' + escapeHtml(o.address) : icon('package') + ' Pickup'}</div>${o.note ? `<div class="o-note">${icon('clipboard')} ${escapeHtml(o.note)}</div>` : ''}${items}
+      <div class="o-foot"><span>${escapeHtml((o.paymentMethod || '').toUpperCase())}${o.riderName ? ' · ' + icon('bike') + ' ' + escapeHtml(o.riderName) : ''}</span><b>${money(o.total)} MMK</b></div>`;
+  }
+  // Left stripe: red = new, orange = preparing, green = ready for the rider
+  function cardState(o) {
+    if (o.status === 'restaurant_pending') return 'new st-new';
+    return o.readyAt ? 'st-ready' : 'st-prep';
+  }
+  const isPickup = o => o.deliveryMethod === 'pickup';
+  function orderHead(o) {
+    let [label, cls] = STATUS[o.status] || [o.status, 'wait'];
+    if (isPickup(o) && o.status === 'awaiting_rider') label = 'Preparing';          // Self-pick up has no rider to find
+    const method = isPickup(o) ? `<span class="mchip pickup">Self-pick up</span>` : `<span class="mchip">Delivery</span>`;
+    return `<div class="o-top"><span><span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span><span class="pill ${o.readyAt && CURRENT.includes(o.status) ? 'ok' : cls}">${o.readyAt && CURRENT.includes(o.status) ? 'Ready' : label}</span></div>`;
+  }
+  function renderOrders() {
+    if (ordersScope === 'settlements') return;       // that tab draws itself (renderSettlements)
+    const box = document.getElementById('orders-list');
+    if (ordersScope === 'current') {
+      const list = ordersData.filter(o => CURRENT.includes(o.status)).sort((a, b) => (a.status === 'restaurant_pending' ? 0 : 1) - (b.status === 'restaurant_pending' ? 0 : 1));
+      box.innerHTML = list.length ? list.map(o => `<div class="o-card ${cardState(o)}">${orderHead(o)}${prepTimerHtml(o)}${orderBody(o)}${
+        o.status === 'restaurant_pending'
+          ? `<div class="o-actions"><button class="btn btn-danger-ghost" onclick="orderAction('${o.orderId}','reject')">Reject</button><button class="btn btn-primary" onclick="orderAction('${o.orderId}','accept')">Accept</button></div>`
+          : (o.readyAt
+              ? (isPickup(o) ? `<div class="o-actions"><button class="btn btn-primary" onclick="orderAction('${o.orderId}','handover')">${icon('check')} Picked up</button></div>` : '')
+              : `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} Mark ready</button></div>`)}</div>`).join('')
+        : `<div class="empty-state"><div class="display">No active orders</div>New orders appear here with a sound alert.</div>`;
+      tickPrep();
+      return;
+    }
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+    const since = historyRange === 1 ? d0.getTime() / 1000 : Date.now() / 1000 - historyRange * 86400;
+    const list = ordersData.filter(o => !CURRENT.includes(o.status) && o.createdAt >= since);
+    const done = list.filter(o => o.status === 'delivered');
+    document.getElementById('st-count').textContent = done.length;
+    document.getElementById('st-rev').textContent = money(done.reduce((t, o) => t + (Number(o.total) || 0), 0));
+    box.innerHTML = list.length ? list.map(o => `<details class="o-card"><summary>${orderHead(o)}${settleBadgeRow(o)}</summary>${orderBody(o)}${finRow(o)}</details>`).join('')
+      : `<div class="empty-state"><div class="display">No orders in this period</div></div>`;
+  }
+
+  /* ================= SETTLEMENTS (what the platform owes this restaurant) ================= */
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtDay = ymd => { const [, m, d] = String(ymd || '').split('-'); return m ? MONTHS[+m - 1] + ' ' + d : ''; };
+  const fmtTsDay = ts => { const d = new Date(ts * 1000); return MONTHS[d.getMonth()] + ' ' + String(d.getDate()).padStart(2, '0'); };
+  const payKind = k => k === 'cod' ? 'COD' : 'Digital';
+
+  // Order History: audit badge on every completed order (stops double claims, shows where the money is)
+  function settleBadgeRow(o) {
+    if (o.status !== 'delivered') return '';
+    const st = o.settlementStatus || 'unsettled', b = escapeHtml(o.settlementBatchId || '');
+    const badge = st === 'settled' ? `<span class="sbadge settled"><i></i>Settled (Batch #${b})</span>`
+                : st === 'requested' ? `<span class="sbadge requested"><i></i>Settlement Requested (Batch #${b})</span>`
+                : `<span class="sbadge unsettled"><i></i>Unsettled</span>`;
+    return `<div class="o-badges">${badge}</div>`;
+  }
+  function finRow(o) {
+    if (o.status !== 'delivered' || o.foodAmount == null) return '';
+    return `<div class="o-fin"><span>Food (yours): <b>${money(o.foodAmount)} MMK</b></span><span>${payKind(o.paymentKind)} · Delivery fee ${money(o.deliveryFee)}</span></div>`;
+  }
+
+  let settleData = null, settleSig = '', settleRange = { from: '', to: '' }, settleFilter = 'all', settleQuery = '', settleOpen = new Set(), settleBusy = false;
+
+  async function loadSettlements(quiet) {
+    const box = document.getElementById('settle-view');
+    if (quiet && document.activeElement && /^settle-/.test(document.activeElement.id || '')) return;   // don't redraw under a date picker
+    if (!quiet && !settleData) box.innerHTML = '<div class="empty-state"><div class="display">Loading…</div></div>';
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/settlements`, { headers: adminHeaders(), cache: 'no-store' });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+      const sig = JSON.stringify([d.unsettled, d.batches]);
+      if (quiet && sig === settleSig) return;
+      settleSig = sig; settleData = d;
+      renderSettlements();
+    } catch (e) {
+      if (!quiet || !settleData) box.innerHTML = `<div class="empty-state"><div class="display">Couldn't load settlements</div>${escapeHtml(e.message)}<br><button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="loadSettlements()">Try again</button></div>`;
+    }
+  }
+
+  function settleSelection() {
+    const rows = (settleData && settleData.unsettled.orders) || [];
+    const { from, to } = settleRange;
+    const sel = rows.filter(r => (!from || r.completedDate >= from) && (!to || r.completedDate <= to));
+    return { rows: sel, count: sel.length, food: sel.reduce((t, r) => t + r.foodAmount, 0), bad: !!(from && to && to < from) };
+  }
+
+  function renderSettlements() {
+    const u = settleData.unsettled, rows = u.orders;
+    if (rows.length) {                                   // default range = everything waiting, clipped to what exists
+      const first = rows[0].completedDate, last = rows[rows.length - 1].completedDate;
+      if (!settleRange.from || settleRange.from < first || settleRange.from > last) settleRange.from = first;
+      if (!settleRange.to || settleRange.to > last || settleRange.to < first) settleRange.to = last;
+    } else settleRange = { from: '', to: '' };
+    const waiting = settleData.batches.filter(b => b.status === 'requested');
+    const first = rows.length ? rows[0].completedDate : '', last = rows.length ? rows[rows.length - 1].completedDate : '';
+    document.getElementById('settle-view').innerHTML = `
+      <div class="settle-card">
+        <div class="settle-label">Total Unsettled Balance</div>
+        <div class="settle-big">${money(u.foodTotal)} <small>MMK</small></div>
+        <div class="settle-sub">${u.count} completed order${u.count === 1 ? '' : 's'} · Digital ${money(u.digitalTotal)} · COD ${money(u.codTotal)}<br>Food amounts only — delivery fees are not part of your payout.</div>
+        ${waiting.length ? `<div class="settle-notice">${waiting.length === 1 ? 'Request #' + escapeHtml(waiting[0].batchId) + ' is' : waiting.length + ' requests are'} waiting for the platform to pay.</div>` : ''}
+        ${rows.length ? `
+        <div class="settle-dates">
+          <label>From<input type="date" id="settle-from" value="${settleRange.from}" min="${first}" max="${last}" onchange="settleRangeChanged()"></label>
+          <label>To<input type="date" id="settle-to" value="${settleRange.to}" min="${first}" max="${last}" onchange="settleRangeChanged()"></label>
+        </div>
+        <div class="settle-warn" id="settle-warn" style="display:none">The end date can't be before the start date.</div>
+        <div class="settle-sel"><span id="settle-sel-count"></span><b id="settle-sel-amount"></b></div>
+        <button class="btn btn-primary settle-submit" id="settle-submit" onclick="submitSettlement()">Submit Settlement Request</button>`
+        : `<div class="settle-sub" style="margin-top:12px">Nothing to settle right now. Delivered orders show up here automatically.</div>`}
+      </div>
+      <div class="settle-h"><span>Settlement Batches</span></div>
+      <div class="cat-chip-bar" id="settle-chips">
+        ${[['all', 'All'], ['requested', 'Requested'], ['settled', 'Settled']].map(([k, l]) => `<button class="cat-chip-tab ${settleFilter === k ? 'active' : ''}" onclick="setSettleFilter('${k}')">${l}</button>`).join('')}
+      </div>
+      <input class="settle-search" id="settle-search" type="search" placeholder="Search batch or order ID" value="${escapeHtml(settleQuery)}" oninput="settleQuery=this.value;renderSettleLedger()">
+      <div id="settle-ledger"></div>`;
+    updateSettleSelection();
+    renderSettleLedger();
+  }
+
+  function settleRangeChanged() {
+    settleRange.from = document.getElementById('settle-from').value;
+    settleRange.to = document.getElementById('settle-to').value;
+    updateSettleSelection();
+  }
+  function updateSettleSelection() {
+    const cnt = document.getElementById('settle-sel-count'); if (!cnt) return;
+    const sel = settleSelection();
+    cnt.textContent = sel.bad ? '' : `${sel.count} order${sel.count === 1 ? '' : 's'} selected`;
+    document.getElementById('settle-sel-amount').textContent = sel.bad ? '' : money(sel.food) + ' MMK';
+    document.getElementById('settle-warn').style.display = sel.bad ? 'block' : 'none';
+    document.getElementById('settle-submit').disabled = settleBusy || sel.bad || !sel.count;
+  }
+  function setSettleFilter(k) { settleFilter = k; document.querySelectorAll('#settle-chips .cat-chip-tab').forEach((b, i) => b.classList.toggle('active', ['all', 'requested', 'settled'][i] === k)); renderSettleLedger(); }
+
+  function renderSettleLedger() {
+    const q = settleQuery.trim().toLowerCase();
+    const list = settleData.batches.filter(b => (settleFilter === 'all' || b.status === settleFilter) &&
+      (!q || b.batchId.toLowerCase().includes(q) || b.orders.some(o => o.orderId.toLowerCase().includes(q))));
+    document.getElementById('settle-ledger').innerHTML = list.length ? list.map(batchHtml).join('')
+      : `<div class="empty-state"><div class="display">${settleData.batches.length ? 'No batches match' : 'No settlements yet'}</div>${settleData.batches.length ? '' : 'Once you request and receive a payout, it is recorded here.'}</div>`;
+  }
+  function batchHtml(b) {
+    const paid = b.status === 'settled';
+    const via = { kbzpay: 'KBZPay', wavepay: 'WavePay' }[b.payoutMethod] || 'bank / other';
+    return `<details class="batch" ${settleOpen.has(b.batchId) ? 'open' : ''} ontoggle="this.open ? settleOpen.add('${b.batchId}') : settleOpen.delete('${b.batchId}')">
+      <summary>
+        <div class="batch-top"><b>Batch #${escapeHtml(b.batchId)}</b><span class="bstatus ${b.status}">${paid ? 'Settled' : 'Requested'}</span></div>
+        <div class="batch-meta">${fmtDay(b.dateFrom)} - ${fmtDay(b.dateTo)} · ${b.orderCount} order${b.orderCount === 1 ? '' : 's'}</div>
+        <div class="batch-line"><span>${paid ? 'Total Paid' : 'Total Requested'}: <b>${money(b.foodTotal)} MMK</b></span><span>${paid ? 'Settled on ' + fmtTsDay(b.settledAt) : 'Requested on ' + fmtTsDay(b.requestedAt)}</span></div>
+      </summary>
+      <div class="batch-body">
+        <div class="batch-pay">${paid ? `Paid via <b>${via}</b>${b.payoutReference ? ' · Ref ' + escapeHtml(b.payoutReference) : ''}${b.note ? '<br>' + escapeHtml(b.note) : ''}` : 'Waiting for the platform to send your payout.'}</div>
+        ${b.orders.map(o => `<div class="batch-row"><span><span class="oid">${escapeHtml(o.orderId)}</span><span class="od">${fmtDay(o.completedDate)}</span><span class="kchip">${payKind(o.paymentMethod)}</span></span><b>${money(o.foodAmount)}</b></div>`).join('')}
+        <div class="batch-foot">Food total <b>${money(b.foodTotal)} MMK</b> · Digital ${money(b.digitalTotal)} · COD ${money(b.codTotal)}<br>Delivery fees (not part of this payout): ${money(b.deliveryFeeTotal)} MMK</div>
+        ${paid ? '' : `<button class="btn btn-outline batch-cancel" onclick="cancelSettlement('${b.batchId}')">Cancel request</button>`}
+      </div>
+    </details>`;
+  }
+
+  async function submitSettlement() {
+    const sel = settleSelection(); if (!sel.count || sel.bad || settleBusy) return;
+    if (!confirm(`Request settlement of ${money(sel.food)} MMK for ${sel.count} order${sel.count === 1 ? '' : 's'} (${fmtDay(settleRange.from)} - ${fmtDay(settleRange.to)})?\n\nThese orders are locked until the platform pays or declines the request.`)) return;
+    settleBusy = true; updateSettleSelection();
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/settlements/request`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify({ from: settleRange.from, to: settleRange.to }) });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+      tg?.HapticFeedback?.notificationOccurred('success');
+      showToast(`Request #${d.batch.batchId} sent to the platform.`);
+      settleRange = { from: '', to: '' }; settleOpen.add(d.batch.batchId);
+    } catch (e) { showToast(e.message); }
+    settleBusy = false;
+    await loadSettlements(); loadOrders();
+  }
+  async function cancelSettlement(batchId) {
+    if (!confirm(`Cancel request #${batchId}? Its orders go back to Unsettled and you can request them again.`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/settlements/cancel`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify({ batchId }) });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+      showToast('Request cancelled.');
+    } catch (e) { showToast(e.message); }
+    await loadSettlements(); loadOrders();
+  }
+
+  async function orderAction(id, action) {
+    if (action === 'reject' && !confirm('Are you sure to reject the order?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/order-action`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify(action === 'accept' ? { orderId: id, action, prepMinutes: pendingPrepMinutes(id) } : { orderId: id, action }) });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+      showToast(action === 'accept' ? 'Order accepted.' : action === 'reject' ? 'Order rejected.' : action === 'handover' ? 'Order completed.' : 'Marked ready.');
+    } catch (e) { showToast('Could not update: ' + e.message); }
+    loadOrders();
+  }
+
+
+  /* ================= RESTAURANT STATUS: open / busy / closed ================= */
+  const BUSY_EXTRA_MIN = 15;
+  const STATUS_TEXT = { open: 'Open', busy: 'Busy', closed: 'Closed' };
+  function restaurantStatus() {
+    if (restaurantProfile.isOpen === false) return 'closed';
+    return (restaurantProfile.busyMinutes || 0) > 0 ? 'busy' : 'open';
+  }
+  async function loadRestaurantStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/api/restaurant-info?restaurant=${encodeURIComponent(currentRestaurantId)}`);
+      const d = await res.json();
+      restaurantProfile.isOpen = d.isOpen !== false;
+      restaurantProfile.busyMinutes = +d.busyMinutes || 0;
+    } catch (e) { /* keep the last known state */ }
+    renderRestaurantStatus();
+  }
+  function renderRestaurantStatus() {
+    const st = restaurantStatus();
+    const pill = document.getElementById('status-pill');
+    pill.className = 'status-pill ' + st;
+    document.getElementById('status-pill-text').textContent = STATUS_TEXT[st];
+    document.querySelectorAll('#status-overlay button[data-s]').forEach(b => b.classList.toggle('active', b.dataset.s === st));
+    document.getElementById('closed-banner').style.display = st === 'closed' ? 'flex' : 'none';
+    try { renderOrders(); } catch (e) {}     // estimates on new orders include the busy minutes
+  }
+  function toggleStatusMenu(ev) {
+    ev && ev.stopPropagation();
+    const ov = document.getElementById('status-overlay');
+    const open = !ov.classList.contains('open');
+    ov.classList.toggle('open', open);
+    document.getElementById('status-pill').setAttribute('aria-expanded', open);
+  }
+  function closeStatusMenu() {
+    document.getElementById('status-overlay').classList.remove('open');
+    document.getElementById('status-pill').setAttribute('aria-expanded', 'false');
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeStatusMenu(); });
+
+  async function chooseStatus(next) {
+    closeStatusMenu();
+    if (next === restaurantStatus()) return;
+    if (next === 'closed' && !confirm('Close the restaurant? Customers will not be able to place new orders until you reopen.')) return;
+    const prev = { isOpen: restaurantProfile.isOpen, busyMinutes: restaurantProfile.busyMinutes || 0 };
+    const patch = { isOpen: next !== 'closed', busyMinutes: next === 'busy' ? BUSY_EXTRA_MIN : 0 };
+    Object.assign(restaurantProfile, patch);
+    renderRestaurantStatus();                                   // instant feedback
+    const pill = document.getElementById('status-pill');
+    pill.disabled = true;
+    // The server always wants the name; the other profile fields go back unchanged.
+    const ok = await saveRestaurantProfile({
+      name: restaurantProfile.name, tagline: restaurantProfile.tagline,
+      logoUrl: restaurantProfile.logoUrl, address: restaurantProfile.address, ...patch
+    });
+    pill.disabled = false;
+    if (!ok) { Object.assign(restaurantProfile, prev); renderRestaurantStatus(); return; }   // roll back
+    tg?.HapticFeedback?.notificationOccurred(next === 'closed' ? 'warning' : 'success');
+    showToast(next === 'open' ? 'You are open — orders can come in.'
+            : next === 'busy' ? `Busy mode on — prep estimates are +${BUSY_EXTRA_MIN} min.`
+            : 'Restaurant closed — new orders are paused.');
+  }
+  function reopenRestaurant() { chooseStatus('open'); }
+
+  /* ================= PREP COUNTDOWN TIMER ================= */
+  const RING_R = 22, RING_C = 2 * Math.PI * RING_R;
+  const DEFAULT_PREP_MIN = 15, MAX_PREP_MIN = 180;
+  let serverOffset = 0;                 // server clock minus this device's clock (seconds)
+  const nowSec = () => Date.now() / 1000 + serverOffset;
+  const pendingPrep = {};               // orderId -> minutes chosen before accepting
+  const prepQueue = {};                 // orderId -> { delta, timer } adjustments not yet sent
+  let openPrepId = null, prepPopTimer = null;
+
+  // "15 mins" -> 15, "50+ mins" -> 50, old "10-20 mins" -> 20 (longest end of the range)
+  function parsePrepMinutes(text) {
+    const n = String(text || '').match(/\d+/g);
+    return n ? +n[n.length - 1] : 0;
+  }
+  // Slowest dish in the order decides the estimate.
+  function defaultPrepMinutes(o) {
+    let best = 0;
+    const lookup = {};
+    (menuCategories || []).forEach(c => (c.items || []).forEach(it => { lookup[String(it.name).trim().toLowerCase()] = it; }));
+    (o.items || []).forEach(i => {
+      const it = lookup[String(i.name).trim().toLowerCase()];
+      if (it) best = Math.max(best, parsePrepMinutes(it.time));
+    });
+    return Math.min(MAX_PREP_MIN, (best || DEFAULT_PREP_MIN) + (restaurantProfile.busyMinutes || 0));
+  }
+  function pendingPrepMinutes(id) {
+    const o = ordersData.find(x => x.orderId === id);
+    return pendingPrep[id] ?? (o ? defaultPrepMinutes(o) : DEFAULT_PREP_MIN);
+  }
+  const clampEnd = end => Math.max(nowSec(), Math.min(end, nowSec() + MAX_PREP_MIN * 60));
+  function applyPrepDelta(end, deltaMin) {            // same rule as the server
+    return clampEnd(Math.max(end, nowSec()) + deltaMin * 60);
+  }
+  // A poll must not wipe clicks that haven't reached the server yet.
+  function reapplyPendingPrep() {
+    Object.entries(prepQueue).forEach(([id, q]) => {
+      const o = ordersData.find(x => x.orderId === id);
+      if (o && o.prepEndsAt) o.prepEndsAt = applyPrepDelta(o.prepEndsAt, q.delta);
+    });
+  }
+
+  function prepState(o) {
+    if (o.readyAt) return { done: true };
+    if (o.status === 'restaurant_pending') {
+      const m = pendingPrepMinutes(o.orderId);
+      return { waiting: true, minutes: m };
+    }
+    if (!o.prepEndsAt) return { unset: true };
+    const total = Math.max(o.prepEndsAt - (o.prepStartedAt || o.prepEndsAt - DEFAULT_PREP_MIN * 60), 1);
+    const rem = o.prepEndsAt - nowSec();
+    return { rem, total: Math.max(total, rem) };
+  }
+  function ringText(st) {
+    if (st.waiting) return ['' + st.minutes, 'min'];
+    if (st.unset) return ['--', 'set'];
+    if (st.rem > 60) return ['' + Math.ceil(st.rem / 60), 'min'];
+    if (st.rem > 0) return ['' + Math.ceil(st.rem), 'sec'];
+    return ['' + Math.floor(-st.rem / 60), 'late'];
+  }
+  function prepTimerHtml(o) {
+    const st = prepState(o), id = escapeHtml(o.orderId);
+    if (st.done) {
+      return `<div class="o-prep"><div class="prep-main"><span class="prep-ring done"><svg viewBox="0 0 56 56"><circle class="trk" cx="28" cy="28" r="${RING_R}"/><circle class="arc" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><span class="prep-txt">${icon('check')}</span></span>
+        <div class="prep-label"><b>Ready</b><small>${isPickup(o) ? 'Waiting for the customer' : 'Waiting for the rider'}</small></div></div></div>`;
+    }
+    const open = openPrepId === o.orderId;
+    const label = st.waiting ? ['Estimated prep time', (restaurantProfile.busyMinutes > 0 ? 'Includes +' + restaurantProfile.busyMinutes + ' min busy time · ' : '') + 'Tap the circle to change before accepting']
+                : st.unset   ? ['No timer yet', 'Tap the circle to start one']
+                :              ['Time left to prepare', 'Tap the circle to add or remove minutes'];
+    return `<div class="o-prep" data-oid="${id}">
+      <div class="prep-main">
+        <button type="button" class="prep-ring" data-oid="${id}" aria-label="Adjust preparation time" aria-expanded="${open}" onclick="togglePrepPop('${id}', event)">
+          <svg viewBox="0 0 56 56"><circle class="trk" cx="28" cy="28" r="${RING_R}"/><circle class="arc" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg>
+          <span class="prep-txt"><b>--</b><small>min</small></span>
+        </button>
+        <div class="prep-label"><b>${label[0]}</b><small>${label[1]}</small></div>
+      </div>
+      ${open ? `<div class="prep-pop">
+        <button type="button" onclick="adjustPrep('${id}', -1)" aria-label="Remove one minute">−1 min</button>
+        <span class="prep-now" data-oid="${id}"></span>
+        <button type="button" onclick="adjustPrep('${id}', 1)" aria-label="Add one minute">+1 min</button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  // Redraws every ring in place once a second — no re-render, so an open popover never flickers.
+  function tickPrep() {
+    document.querySelectorAll('.prep-ring[data-oid]').forEach(el => {
+      const o = ordersData.find(x => x.orderId === el.dataset.oid); if (!o) return;
+      const st = prepState(o);
+      if (st.done) return;
+      const [big, small] = ringText(st);
+      el.querySelector('.prep-txt b').textContent = big;
+      el.querySelector('.prep-txt small').textContent = small;
+      const frac = st.waiting ? 1 : st.unset ? 0 : Math.max(0, Math.min(1, st.rem / st.total));
+      el.querySelector('.arc').style.strokeDashoffset = RING_C * (1 - frac);
+      el.classList.toggle('late', !!st.rem && st.rem <= 0);
+      el.classList.toggle('warn', !!st.rem && st.rem > 0 && (st.rem <= 120 || frac <= 0.2));
+    });
+    document.querySelectorAll('.prep-now[data-oid]').forEach(el => {
+      const o = ordersData.find(x => x.orderId === el.dataset.oid); if (!o) return;
+      const st = prepState(o);
+      el.textContent = st.waiting ? st.minutes + ' min' : st.unset ? '' : st.rem > 0 ? (st.rem > 60 ? Math.ceil(st.rem / 60) + ' min left' : Math.ceil(st.rem) + ' s left') : 'overdue';
+    });
+  }
+  setInterval(() => { if (!document.hidden) tickPrep(); }, 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tickPrep(); });
+
+  function togglePrepPop(id, ev) {
+    ev && ev.stopPropagation();
+    openPrepId = openPrepId === id ? null : id;
+    keepPrepPopAlive();
+    renderOrders();
+  }
+  function closePrepPop() {
+    if (!openPrepId) return;
+    openPrepId = null; clearTimeout(prepPopTimer); renderOrders();
+  }
+  function keepPrepPopAlive() {            // popover tidies itself away after 8 s of no taps
+    clearTimeout(prepPopTimer);
+    if (openPrepId) prepPopTimer = setTimeout(closePrepPop, 8000);
+  }
+  document.addEventListener('click', e => { if (openPrepId && !e.target.closest('.o-prep')) closePrepPop(); });
+
+  function adjustPrep(id, delta) {
+    const o = ordersData.find(x => x.orderId === id); if (!o) return;
+    keepPrepPopAlive();
+    tg?.HapticFeedback?.impactOccurred('light');
+    if (o.status === 'restaurant_pending') {                 // not accepted yet: just change the estimate
+      pendingPrep[id] = Math.max(1, Math.min(MAX_PREP_MIN, pendingPrepMinutes(id) + delta));
+      renderOrders();
+      return;
+    }
+    if (!o.prepEndsAt) {                                     // accepted from the bot, timer never started
+      o.prepStartedAt = nowSec();
+      o.prepEndsAt = nowSec() + defaultPrepMinutes(o) * 60;
+    }
+    o.prepEndsAt = applyPrepDelta(o.prepEndsAt, delta);      // instant feedback
+    const q = prepQueue[id] || (prepQueue[id] = { delta: 0, timer: null });
+    q.delta += delta;
+    clearTimeout(q.timer);
+    q.timer = setTimeout(() => flushPrep(id, o), 450);       // many fast taps -> one request
+    renderOrders();
+  }
+  async function flushPrep(id, o) {
+    const q = prepQueue[id]; if (!q) return;
+    delete prepQueue[id];
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/order-action`, { method: 'POST', headers: adminHeaders(),
+        body: JSON.stringify({ orderId: id, action: 'adjust_prep', delta: q.delta, prepMinutes: defaultPrepMinutes(o) }) });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+    } catch (e) { showToast('Could not update the timer: ' + e.message); }
+    loadOrders();
+  }
+
+  const ADD_CHIP = '<button class="cat-chip-tab add" onclick="openCategoryDrawer()">＋ Category</button>';
+
+  function toggleSoldOut(i) {
+    const cat = getSelectedCategory(); if (!cat) return;
+    cat.items[i].soldOut = !cat.items[i].soldOut;
+    saveMenu(); renderItemGrid();
+    showToast(cat.items[i].soldOut ? 'Marked sold out.' : 'Back in stock.');
+  }
+
+  /* ---- profile hero ---- */
+  function renderHero() {
+    const img = document.getElementById('hero-logo-img'), fb = document.getElementById('hero-logo-fallback');
+    if (!img) return;
+    if (restaurantProfile.logoUrl) {
+      img.src = restaurantProfile.logoUrl; img.style.display = 'block'; fb.style.display = 'none';
+      img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
+    } else { img.style.display = 'none'; fb.style.display = 'block'; }
+  }
+  function toggleProfileEdit(on) {
+    document.getElementById('profile-edit-card').style.display = on ? 'block' : 'none';
+    document.querySelector('#profile-hero .btn-ghost').style.display = on ? 'none' : '';
+    if (on) { document.getElementById('profile-edit-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); initPicker('settings'); }
+  }
+
+  /* ---- long-press category menu (Telegram-style) ---- */
+  let longPressed = false, pressTimer = null, ctxCatId = null;
+  document.addEventListener('DOMContentLoaded', () => {
+    const bar = document.getElementById('item-cat-tabs');
+    const chipOf = e => e.target.closest('.cat-chip-tab[data-id]');
+    const stop = () => clearTimeout(pressTimer);
+    bar.addEventListener('pointerdown', e => {
+      const chip = chipOf(e); if (!chip) return;
+      longPressed = false; stop();
+      pressTimer = setTimeout(() => { longPressed = true; tg?.HapticFeedback?.impactOccurred('medium'); openCatMenu(chip); }, 480);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel', 'scroll'].forEach(t => bar.addEventListener(t, stop));
+    bar.addEventListener('contextmenu', e => {
+      const chip = chipOf(e); if (!chip) return;
+      e.preventDefault();
+      if (!longPressed) { longPressed = true; openCatMenu(chip); }
+    });
+  });
+  function openCatMenu(chip) {
+    ctxCatId = chip.dataset.id;
+    const i = menuCategories.findIndex(c => c.id === ctxCatId); if (i < 0) return;
+    document.getElementById('ctx-left').disabled = i === 0;
+    document.getElementById('ctx-right').disabled = i === menuCategories.length - 1;
+    document.getElementById('ctx-overlay').classList.add('open');
+    const m = document.getElementById('ctx-menu'), r = chip.getBoundingClientRect();
+    m.style.top = (r.bottom + 8) + 'px';
+    m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + 'px';
+  }
+  function closeCatMenu() { document.getElementById('ctx-overlay').classList.remove('open'); }
+  function ctxAction(a) {
+    const i = menuCategories.findIndex(c => c.id === ctxCatId);
+    closeCatMenu(); if (i < 0) return;
+    if (a === 'edit') openCategoryDrawer(i);
+    else if (a === 'delete') deleteCategory(i);
+    else {
+      const j = a === 'left' ? i - 1 : i + 1;
+      [menuCategories[i], menuCategories[j]] = [menuCategories[j], menuCategories[i]];
+      saveMenu(); renderAll();
+    }
+  }
+</script>
+
+</body>
+</html>
