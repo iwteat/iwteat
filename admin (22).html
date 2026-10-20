@@ -6,7 +6,7 @@
 <title>IWTEAT — Restaurant Manager</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -32,12 +32,12 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Poppins', 'Noto Sans Myanmar', 'Myanmar Text', 'Padauk', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--paper);
     color: var(--ink);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, .display { font-family: 'Poppins', -apple-system, sans-serif; }
+  h1, h2, h3, .display { font-family: 'Poppins', 'Noto Sans Myanmar', 'Myanmar Text', 'Padauk', -apple-system, sans-serif; }
   .mono { font-family: 'IBM Plex Mono', monospace; }
   .ico { display: inline-block; width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; line-height: 1; }
   .ico svg { width: 100%; height: 100%; display: block; }
@@ -86,7 +86,7 @@
   .setup-card {
     width: 100%; max-width: 520px; margin: 0 auto; flex: 1;
     display: flex; flex-direction: column;
-    padding: calc(18px + env(safe-area-inset-top, 0px)) 20px calc(22px + env(safe-area-inset-bottom, 0px));
+    padding: calc(18px + var(--top-inset)) 20px calc(22px + env(safe-area-inset-bottom, 0px));
   }
   .setup-step { display: flex; flex-direction: column; flex: 1; }
   .setup-top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; margin-bottom: 8px; }
@@ -134,7 +134,7 @@
   .launch-done-badge { width: 22px; height: 22px; border-radius: 50%; background: var(--ok); color: #fff; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; animation: launchPop .4s ease; }
   .launch-done-badge .ico { font-size: 13px; color: #fff; }
   @keyframes launchPop { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
-  #launch-success { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
+  #launch-success { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 1300; padding: 24px; }
   #launch-success.open { display: flex; }
   #launch-success .box { background: var(--card); border-radius: 20px; padding: 30px 24px 24px; max-width: 340px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
   #launch-success .big { width: 76px; height: 76px; margin: 0 auto 14px; border-radius: 50%; background: var(--primary-tint); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 40px; }
@@ -177,15 +177,21 @@
   #sync-indicator.error #sync-dot { background: var(--brick); }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-  /* Bottom tab bar — fixed to the viewport, thumb-reachable on a phone.
-     #app gets bottom padding (below) so content never sits under it. */
-  .tabs {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  /* Bottom navigation — locked to the bottom of the viewport, thumb-reachable on a phone.
+     Its bottom padding clears the phone's gesture bar; every .view has matching bottom
+     padding (see below) so the last card / button can always scroll up above it. */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
     display: flex; justify-content: space-around;
-    background: var(--card);
+    padding: 8px 8px 0;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
+    background: #ffffff;
     border-radius: 24px 24px 0 0;
-    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -6px 24px rgba(0,0,0,0.07);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
   }
   .tab-btn {
     flex: 1; max-width: 160px;
@@ -197,8 +203,9 @@
   .tab-btn .tab-icon { font-size: 26px; line-height: 1; display: flex; }
   .tab-btn.active { color: var(--primary); font-weight: 600; }
 
-  main { flex: 1; padding: 20px 16px calc(100px + env(safe-area-inset-bottom, 0px)); max-width: 900px; width: 100%; margin: 0 auto; }
-  .view { display: none; }
+  main { flex: 1; padding: 20px 16px 0; max-width: 900px; width: 100%; margin: 0 auto; }
+  /* Room for the fixed bottom nav (+ the phone's safe area) so nothing hides behind it */
+  .view { display: none; padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)); }
   .view.active { display: block; }
 
   .section-head {
@@ -326,7 +333,7 @@
   .drawer-overlay {
     position: fixed; inset: 0; background: rgba(28,31,26,0.42);
     display: none; align-items: flex-end; justify-content: center;
-    z-index: 50;
+    z-index: 1050;
   }
   .drawer-overlay.open { display: flex; }
   .drawer {
@@ -452,14 +459,14 @@
   .toast {
     position: fixed; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
     background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 30px;
-    font-size: 13px; font-weight: 500; z-index: 100; width: max-content; max-width: calc(100vw - 32px); text-align: center;
+    font-size: 13px; font-weight: 500; z-index: 1200; width: max-content; max-width: calc(100vw - 32px); text-align: center;
     opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
 
   .cat-chip-tab{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   .cat-chip-tab.add{border-style:dashed;color:var(--primary-dark);background:transparent}
-  .ctx-overlay{position:fixed;inset:0;z-index:90;display:none}
+  .ctx-overlay{position:fixed;inset:0;z-index:1070;display:none}
   .ctx-overlay.open{display:block}
   .ctx-menu{position:absolute;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);min-width:200px;padding:6px}
   .ctx-menu button{display:flex;gap:10px;width:100%;background:none;border:none;padding:11px 12px;font-size:14px;border-radius:9px;cursor:pointer;text-align:left;color:var(--ink)}
@@ -471,7 +478,7 @@
   #item-drawer-overlay .drawer,#group-drawer-overlay .drawer{max-width:none;max-height:none;height:100%;border-radius:0}
   #item-drawer-overlay .drawer-head,#item-drawer-overlay .drawer-foot,#group-drawer-overlay .drawer-head,#group-drawer-overlay .drawer-foot{border-radius:0}
   #item-drawer-overlay .drawer-body,#group-drawer-overlay .drawer-body{width:100%;max-width:560px;margin:0 auto}
-  #group-drawer-overlay{z-index:70}
+  #group-drawer-overlay{z-index:1060}
   .hero{display:flex;flex-direction:column;align-items:center;gap:16px;padding:12px 0 24px}
   .hero-handle{font-size:12.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:-6px}
   .hero-handle:empty{display:none}
@@ -526,7 +533,7 @@
   .status-pill.busy{border-color:var(--mustard);background:var(--mustard-tint);color:var(--mustard)}
   .status-pill.closed{border-color:var(--brick);background:var(--brick-tint);color:var(--brick)}
   .status-pill:disabled{opacity:.6;cursor:wait}
-  .status-overlay{position:fixed;inset:0;z-index:80;display:none;background:rgba(0,0,0,.18)}
+  .status-overlay{position:fixed;inset:0;z-index:1065;display:none;background:rgba(0,0,0,.18)}
   .status-overlay.open{display:block}
   .status-menu{position:absolute;top:calc(50px + var(--top-inset));right:12px;left:12px;max-width:340px;margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:6px;animation:popIn .15s ease-out}
   .status-menu button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;border-radius:11px;padding:12px;text-align:left;cursor:pointer;color:var(--ink)}
@@ -645,6 +652,38 @@
   .prep-pop .prep-now{flex:0 0 auto;min-width:64px;text-align:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   @keyframes prepPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
   @keyframes popIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  /* ============ LANGUAGE SWITCHER (English / Myanmar) ============ */
+  .lang-switch {
+    display: inline-flex; align-items: center; gap: 2px; padding: 3px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .lang-switch button {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: 12px; font-weight: 600; line-height: 1.2; white-space: nowrap;
+    padding: 6px 11px; border-radius: 999px; cursor: pointer; touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent; transition: background .15s, color .15s;
+  }
+  .lang-switch button.active { background: var(--primary); color: #fff; }
+  .lang-switch button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  /* Setup screen: centred in the very top row, between Telegram's top-left and top-right buttons.
+     Fixed (not scrolling away with the form); the offset follows Telegram's safe-area inset. */
+  .lang-switch-top {
+    position: fixed;
+    top: calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+  }
+  .lang-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  /* Myanmar script stacks marks above and below the line — give it more room */
+  html[lang="my"] body { line-height: 1.65; }
+  html[lang="my"] .btn, html[lang="my"] .btn-ghost, html[lang="my"] .btn-upload, html[lang="my"] .tab-btn,
+  html[lang="my"] .pill, html[lang="my"] .cat-chip-tab, html[lang="my"] .seg button, html[lang="my"] .status-pill { line-height: 1.55; }
+  html[lang="my"] .setup-card h1 { letter-spacing: 0; line-height: 1.5; }
+  html[lang="my"] .tab-btn { font-size: 11px; }
+  html[lang="my"] .prep-txt small { font-size: 8px; letter-spacing: 0; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -657,7 +696,7 @@
 <div id="outside-gate">
   <div class="pin-card">
     <div class="ticket-icon"><i class="ico " data-icon="lock"></i></div>
-    <p style="margin:0; font-size:15px; font-weight:600; color:var(--ink); line-height:1.5;">Please open this app through the official Telegram bot.</p>
+    <p style="margin:0; font-size:15px; font-weight:600; color:var(--ink); line-height:1.5;" data-i18n="gate.outside">Please open this app through the official Telegram bot.</p>
   </div>
 </div>
 
@@ -665,28 +704,33 @@
 <div id="not-approved-gate" style="display:none;">
   <div class="pin-card">
     <div class="ticket-icon"><i class="ico " data-icon="ban"></i></div>
-    <h1>Not approved yet</h1>
-    <p id="not-approved-message">This Telegram account isn't linked to a restaurant yet. If you'd like to list your restaurant, open the bot and tap "List My Restaurant".</p>
+    <h1 data-i18n="gate.notApprovedTitle">Not approved yet</h1>
+    <p id="not-approved-message" data-i18n="gate.notApprovedMsg">This Telegram account isn't linked to a restaurant yet. If you'd like to list your restaurant, open the bot and tap "List My Restaurant".</p>
     <a href="https://t.me/assichit_bot" target="_blank" rel="noopener" style="text-decoration:none; display:block;">
-      <button class="btn btn-primary" style="width:100%; justify-content:center;">Open Bot</button>
+      <button class="btn btn-primary" style="width:100%; justify-content:center;" data-i18n="gate.openBot">Open Bot</button>
     </a>
   </div>
 </div>
 
 <!-- ============ RESTAURANT SETUP (shown once, for a brand-new restaurant) ============ -->
 <div id="setup-gate">
+  <!-- Language switcher: centred in the top row of the setup screen -->
+  <div class="lang-switch lang-switch-top" role="group" aria-label="Language">
+    <button type="button" data-lang="my" onclick="switchLanguage('my')">🇲🇲 မြန်မာ</button>
+    <button type="button" data-lang="en" onclick="switchLanguage('en')">🇬🇧 EN</button>
+  </div>
   <div class="setup-card">
 
     <!-- ---- Step 1: profile ---- -->
     <div class="setup-step" id="setup-step-1">
-      <div class="setup-top"><span class="setup-steps">STEP 1 OF 2</span></div>
-      <h1>Welcome! Let's set up your restaurant</h1>
-      <p class="intro">Fill in every field to continue. You can change most of this later from Settings.</p>
+      <div class="setup-top"><span class="setup-steps" data-i18n="setup.step1">STEP 1 OF 2</span></div>
+      <h1 data-i18n="setup.welcome">Welcome! Let's set up your restaurant</h1>
+      <p class="intro" data-i18n="setup.intro1">Fill in every field to continue. You can change most of this later from Settings.</p>
 
       <div class="setup-logo-block">
         <img class="thumb-preview" id="setup-logo-preview" src="" alt="" onerror="this.style.opacity=0.6;" onload="this.style.opacity=1;">
         <div class="upload-row">
-          <button type="button" class="btn-upload" id="setup-logo-upload-btn" onclick="document.getElementById('setup-logo-file-input').click()"><i class="ico" data-icon="camera"></i> Upload Logo</button>
+          <button type="button" class="btn-upload" id="setup-logo-upload-btn" onclick="document.getElementById('setup-logo-file-input').click()"><i class="ico" data-icon="camera"></i> <span data-i18n="common.uploadLogo">Upload Logo</span></button>
           <span class="upload-status" id="setup-logo-upload-status"></span>
         </div>
         <input type="file" id="setup-logo-file-input" accept="image/*" style="display:none" onchange="handleSetupLogoFileSelect(event)">
@@ -694,48 +738,48 @@
       </div>
 
       <div class="field">
-        <label>Restaurant name</label>
-        <input type="text" id="setup-name-input" placeholder="e.g. Restaurant name">
+        <label data-i18n="f.name">Restaurant name</label>
+        <input type="text" id="setup-name-input" placeholder="e.g. Restaurant name" data-i18n-placeholder="ph.name">
       </div>
       <div class="field">
-        <label>Restaurant ID <span style="font-weight:400;">(unique — used for your shareable link)</span></label>
+        <label><span data-i18n="f.id">Restaurant ID</span> <span style="font-weight:400;" data-i18n="setup.idHint">(unique — used for your shareable link)</span></label>
         <div class="handle-wrap">
-          <input type="text" id="setup-handle-input" class="mono-input" placeholder="e.g. moon_cafe" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('setup')">
+          <input type="text" id="setup-handle-input" class="mono-input" placeholder="e.g. moon_cafe" data-i18n-placeholder="ph.handle" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('setup')">
           <span class="handle-count" id="setup-handle-count">0/20</span>
         </div>
         <div class="handle-status" id="setup-handle-status">4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later.</div>
       </div>
       <div class="field">
-        <label>Tagline / title <span style="font-weight:400;">(shown under your name to customers)</span></label>
-        <input type="text" id="setup-tagline-input" placeholder="e.g. A short line about your food">
+        <label><span data-i18n="f.tagline">Tagline / title</span> <span style="font-weight:400;" data-i18n="setup.taglineHint">(shown under your name to customers)</span></label>
+        <input type="text" id="setup-tagline-input" placeholder="e.g. A short line about your food" data-i18n-placeholder="ph.tagline">
       </div>
       <div class="field">
-        <label>Restaurant address</label>
-        <textarea id="setup-address-input" placeholder="Street, township, city — shown to customers at checkout"></textarea>
+        <label data-i18n="f.address">Restaurant address</label>
+        <textarea id="setup-address-input" placeholder="Street, township, city — shown to customers at checkout" data-i18n-placeholder="ph.addrSetup"></textarea>
       </div>
 
       <div class="setup-spacer"></div>
       <div id="setup-error"></div>
-      <button class="btn btn-primary btn-wide" id="setup-next-btn" onclick="completeSetup()" disabled>Next</button>
+      <button class="btn btn-primary btn-wide" id="setup-next-btn" onclick="completeSetup()" disabled data-i18n="common.next">Next</button>
     </div>
 
     <!-- ---- Step 2: location pin (skippable) ---- -->
     <div class="setup-step" id="setup-step-2" style="display:none;">
       <div class="setup-top">
-        <button class="setup-back" aria-label="Back" onclick="backToStep1()"><i class="ico" data-icon="arrowLeft"></i></button>
-        <span class="setup-steps">STEP 2 OF 2</span>
+        <button class="setup-back" aria-label="Back" data-i18n-aria="aria.back" onclick="backToStep1()"><i class="ico" data-icon="arrowLeft"></i></button>
+        <span class="setup-steps" data-i18n="setup.step2">STEP 2 OF 2</span>
       </div>
-      <h1>Pin your location</h1>
-      <p class="intro">Riders and customers can find you easily with a location pin. Tap the map or drag the pin to fine-tune it.</p>
+      <h1 data-i18n="setup.pinTitle">Pin your location</h1>
+      <p class="intro" data-i18n="setup.pinIntro">Riders and customers can find you easily with a location pin. Tap the map or drag the pin to fine-tune it.</p>
 
       <div class="map-box" id="setup-map"></div>
       <input type="hidden" id="setup-pin-input">
-      <div class="pin-hint" id="setup-pin-status">Stand at your restaurant when you tap the button for the most accurate pin.</div>
-      <button type="button" class="btn btn-outline-accent btn-wide" style="margin-top:12px;" onclick="useMyLocation('setup')"><i class="ico" data-icon="locate"></i> Use my current location</button>
+      <div class="pin-hint" id="setup-pin-status" data-i18n="setup.pinHint">Stand at your restaurant when you tap the button for the most accurate pin.</div>
+      <button type="button" class="btn btn-outline-accent btn-wide" style="margin-top:12px;" onclick="useMyLocation('setup')"><i class="ico" data-icon="locate"></i> <span data-i18n="loc.use">Use my current location</span></button>
 
       <div class="setup-spacer"></div>
-      <button class="btn btn-primary btn-wide" id="setup-continue-btn" style="margin-top:18px;" onclick="finishSetup(true)" disabled>Continue to Menu</button>
-      <button class="skip-link" onclick="finishSetup(false)">Skip for now</button>
+      <button class="btn btn-primary btn-wide" id="setup-continue-btn" style="margin-top:18px;" onclick="finishSetup(true)" disabled data-i18n="setup.continue">Continue to Menu</button>
+      <button class="skip-link" onclick="finishSetup(false)" data-i18n="setup.skip">Skip for now</button>
     </div>
 
   </div>
@@ -743,10 +787,10 @@
 
 <!-- ============ APP ============ -->
 <div id="app">
-  <nav class="tabs">
-    <button class="tab-btn active" id="tab-btn-orders" onclick="switchView('orders')"><span class="tab-icon"><i class="ico " data-icon="clipboard"></i></span><span>Orders</span><span class="tab-badge" id="orders-badge"></span></button>
-    <button class="tab-btn" id="tab-btn-items" onclick="switchView('items')"><span class="tab-icon"><i class="ico " data-icon="utensils"></i></span><span>Menu</span></button>
-    <button class="tab-btn" id="tab-btn-settings" onclick="switchView('settings')"><span class="tab-icon"><i class="ico " data-icon="gear"></i></span><span>Settings</span></button>
+  <nav class="bottom-nav">
+    <button class="tab-btn active" id="tab-btn-orders" onclick="switchView('orders')"><span class="tab-icon"><i class="ico " data-icon="clipboard"></i></span><span data-i18n="tab.orders">Orders</span><span class="tab-badge" id="orders-badge"></span></button>
+    <button class="tab-btn" id="tab-btn-items" onclick="switchView('items')"><span class="tab-icon"><i class="ico " data-icon="utensils"></i></span><span data-i18n="tab.menu">Menu</span></button>
+    <button class="tab-btn" id="tab-btn-settings" onclick="switchView('settings')"><span class="tab-icon"><i class="ico " data-icon="gear"></i></span><span data-i18n="tab.settings">Settings</span></button>
   </nav>
 
   <div class="status-bar">
@@ -758,9 +802,9 @@
   </div>
   <div class="status-overlay" id="status-overlay" onclick="closeStatusMenu()">
     <div class="status-menu" role="menu" onclick="event.stopPropagation()">
-      <button type="button" role="menuitem" data-s="open" onclick="chooseStatus('open')"><span class="sm-dot open"></span><span class="sm-text"><b>Open for Orders</b><small>Taking new orders as normal</small></span><span class="sm-check">✓</span></button>
-      <button type="button" role="menuitem" data-s="busy" onclick="chooseStatus('busy')"><span class="sm-dot busy"></span><span class="sm-text"><b>Busy (+15 mins prep)</b><small>Still open — adds 15 min to prep estimates</small></span><span class="sm-check">✓</span></button>
-      <button type="button" role="menuitem" data-s="closed" onclick="chooseStatus('closed')"><span class="sm-dot closed"></span><span class="sm-text"><b>Closed / Paused</b><small>No new orders until you reopen</small></span><span class="sm-check">✓</span></button>
+      <button type="button" role="menuitem" data-s="open" onclick="chooseStatus('open')"><span class="sm-dot open"></span><span class="sm-text"><b data-i18n="sm.openT">Open for Orders</b><small data-i18n="sm.openS">Taking new orders as normal</small></span><span class="sm-check">✓</span></button>
+      <button type="button" role="menuitem" data-s="busy" onclick="chooseStatus('busy')"><span class="sm-dot busy"></span><span class="sm-text"><b data-i18n="sm.busyT">Busy (+15 mins prep)</b><small data-i18n="sm.busyS">Still open — adds 15 min to prep estimates</small></span><span class="sm-check">✓</span></button>
+      <button type="button" role="menuitem" data-s="closed" onclick="chooseStatus('closed')"><span class="sm-dot closed"></span><span class="sm-text"><b data-i18n="sm.closedT">Closed / Paused</b><small data-i18n="sm.closedS">No new orders until you reopen</small></span><span class="sm-check">✓</span></button>
     </div>
   </div>
 
@@ -768,23 +812,23 @@
     <!-- CLOSED BANNER (all tabs) -->
     <div class="closed-banner" id="closed-banner" role="alert">
       <i class="ico" data-icon="ban"></i>
-      <span><b>Your restaurant is closed.</b> Customers can't place new orders. Orders you already accepted carry on as normal.</span>
-      <button type="button" onclick="reopenRestaurant()">Reopen</button>
+      <span><b data-i18n="banner.closedTitle">Your restaurant is closed.</b> <span data-i18n="banner.closedBody">Customers can't place new orders. Orders you already accepted carry on as normal.</span></span>
+      <button type="button" onclick="reopenRestaurant()" data-i18n="banner.reopen">Reopen</button>
     </div>
     <!-- ITEMS VIEW -->
     <div class="view active" id="view-orders">
       <div class="seg">
-        <button class="active" id="seg-current" onclick="setOrdersScope('current')">Current</button>
-        <button id="seg-history" onclick="setOrdersScope('history')">History</button>
-        <button id="seg-settle" onclick="setOrdersScope('settlements')">Settlements</button>
+        <button class="active" id="seg-current" onclick="setOrdersScope('current')" data-i18n="seg.current">Current</button>
+        <button id="seg-history" onclick="setOrdersScope('history')" data-i18n="seg.history">History</button>
+        <button id="seg-settle" onclick="setOrdersScope('settlements')" data-i18n="seg.settlements">Settlements</button>
       </div>
       <div id="history-summary" style="display:none">
         <div class="cat-chip-bar">
-          <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)">Today</button>
-          <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)">7 days</button>
-          <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)">30 days</button>
+          <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)" data-i18n="range.today">Today</button>
+          <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)" data-i18n="range.7">7 days</button>
+          <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)" data-i18n="range.30">30 days</button>
         </div>
-        <div class="stats"><div><b id="st-count">0</b><span>Delivered</span></div><div><b id="st-rev">0</b><span>Revenue (MMK)</span></div></div>
+        <div class="stats"><div><b id="st-count">0</b><span data-i18n="stat.delivered">Delivered</span></div><div><b id="st-rev">0</b><span data-i18n="stat.revenue">Revenue (MMK)</span></div></div>
       </div>
       <div id="orders-list"></div>
       <div id="settle-view" style="display:none"></div>
@@ -794,96 +838,107 @@
     <div class="view" id="view-items">
       <div class="cat-chip-bar" id="item-cat-tabs"></div>
       <div class="cat-options-hint" id="cat-options-hint"></div>
-      <button class="btn btn-primary" id="add-item-btn" style="width:100%; padding:13px; font-size:14px; margin-bottom:14px;" onclick="openItemDrawer(null)"><i class="ico " data-icon="plus"></i> New Item</button>
+      <button class="btn btn-primary" id="add-item-btn" style="width:100%; padding:13px; font-size:14px; margin-bottom:14px;" onclick="openItemDrawer(null)"><i class="ico " data-icon="plus"></i> <span data-i18n="menu.newItem">New Item</span></button>
       <div class="item-grid" id="item-grid"></div>
       <div class="launch-card" id="launch-card" style="display:none;"></div>
     </div>
 
     <!-- SETTINGS VIEW -->
     <div class="view" id="view-settings">
-      <div class="section-head"><h2>Settings</h2></div>
+      <div class="section-head"><h2 data-i18n="settings.title">Settings</h2></div>
 
       <div class="hero" id="profile-hero">
         <div class="hero-logo"><img id="hero-logo-img" alt="" style="display:none"><span id="hero-logo-fallback"><i class="ico " data-icon="store"></i></span></div>
         <div class="hero-handle" id="hero-handle"></div>
-        <button class="btn-ghost" onclick="toggleProfileEdit(true)"><i class="ico " data-icon="edit"></i> Edit profile</button>
+        <button class="btn-ghost" onclick="toggleProfileEdit(true)"><i class="ico " data-icon="edit"></i> <span data-i18n="settings.editProfile">Edit profile</span></button>
       </div>
       <!-- SHAREABLE LINK -->
       <div class="share-row-card" id="share-box" style="display:none">
-        <div class="share-label"><i class="ico " data-icon="share"></i><span>Shareable Link</span><span class="share-tag" id="share-tag" style="display:none">Not live yet</span></div>
-        <button type="button" class="share-btn" onclick="shareRestaurantLink()"><i class="ico " data-icon="link"></i> Share Profile</button>
+        <div class="share-label"><i class="ico " data-icon="share"></i><span data-i18n="share.label">Shareable Link</span><span class="share-tag" id="share-tag" style="display:none" data-i18n="share.notLive">Not live yet</span></div>
+        <button type="button" class="share-btn" onclick="shareRestaurantLink()"><i class="ico " data-icon="link"></i> <span data-i18n="share.btn">Share Profile</span></button>
       </div>
       <div class="settings-card" id="profile-edit-card" style="display:none;">
-        <h3>Edit profile</h3>
-        <p>Shown to customers in the app.</p>
+        <h3 data-i18n="settings.editProfile">Edit profile</h3>
+        <p data-i18n="profile.shown">Shown to customers in the app.</p>
         <div class="field">
-          <label>Restaurant name</label>
-          <input type="text" id="settings-name-input" placeholder="e.g. Restaurant name">
+          <label data-i18n="f.name">Restaurant name</label>
+          <input type="text" id="settings-name-input" placeholder="e.g. Restaurant name" data-i18n-placeholder="ph.name">
         </div>
         <div class="field">
-          <label>Restaurant ID</label>
+          <label data-i18n="f.id">Restaurant ID</label>
           <div class="handle-wrap">
-            <input type="text" id="settings-handle-input" class="mono-input" placeholder="e.g. moon_cafe" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('settings')">
+            <input type="text" id="settings-handle-input" class="mono-input" placeholder="e.g. moon_cafe" data-i18n-placeholder="ph.handle" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('settings')">
             <span class="handle-count" id="settings-handle-count">0/20</span>
           </div>
           <div class="handle-status" id="settings-handle-status"></div>
         </div>
         <div class="field">
-          <label>Tagline / title</label>
-          <input type="text" id="settings-tagline-input" placeholder="e.g. A short line about your food">
+          <label data-i18n="f.tagline">Tagline / title</label>
+          <input type="text" id="settings-tagline-input" placeholder="e.g. A short line about your food" data-i18n-placeholder="ph.tagline">
         </div>
         <div class="field">
-          <label>Logo</label>
+          <label data-i18n="f.logo">Logo</label>
           <img class="thumb-preview" id="settings-logo-preview" src="" alt="" onerror="this.style.opacity=0.3;" onload="this.style.opacity=1;">
           <div class="upload-row">
-            <button type="button" class="btn-upload" id="settings-logo-upload-btn" onclick="document.getElementById('settings-logo-file-input').click()"><i class="ico " data-icon="camera"></i> Upload Logo</button>
+            <button type="button" class="btn-upload" id="settings-logo-upload-btn" onclick="document.getElementById('settings-logo-file-input').click()"><i class="ico " data-icon="camera"></i> <span data-i18n="common.uploadLogo">Upload Logo</span></button>
             <span class="upload-status" id="settings-logo-upload-status"></span>
           </div>
           <input type="file" id="settings-logo-file-input" accept="image/*" style="display:none" onchange="handleSettingsLogoFileSelect(event)">
           <input type="hidden" id="settings-logo-input">
         </div>
         <div class="field">
-          <label>Restaurant address</label>
-          <textarea id="settings-address-input" placeholder="Street, township, city"></textarea>
+          <label data-i18n="f.address">Restaurant address</label>
+          <textarea id="settings-address-input" placeholder="Street, township, city" data-i18n-placeholder="ph.addrSettings"></textarea>
         </div>
         <div class="field">
-          <label>Location pin <span style="font-weight:400;">(optional)</span></label>
+          <label><span data-i18n="f.pin">Location pin</span> <span style="font-weight:400;" data-i18n="common.optional">(optional)</span></label>
           <div class="map-box small" id="settings-map"></div>
           <input type="hidden" id="settings-pin-input">
           <div class="pin-hint" id="settings-pin-status"></div>
-          <button type="button" class="btn btn-outline-accent btn-sm" style="margin-top:8px;" onclick="useMyLocation('settings')"><i class="ico " data-icon="locate"></i> Use my current location</button>
+          <button type="button" class="btn btn-outline-accent btn-sm" style="margin-top:8px;" onclick="useMyLocation('settings')"><i class="ico " data-icon="locate"></i> <span data-i18n="loc.use">Use my current location</span></button>
         </div>
         <div class="settings-row">
-          <button class="btn btn-primary btn-sm" onclick="saveSettingsProfile()">Save</button>
-          <button class="btn btn-outline btn-sm" onclick="renderSettingsProfileFields();toggleProfileEdit(false)">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveSettingsProfile()" data-i18n="common.save">Save</button>
+          <button class="btn btn-outline btn-sm" onclick="renderSettingsProfileFields();toggleProfileEdit(false)" data-i18n="common.cancel">Cancel</button>
+        </div>
+      </div>
+
+      <!-- LANGUAGE -->
+      <div class="settings-card" id="lang-card">
+        <div class="lang-row">
+          <span class="tax-title"><i class="ico ico-accent" data-icon="globe"></i> <span data-i18n="lang.title">Language</span></span>
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" data-lang="my" onclick="switchLanguage('my')">🇲🇲 မြန်မာ</button>
+            <button type="button" data-lang="en" onclick="switchLanguage('en')">🇬🇧 EN</button>
+          </div>
         </div>
       </div>
 
       <div class="settings-card" id="tax-card">
         <div class="tax-head">
-          <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> 5% Commercial Tax</span>
+          <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> <span data-i18n="tax.title">5% Commercial Tax</span></span>
           <span class="switch"><input type="checkbox" id="tax-enable-input" onchange="onTaxToggle()" aria-label="5% Commercial Tax"><i></i></span>
         </div>
         <div class="tax-seg" id="tax-mode-wrap" role="group" aria-label="Tax mode">
-          <button type="button" id="tax-opt-inclusive" onclick="setTaxMode('inclusive')">Tax Inclusive</button>
-          <button type="button" id="tax-opt-exclusive" onclick="setTaxMode('exclusive')">Tax Exclusive</button>
+          <button type="button" id="tax-opt-inclusive" onclick="setTaxMode('inclusive')" data-i18n="tax.incl">Tax Inclusive</button>
+          <button type="button" id="tax-opt-exclusive" onclick="setTaxMode('exclusive')" data-i18n="tax.excl">Tax Exclusive</button>
         </div>
       </div>
 
       <div class="settings-card">
-        <h3><i class="ico ico-accent" data-icon="download"></i> Backup &amp; restore</h3>
-        <p>Export the full menu as a JSON file, or paste one back in to restore it. Useful before making big changes, or to copy a menu between restaurants later.</p>
+        <h3><i class="ico ico-accent" data-icon="download"></i> <span data-i18n="backup.title">Backup &amp; restore</span></h3>
+        <p data-i18n="backup.desc">Export the full menu as a JSON file, or paste one back in to restore it. Useful before making big changes, or to copy a menu between restaurants later.</p>
         <div class="settings-row">
-          <button class="btn btn-outline btn-sm" onclick="exportMenuBackup()">Export JSON</button>
-          <button class="btn btn-outline btn-sm" onclick="importMenuBackup()">Import JSON</button>
+          <button class="btn btn-outline btn-sm" onclick="exportMenuBackup()" data-i18n="backup.export">Export JSON</button>
+          <button class="btn btn-outline btn-sm" onclick="importMenuBackup()" data-i18n="backup.import">Import JSON</button>
         </div>
       </div>
 
       <div class="settings-card">
-        <h3><i class="ico ico-accent" data-icon="refresh"></i> Sync</h3>
-        <p>The menu is stored on your server, not in this browser — every device reads the same data. Use this if you suspect this tab is showing something stale.</p>
+        <h3><i class="ico ico-accent" data-icon="refresh"></i> <span data-i18n="sync.title">Sync</span></h3>
+        <p data-i18n="sync.desc">The menu is stored on your server, not in this browser — every device reads the same data. Use this if you suspect this tab is showing something stale.</p>
         <div class="settings-row">
-          <button class="btn btn-outline btn-sm" onclick="loadMenu(true)">Reload from server</button>
+          <button class="btn btn-outline btn-sm" onclick="loadMenu(true)" data-i18n="sync.reload">Reload from server</button>
         </div>
       </div>
 
@@ -900,38 +955,38 @@
     </div>
     <div class="drawer-body">
       <div class="field">
-        <label>Category name</label>
-        <input type="text" id="cat-name-input" placeholder="e.g. Category name">
+        <label data-i18n="f.catName">Category name</label>
+        <input type="text" id="cat-name-input" placeholder="e.g. Category name" data-i18n-placeholder="ph.catName">
       </div>
 
-      <p class="important-note">Adding sizes and options in the category will apply to all items under this category.</p>
+      <p class="important-note" data-i18n="cat.note">Adding sizes and options in the category will apply to all items under this category.</p>
 
       <div class="field">
-        <label>Sizes</label>
+        <label data-i18n="f.sizes">Sizes</label>
         <div class="chip-list" id="cat-size-chips"></div>
         <div class="chip-add-row">
-          <input type="text" id="cat-new-size-input" placeholder="e.g. Small" oninput="toggleAddBtn('cat-new-size-input','cat-add-size-btn')" onkeydown="if(event.key==='Enter'){event.preventDefault(); addSizeChip();}">
-          <button class="btn btn-outline btn-sm" id="cat-add-size-btn" disabled onclick="addSizeChip()">Add Size</button>
+          <input type="text" id="cat-new-size-input" placeholder="e.g. Small" data-i18n-placeholder="ph.size" oninput="toggleAddBtn('cat-new-size-input','cat-add-size-btn')" onkeydown="if(event.key==='Enter'){event.preventDefault(); addSizeChip();}">
+          <button class="btn btn-outline btn-sm" id="cat-add-size-btn" disabled onclick="addSizeChip()" data-i18n="cat.addSize">Add Size</button>
         </div>
       </div>
 
       <div class="field" id="cat-bulk-price-section">
-        <label>Price per size</label>
+        <label data-i18n="f.pricePerSize">Price per size</label>
         <div id="cat-bulk-price-inputs"></div>
       </div>
 
       <div class="field">
-        <label>Options</label>
+        <label data-i18n="f.options">Options</label>
         <div id="cat-option-groups-list"></div>
         <div class="group-add-row">
-          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'single')"><i class="ico " data-icon="circleDot"></i> Single-choice group</button>
-          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> Add-on group</button>
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'single')"><i class="ico " data-icon="circleDot"></i> <span data-i18n="group.single">Single-choice group</span></button>
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> <span data-i18n="group.multi">Add-on group</span></button>
         </div>
       </div>
     </div>
     <div class="drawer-foot modal-bottom-actions">
-      <button class="btn btn-outline" onclick="closeCategoryDrawer()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveCategoryDrawer()">Save Category</button>
+      <button class="btn btn-outline" onclick="closeCategoryDrawer()" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategoryDrawer()" data-i18n="cat.save">Save Category</button>
     </div>
   </div>
 </div>
@@ -946,7 +1001,7 @@
     <div class="drawer-body">
       <img class="thumb-preview" id="item-image-preview" src="" alt="" style="cursor:pointer" onclick="document.getElementById('item-image-file-input').click()" onerror="this.style.opacity=0.3;">
       <div class="upload-row">
-        <button type="button" class="btn-upload" id="upload-photo-btn" onclick="document.getElementById('item-image-file-input').click()"><i class="ico " data-icon="camera"></i> Upload Photo</button>
+        <button type="button" class="btn-upload" id="upload-photo-btn" onclick="document.getElementById('item-image-file-input').click()"><i class="ico " data-icon="camera"></i> <span data-i18n="upload.photo">Upload Photo</span></button>
         <span class="upload-status" id="upload-status"></span>
       </div>
       <input type="file" id="item-image-file-input" accept="image/*" style="display:none" onchange="handleItemImageFileSelect(event)">
@@ -955,13 +1010,13 @@
         <input type="url" id="item-image-input" placeholder="https://…" oninput="updateItemImagePreview()">
       </div>
       <div class="field">
-        <label>Name</label>
-        <input type="text" id="item-name-input" placeholder="e.g. Food name" oninput="updateItemSaveState()">
+        <label data-i18n="f.itemName">Name</label>
+        <input type="text" id="item-name-input" placeholder="e.g. Food name" data-i18n-placeholder="ph.food" oninput="updateItemSaveState()">
       </div>
       <div class="field">
-        <label>Description <span style="font-weight:400;">(max 150 characters)</span></label>
+        <label><span data-i18n="f.desc">Description</span> <span style="font-weight:400;" data-i18n="f.descMax">(max 150 characters)</span></label>
         <div class="handle-wrap">
-          <input type="text" id="item-desc-input" maxlength="150" placeholder="What's in it, what makes it good…" oninput="updateDescCount(); updateItemSaveState()">
+          <input type="text" id="item-desc-input" maxlength="150" placeholder="What's in it, what makes it good…" data-i18n-placeholder="ph.desc" oninput="updateDescCount(); updateItemSaveState()">
           <span class="handle-count" id="item-desc-count">0/150</span>
         </div>
       </div>
@@ -971,47 +1026,47 @@
       </div>
 
       <div class="field">
-        <label>Sizes <span style="font-weight:400">(optional)</span></label>
+        <label><span data-i18n="f.sizes">Sizes</span> <span style="font-weight:400" data-i18n="common.optional">(optional)</span></label>
         <div class="sub-hint" id="item-size-inherit-hint" style="margin-bottom:8px;"></div>
         <div class="chip-list" id="item-size-chips"></div>
         <div class="chip-add-row">
-          <input type="text" id="item-new-size-input" placeholder="e.g. Small" oninput="toggleAddBtn('item-new-size-input','item-add-size-btn')" onkeydown="if(event.key==='Enter'){event.preventDefault(); addItemSizeChip();}">
-          <button class="btn btn-outline btn-sm" id="item-add-size-btn" disabled onclick="addItemSizeChip()">Add</button>
+          <input type="text" id="item-new-size-input" placeholder="e.g. Small" data-i18n-placeholder="ph.size" oninput="toggleAddBtn('item-new-size-input','item-add-size-btn')" onkeydown="if(event.key==='Enter'){event.preventDefault(); addItemSizeChip();}">
+          <button class="btn btn-outline btn-sm" id="item-add-size-btn" disabled onclick="addItemSizeChip()" data-i18n="common.add">Add</button>
         </div>
-        <button class="btn btn-outline btn-sm" id="item-reset-sizes-btn" style="margin-top:8px; display:none;" onclick="resetItemSizesToCategory()"><i class="ico " data-icon="reset"></i> Use category's sizes instead</button>
+        <button class="btn btn-outline btn-sm" id="item-reset-sizes-btn" style="margin-top:8px; display:none;" onclick="resetItemSizesToCategory()"><i class="ico " data-icon="reset"></i> <span data-i18n="size.resetCat">Use category's sizes instead</span></button>
       </div>
 
       <div class="field">
-        <label>Prep time</label>
+        <label data-i18n="f.prepTime">Prep time</label>
         <select id="item-time-input">
-          <option value="5 mins">5 mins</option>
-          <option value="10 mins">10 mins</option>
-          <option value="15 mins">15 mins</option>
-          <option value="20 mins">20 mins</option>
-          <option value="25 mins">25 mins</option>
-          <option value="30 mins">30 mins</option>
-          <option value="40 mins">40 mins</option>
-          <option value="50+ mins">50+ mins</option>
+          <option value="5 mins" data-i18n="time.5">5 mins</option>
+          <option value="10 mins" data-i18n="time.10">10 mins</option>
+          <option value="15 mins" data-i18n="time.15">15 mins</option>
+          <option value="20 mins" data-i18n="time.20">20 mins</option>
+          <option value="25 mins" data-i18n="time.25">25 mins</option>
+          <option value="30 mins" data-i18n="time.30">30 mins</option>
+          <option value="40 mins" data-i18n="time.40">40 mins</option>
+          <option value="50+ mins" data-i18n="time.50">50+ mins</option>
         </select>
       </div>
 
       <div class="field" id="item-inherited-groups-field" style="display:none;">
-        <label>Options from this category</label>
+        <label data-i18n="item.inherited">Options from this category</label>
         <div id="item-inherited-groups-list"></div>
       </div>
 
       <div class="field">
-        <label>This item's own options</label>
+        <label data-i18n="item.own">This item's own options</label>
         <div id="item-option-groups-list"></div>
         <div class="group-add-row">
-          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('item', null, 'single')"><i class="ico " data-icon="circleDot"></i> Single-choice group</button>
-          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('item', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> Add-on group</button>
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('item', null, 'single')"><i class="ico " data-icon="circleDot"></i> <span data-i18n="group.single">Single-choice group</span></button>
+          <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('item', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> <span data-i18n="group.multi">Add-on group</span></button>
         </div>
       </div>
     </div>
     <div class="drawer-foot modal-bottom-actions">
-      <button class="btn btn-outline" onclick="closeItemDrawer()">Cancel</button>
-      <button class="btn btn-primary" id="item-save-btn" onclick="saveItemDrawer()" disabled>Save Item</button>
+      <button class="btn btn-outline" onclick="closeItemDrawer()" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" id="item-save-btn" onclick="saveItemDrawer()" disabled data-i18n="item.save">Save Item</button>
     </div>
   </div>
 </div>
@@ -1029,42 +1084,42 @@
     </div>
     <div class="drawer-body">
       <div class="field">
-        <label>Group title (shown to customers)</label>
-        <input type="text" id="group-title-input" placeholder="e.g. Group name">
+        <label data-i18n="f.groupTitle">Group title (shown to customers)</label>
+        <input type="text" id="group-title-input" placeholder="e.g. Group name" data-i18n-placeholder="ph.group">
       </div>
       <div class="field">
         <label class="chk-label" style="font-weight:700; font-size:13.5px;">
-          <input type="checkbox" id="group-required-input"> Customer must choose <span id="group-required-hint" class="sub-hint" style="font-weight:400;"></span>
+          <input type="checkbox" id="group-required-input"> <span data-i18n="group.mustChoose">Customer must choose</span> <span id="group-required-hint" class="sub-hint" style="font-weight:400;"></span>
         </label>
       </div>
       <div class="field">
-        <label>Options</label>
+        <label data-i18n="f.options">Options</label>
         <div id="group-options-list"></div>
-        <button class="btn btn-outline btn-sm add-option-btn" onclick="addGroupOption()"><i class="ico " data-icon="plus"></i> Add option</button>
+        <button class="btn btn-outline btn-sm add-option-btn" onclick="addGroupOption()"><i class="ico " data-icon="plus"></i> <span data-i18n="group.addOption">Add option</span></button>
       </div>
     </div>
     <div class="drawer-foot modal-bottom-actions">
-      <button class="btn btn-danger-ghost" id="group-delete-btn" style="display:none; margin-right:auto;" onclick="deleteGroupFromDrawer()">Delete</button>
-      <button class="btn btn-outline" onclick="closeGroupDrawer()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveGroupDrawer()">Save Group</button>
+      <button class="btn btn-danger-ghost" id="group-delete-btn" style="display:none; margin-right:auto;" onclick="deleteGroupFromDrawer()" data-i18n="common.delete">Delete</button>
+      <button class="btn btn-outline" onclick="closeGroupDrawer()" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGroupDrawer()" data-i18n="group.save">Save Group</button>
     </div>
   </div>
 </div>
 
 <div class="ctx-overlay" id="ctx-overlay" onclick="closeCatMenu()">
   <div class="ctx-menu" id="ctx-menu" onclick="event.stopPropagation()">
-    <button onclick="ctxAction('edit')"><i class="ico " data-icon="edit"></i> Edit category</button>
-    <button id="ctx-left" onclick="ctxAction('left')"><i class="ico " data-icon="arrowLeft"></i> Move left</button>
-    <button id="ctx-right" onclick="ctxAction('right')"><i class="ico " data-icon="arrowRight"></i> Move right</button>
-    <button class="danger" onclick="ctxAction('delete')"><i class="ico " data-icon="trash"></i> Delete category</button>
+    <button onclick="ctxAction('edit')"><i class="ico " data-icon="edit"></i> <span data-i18n="ctx.edit">Edit category</span></button>
+    <button id="ctx-left" onclick="ctxAction('left')"><i class="ico " data-icon="arrowLeft"></i> <span data-i18n="ctx.left">Move left</span></button>
+    <button id="ctx-right" onclick="ctxAction('right')"><i class="ico " data-icon="arrowRight"></i> <span data-i18n="ctx.right">Move right</span></button>
+    <button class="danger" onclick="ctxAction('delete')"><i class="ico " data-icon="trash"></i> <span data-i18n="ctx.delete">Delete category</span></button>
   </div>
 </div>
 <div id="launch-success">
   <div class="box">
     <div class="big"><i class="ico " data-icon="checkCircle"></i></div>
-    <h2>Congratulations!</h2>
-    <p>Your restaurant is now live on the IWTEAT home screen. Customers can find you and start ordering.</p>
-    <button class="btn btn-primary btn-wide" onclick="document.getElementById('launch-success').classList.remove('open')">Done</button>
+    <h2 data-i18n="launch.successTitle">Congratulations!</h2>
+    <p data-i18n="launch.successBody">Your restaurant is now live on the IWTEAT home screen. Customers can find you and start ordering.</p>
+    <button class="btn btn-primary btn-wide" onclick="document.getElementById('launch-success').classList.remove('open')" data-i18n="common.done">Done</button>
   </div>
 </div>
 
@@ -1073,8 +1128,776 @@
 <script>
   const API_BASE = 'https://chitkool.pythonanywhere.com';
 
+  /* ================= LANGUAGE: English / Myanmar (lightweight i18n) =================
+     - Static text: any element with data-i18n="key" (text), data-i18n-placeholder / -aria / -title.
+     - Text built by JavaScript: tr('key', {vars}) / trn('key', count, {vars}) for singular/plural.
+     - switchLanguage('en' | 'my') updates everything instantly (no reload) and remembers the choice. */
+  const LANG_KEY = 'iwteat_admin_lang';
+  const I18N = {
+ "en": {
+  "lang.title": "Language",
+  "tab.orders": "Orders",
+  "tab.menu": "Menu",
+  "tab.settings": "Settings",
+  "brand.default": "My Restaurant",
+  "gate.outside": "Please open this app through the official Telegram bot.",
+  "gate.notApprovedTitle": "Not approved yet",
+  "gate.notApprovedMsg": "This Telegram account isn't linked to a restaurant yet. If you'd like to list your restaurant, open the bot and tap \"List My Restaurant\".",
+  "gate.serverError": "Could not reach the server. Check your connection and try again.",
+  "gate.openBot": "Open Bot",
+  "setup.step1": "STEP 1 OF 2",
+  "setup.step2": "STEP 2 OF 2",
+  "setup.welcome": "Welcome! Let's set up your restaurant",
+  "setup.intro1": "Fill in every field to continue. You can change most of this later from Settings.",
+  "common.uploadLogo": "Upload Logo",
+  "f.name": "Restaurant name",
+  "f.id": "Restaurant ID",
+  "setup.idHint": "(unique — used for your shareable link)",
+  "f.tagline": "Tagline / title",
+  "setup.taglineHint": "(shown under your name to customers)",
+  "f.address": "Restaurant address",
+  "ph.name": "e.g. Restaurant name",
+  "ph.handle": "e.g. moon_cafe",
+  "ph.tagline": "e.g. A short line about your food",
+  "ph.addrSetup": "Street, township, city — shown to customers at checkout",
+  "ph.addrSettings": "Street, township, city",
+  "common.next": "Next",
+  "setup.pinTitle": "Pin your location",
+  "setup.pinIntro": "Riders and customers can find you easily with a location pin. Tap the map or drag the pin to fine-tune it.",
+  "setup.pinHint": "Stand at your restaurant when you tap the button for the most accurate pin.",
+  "loc.use": "Use my current location",
+  "setup.continue": "Continue to Menu",
+  "setup.skip": "Skip for now",
+  "aria.back": "Back",
+  "setup.fillAll": "Please fill in every field.",
+  "setup.chooseId": "Please choose an available restaurant ID.",
+  "setup.saveFail": "Could not save — check your connection and try again.",
+  "handle.idleSetup": "4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later.",
+  "handle.idleSettings": "Pick a unique ID (4–20 characters, starts with a letter; letters, numbers or _). It can't be changed later.",
+  "handle.mustStartLetter": "The ID must start with a letter (not a number or _).",
+  "handle.min4": "Use at least 4 characters.",
+  "handle.checking": "Checking…",
+  "handle.noConn": "Couldn't check right now — check your connection.",
+  "handle.rule": "Use 4–20 characters, starting with a letter.",
+  "handle.available": "Available",
+  "handle.notAvailable": "Not available.",
+  "handle.locked": "This ID can't be changed — your shared links use it.",
+  "map.fallback": "The map preview couldn't load. Check your connection — you can still skip this step.",
+  "map.dragChange": "Drag the pin or tap the map to change it.",
+  "map.pinSet": "Pin set — drag it or tap the map to fine-tune.",
+  "map.noGeo": "This device can't share its location — you can tap the map instead, or skip.",
+  "map.getting": "Getting your location…",
+  "map.geoFail": "Couldn't get your location. Allow location access, tap the map instead, or skip for now.",
+  "status.open": "Open",
+  "status.busy": "Busy",
+  "status.closed": "Closed",
+  "sm.openT": "Open for Orders",
+  "sm.openS": "Taking new orders as normal",
+  "sm.busyT": "Busy (+15 mins prep)",
+  "sm.busyS": "Still open — adds 15 min to prep estimates",
+  "sm.closedT": "Closed / Paused",
+  "sm.closedS": "No new orders until you reopen",
+  "banner.closedTitle": "Your restaurant is closed.",
+  "banner.closedBody": "Customers can't place new orders. Orders you already accepted carry on as normal.",
+  "banner.reopen": "Reopen",
+  "seg.current": "Current",
+  "seg.history": "History",
+  "seg.settlements": "Settlements",
+  "range.today": "Today",
+  "range.7": "7 days",
+  "range.30": "30 days",
+  "stat.delivered": "Delivered",
+  "stat.revenue": "Revenue (MMK)",
+  "toast.newOrder": "New order {id}",
+  "empty.cantLoadOrders": "Can't load orders",
+  "st.new": "New",
+  "st.finding": "Finding rider",
+  "st.assigned": "Rider assigned",
+  "st.delivered": "Delivered",
+  "st.rejected": "Rejected",
+  "st.canceled": "Canceled",
+  "st.preparing": "Preparing",
+  "st.ready": "Ready",
+  "chip.pickup": "Self-pick up",
+  "chip.delivery": "Delivery",
+  "time.justNow": "just now",
+  "time.minAgo": "{n} min ago",
+  "time.hAgo": "{n} h ago",
+  "order.pickup": "Pickup",
+  "act.reject": "Reject",
+  "act.accept": "Accept",
+  "act.pickedUp": "Picked up",
+  "act.markReady": "Mark ready",
+  "empty.noActive": "No active orders",
+  "empty.noActiveBody": "New orders appear here with a sound alert.",
+  "empty.noPeriod": "No orders in this period",
+  "confirm.reject": "Are you sure to reject the order?",
+  "toast.accepted": "Order accepted.",
+  "toast.rejected": "Order rejected.",
+  "toast.completed": "Order completed.",
+  "toast.markedReady": "Marked ready.",
+  "toast.couldNotUpdate": "Could not update: {msg}",
+  "confirm.close": "Close the restaurant? Customers will not be able to place new orders until you reopen.",
+  "toast.nowOpen": "You are open — orders can come in.",
+  "toast.busyOn": "Busy mode on — prep estimates are +{n} min.",
+  "toast.nowClosed": "Restaurant closed — new orders are paused.",
+  "prep.ready": "Ready",
+  "prep.waitCustomer": "Waiting for the customer",
+  "prep.waitRider": "Waiting for the rider",
+  "prep.estTitle": "Estimated prep time",
+  "prep.estBusy": "Includes +{n} min busy time · ",
+  "prep.estSub": "Tap the circle to change before accepting",
+  "prep.noTimer": "No timer yet",
+  "prep.startTimer": "Tap the circle to start one",
+  "prep.timeLeft": "Time left to prepare",
+  "prep.adjust": "Tap the circle to add or remove minutes",
+  "prep.ariaAdjust": "Adjust preparation time",
+  "prep.ariaMinus": "Remove one minute",
+  "prep.ariaPlus": "Add one minute",
+  "prep.minus": "−1 min",
+  "prep.plus": "+1 min",
+  "ring.min": "min",
+  "ring.set": "set",
+  "ring.sec": "sec",
+  "ring.late": "late",
+  "now.min": "{n} min",
+  "now.minLeft": "{n} min left",
+  "now.secLeft": "{n} s left",
+  "now.overdue": "overdue",
+  "toast.prepFail": "Could not update the timer: {msg}",
+  "mon.1": "Jan",
+  "mon.2": "Feb",
+  "mon.3": "Mar",
+  "mon.4": "Apr",
+  "mon.5": "May",
+  "mon.6": "Jun",
+  "mon.7": "Jul",
+  "mon.8": "Aug",
+  "mon.9": "Sep",
+  "mon.10": "Oct",
+  "mon.11": "Nov",
+  "mon.12": "Dec",
+  "pay.digital": "Digital",
+  "pay.cod": "COD",
+  "sb.settled": "Settled (Batch #{b})",
+  "sb.requested": "Settlement Requested (Batch #{b})",
+  "sb.unsettled": "Unsettled",
+  "fin.food": "Food (yours):",
+  "fin.delivery": "Delivery fee",
+  "settle.loading": "Loading…",
+  "settle.cantLoad": "Couldn't load settlements",
+  "common.tryAgain": "Try again",
+  "settle.totalLabel": "Total Unsettled Balance",
+  "settle.sub_1": "{n} completed order",
+  "settle.sub_n": "{n} completed orders",
+  "settle.foodOnly": "Food amounts only — delivery fees are not part of your payout.",
+  "settle.waitOne": "Request #{id} is waiting for the platform to pay.",
+  "settle.waitMany": "{n} requests are waiting for the platform to pay.",
+  "settle.from": "From",
+  "settle.to": "To",
+  "settle.endBefore": "The end date can't be before the start date.",
+  "settle.submit": "Submit Settlement Request",
+  "settle.nothing": "Nothing to settle right now. Delivered orders show up here automatically.",
+  "settle.batches": "Settlement Batches",
+  "filt.all": "All",
+  "filt.requested": "Requested",
+  "filt.settled": "Settled",
+  "ph.searchBatch": "Search batch or order ID",
+  "settle.selected_1": "{n} order selected",
+  "settle.selected_n": "{n} orders selected",
+  "settle.noMatch": "No batches match",
+  "settle.none": "No settlements yet",
+  "settle.noneBody": "Once you request and receive a payout, it is recorded here.",
+  "batch.viaOther": "bank / other",
+  "batch.title": "Batch #{id}",
+  "batch.settled": "Settled",
+  "batch.requested": "Requested",
+  "order.count_1": "{n} order",
+  "order.count_n": "{n} orders",
+  "batch.totalPaid": "Total Paid",
+  "batch.totalReq": "Total Requested",
+  "batch.settledOn": "Settled on {d}",
+  "batch.requestedOn": "Requested on {d}",
+  "batch.paidVia": "Paid via",
+  "batch.ref": "Ref",
+  "batch.waiting": "Waiting for the platform to send your payout.",
+  "batch.foodTotal": "Food total",
+  "batch.deliveryNote": "Delivery fees (not part of this payout):",
+  "batch.cancel": "Cancel request",
+  "confirm.settle": "Request settlement of {amt} MMK for {cnt} ({from} - {to})?\n\nThese orders are locked until the platform pays or declines the request.",
+  "toast.reqSent": "Request #{id} sent to the platform.",
+  "confirm.cancelReq": "Cancel request #{id}? Its orders go back to Unsettled and you can request them again.",
+  "toast.reqCancelled": "Request cancelled.",
+  "menu.newItem": "New Item",
+  "cat.chipAdd": "＋ Category",
+  "empty.noCat": "No categories yet",
+  "empty.noCatBody": "Tap “＋ Category” above to create your first one.",
+  "empty.noItems": "No items in \"{name}\" yet",
+  "empty.noItemsBody": "Tap \"+ New Item\" above to add the first dish.",
+  "hint.sharedGroups_1": "{n} shared option group applies to every item in \"{name}\"",
+  "hint.sharedGroups_n": "{n} shared option groups apply to every item in \"{name}\"",
+  "badge.groups_1": "{n} option group",
+  "badge.groups_n": "{n} option groups",
+  "stock.soldOutTip": "Sold out — tap to restock",
+  "stock.inStockTip": "In stock — tap to mark sold out",
+  "common.delete": "Delete",
+  "toast.soldOut": "Marked sold out.",
+  "toast.backInStock": "Back in stock.",
+  "confirm.delItem": "Delete \"{name}\"?",
+  "confirm.delCat": "Delete \"{name}\" and all {n} item(s) inside it? This can't be undone.",
+  "ctx.edit": "Edit category",
+  "ctx.left": "Move left",
+  "ctx.right": "Move right",
+  "ctx.delete": "Delete category",
+  "launch.successTitle": "Congratulations!",
+  "launch.successBody": "Your restaurant is now live on the IWTEAT home screen. Customers can find you and start ordering.",
+  "common.done": "Done",
+  "launch.readyTitle": "Congratulations! Your menu is ready",
+  "launch.notPublished": "Your restaurant isn't published yet",
+  "launch.readyBody": "You added all the items you need. Tap below to go live — customers will be able to see your restaurant.",
+  "launch.needMore": "Customers can't see it until you launch. Add at least {n} menu items first.",
+  "launch.allAdded": "{n} of {n} items added — ready to launch!",
+  "launch.progress": "{c} of {n} items added — add {r} more",
+  "launch.start": "Start launching",
+  "launch.launching": "Launching…",
+  "toast.addAtLeast": "Add at least {n} items first.",
+  "toast.launchFail": "Couldn't launch: {msg}",
+  "toast.profileSavedLaunch": "Profile saved — now add at least {n} menu items to launch.",
+  "settings.title": "Settings",
+  "settings.editProfile": "Edit profile",
+  "share.label": "Shareable Link",
+  "share.notLive": "Not live yet",
+  "share.btn": "Share Profile",
+  "share.text": "Check out our menu on IWTEAT!",
+  "share.copied": "Link copied to clipboard!",
+  "share.copyFail": "Could not copy — {url}",
+  "profile.shown": "Shown to customers in the app.",
+  "f.logo": "Logo",
+  "f.pin": "Location pin",
+  "common.optional": "(optional)",
+  "common.save": "Save",
+  "common.cancel": "Cancel",
+  "tax.title": "5% Commercial Tax",
+  "tax.incl": "Tax Inclusive",
+  "tax.excl": "Tax Exclusive",
+  "backup.title": "Backup & restore",
+  "backup.desc": "Export the full menu as a JSON file, or paste one back in to restore it. Useful before making big changes, or to copy a menu between restaurants later.",
+  "backup.export": "Export JSON",
+  "backup.import": "Import JSON",
+  "prompt.json": "Paste your exported JSON here:",
+  "err.jsonArray": "Expected a JSON array of categories.",
+  "toast.imported": "Menu imported.",
+  "toast.invalidJson": "Invalid JSON: {msg}",
+  "sync.title": "Sync",
+  "sync.desc": "The menu is stored on your server, not in this browser — every device reads the same data. Use this if you suspect this tab is showing something stale.",
+  "sync.reload": "Reload from server",
+  "toast.nameRequired": "Restaurant name is required.",
+  "toast.pickId": "Pick an available restaurant ID first (or leave it empty).",
+  "toast.profileUpdated": "Restaurant profile updated.",
+  "toast.noServer": "Could not reach the server: {msg}",
+  "toast.couldNotSave": "Could not save: {msg}",
+  "toast.saveConn": "Could not save — check your connection.",
+  "toast.taxExcl": "Tax on — added at checkout.",
+  "toast.taxIncl": "Tax on — included in prices.",
+  "toast.taxOff": "Tax is off.",
+  "cat.new": "New Category",
+  "edit.title": "Edit \"{name}\"",
+  "f.catName": "Category name",
+  "ph.catName": "e.g. Category name",
+  "cat.note": "Adding sizes and options in the category will apply to all items under this category.",
+  "f.sizes": "Sizes",
+  "ph.size": "e.g. Small",
+  "cat.addSize": "Add Size",
+  "f.pricePerSize": "Price per size",
+  "f.options": "Options",
+  "group.single": "Single-choice group",
+  "group.multi": "Add-on group",
+  "cat.save": "Save Category",
+  "cat.startPrice": "Starting price for every item",
+  "size.noneCat": "No sizes — items use one flat price.",
+  "size.exists": "That size already exists.",
+  "confirm.unsavedCat": "You have unsaved changes to this category. Leave without saving?",
+  "toast.catRequired": "Category name is required.",
+  "toast.catSaved": "Category saved.",
+  "item.new": "New Item",
+  "upload.photo": "Upload Photo",
+  "f.itemName": "Name",
+  "f.desc": "Description",
+  "f.descMax": "(max 150 characters)",
+  "ph.food": "e.g. Food name",
+  "ph.desc": "What's in it, what makes it good…",
+  "item.priceMMK": "Price (MMK)",
+  "item.priceSizeMMK": "Price per size (MMK)",
+  "common.add": "Add",
+  "size.resetCat": "Use category's sizes instead",
+  "f.prepTime": "Prep time",
+  "time.5": "5 mins",
+  "time.10": "10 mins",
+  "time.15": "15 mins",
+  "time.20": "20 mins",
+  "time.25": "25 mins",
+  "time.30": "30 mins",
+  "time.40": "40 mins",
+  "time.50": "50+ mins",
+  "time.current": "(current)",
+  "item.inherited": "Options from this category",
+  "item.own": "This item's own options",
+  "item.save": "Save Item",
+  "size.noneItem": "No sizes — flat price.",
+  "size.hintOwnVs": "Using this item's own sizes instead of the category's ({list}).",
+  "size.hintOwn": "Using this item's own sizes.",
+  "size.hintInherit": "Currently using this category's sizes. Add a size below to override it just for this item.",
+  "size.hintNone": "This category has no sizes — add one below to give just this item its own sizes.",
+  "common.none": "none",
+  "upload.uploading": "Uploading…",
+  "upload.done": "Uploaded",
+  "upload.failed": "Upload failed — try again.",
+  "toast.itemName": "Item name is required.",
+  "toast.itemFill": "Fill in the name, description and price first.",
+  "toast.descLong": "Description must be {max} characters or fewer (now {n}).",
+  "toast.itemSaved": "Item saved.",
+  "toast.createCatFirst": "Create a category first.",
+  "group.newTitle": "New Option Group",
+  "group.newSingle": "New Single-choice Group",
+  "group.newMulti": "New Add-on Group",
+  "group.optionGroup": "Option Group",
+  "f.groupTitle": "Group title (shown to customers)",
+  "ph.group": "e.g. Group name",
+  "group.mustChoose": "Customer must choose",
+  "group.hintSingle": "(customer must pick exactly one)",
+  "group.hintMulti": "(customer must pick at least one)",
+  "group.addOption": "Add option",
+  "group.save": "Save Group",
+  "ph.optName": "Option name",
+  "group.untitled": "Untitled group",
+  "group.required": "Required",
+  "group.optional": "Optional",
+  "opt.count_1": "{n} option",
+  "opt.count_n": "{n} options",
+  "group.editInCat": "edit in this category's settings",
+  "common.noneYet": "None yet.",
+  "toast.groupTitle": "Group title is required.",
+  "confirm.delGroup": "Delete this option group?"
+ },
+ "my": {
+  "lang.title": "ဘာသာစကား",
+  "tab.orders": "အော်ဒါများ",
+  "tab.menu": "မီနူး",
+  "tab.settings": "ဆိုင်ဆက်တင်များ",
+  "brand.default": "ကျွန်ုပ်၏ဆိုင်",
+  "gate.outside": "ကျေးဇူးပြု၍ ဤအက်ပ်ကို တရားဝင် Telegram bot မှတစ်ဆင့် ဖွင့်ပါ။",
+  "gate.notApprovedTitle": "ခွင့်ပြုချက် မရသေးပါ",
+  "gate.notApprovedMsg": "ဤ Telegram အကောင့်ကို ဆိုင်တစ်ခုနှင့် မချိတ်ဆက်ရသေးပါ။ သင့်ဆိုင်ကို စာရင်းသွင်းလိုပါက bot ကိုဖွင့်ပြီး \"List My Restaurant\" ကို နှိပ်ပါ။",
+  "gate.serverError": "ဆာဗာနှင့် ချိတ်ဆက်၍ မရပါ။ အင်တာနက်ကို စစ်ဆေးပြီး ထပ်မံကြိုးစားပါ။",
+  "gate.openBot": "Bot ကို ဖွင့်မည်",
+  "setup.step1": "အဆင့် 1 / 2",
+  "setup.step2": "အဆင့် 2 / 2",
+  "setup.welcome": "ကြိုဆိုပါတယ်! သင့်ဆိုင်ကို စတင်ပြင်ဆင်ကြရအောင်",
+  "setup.intro1": "ဆက်သွားရန် အကွက်အားလုံးကို ဖြည့်ပါ။ အများစုကို နောက်ပိုင်း ဆက်တင်များမှ ပြန်ပြင်နိုင်ပါသည်။",
+  "common.uploadLogo": "လိုဂို တင်မည်",
+  "f.name": "ဆိုင်အမည်",
+  "f.id": "ဆိုင် ID",
+  "setup.idHint": "(သီးသန့်ဖြစ်ရမည် — မျှဝေလင့်ခ်တွင် သုံးမည်)",
+  "f.tagline": "ဆိုင်ဆောင်ပုဒ် / ခေါင်းစဉ်",
+  "setup.taglineHint": "(ဆိုင်အမည်အောက်တွင် ဖောက်သည်များ မြင်ရမည်)",
+  "f.address": "ဆိုင်လိပ်စာ",
+  "ph.name": "ဥပမာ - ဆိုင်အမည်",
+  "ph.handle": "ဥပမာ - moon_cafe",
+  "ph.tagline": "ဥပမာ - သင့်အစားအစာအကြောင်း စာတိုတစ်ကြောင်း",
+  "ph.addrSetup": "လမ်း၊ မြို့နယ်၊ မြို့ — ငွေရှင်းချိန်တွင် ဖောက်သည်များ မြင်ရမည်",
+  "ph.addrSettings": "လမ်း၊ မြို့နယ်၊ မြို့",
+  "common.next": "ရှေ့ဆက်မည်",
+  "setup.pinTitle": "သင့်တည်နေရာကို ပင်ထိုးပါ",
+  "setup.pinIntro": "တည်နေရာပင်ဖြင့် ပို့ဆောင်သူများနှင့် ဖောက်သည်များ သင့်ဆိုင်ကို လွယ်ကူစွာ ရှာတွေ့နိုင်ပါသည်။ မြေပုံကို နှိပ်ပါ သို့မဟုတ် ပင်ကို ဆွဲ၍ ချိန်ညှိပါ။",
+  "setup.pinHint": "ပိုမိုတိကျစေရန် ခလုတ်နှိပ်ချိန်တွင် ဆိုင်၌ ရပ်နေပါ။",
+  "loc.use": "ကျွန်ုပ်၏ လက်ရှိတည်နေရာကို သုံးမည်",
+  "setup.continue": "မီနူးသို့ ဆက်သွားမည်",
+  "setup.skip": "ယခု ကျော်ထားမည်",
+  "aria.back": "နောက်သို့",
+  "setup.fillAll": "အကွက်အားလုံးကို ဖြည့်ပါ။",
+  "setup.chooseId": "အသုံးပြုနိုင်သော ဆိုင် ID တစ်ခု ရွေးပါ။",
+  "setup.saveFail": "သိမ်း၍မရပါ — အင်တာနက်ကို စစ်ဆေးပြီး ထပ်မံကြိုးစားပါ။",
+  "handle.idleSetup": "စာလုံး 4 မှ 20 အထိ၊ စာလုံးဖြင့် စရမည်။ စာလုံး၊ ဂဏန်းနှင့် _ သာ သုံးနိုင်သည်။ နောက်ပိုင်း ပြောင်း၍မရပါ။",
+  "handle.idleSettings": "သီးသန့် ID တစ်ခု ရွေးပါ (စာလုံး 4 မှ 20၊ စာလုံးဖြင့်စရမည်၊ စာလုံး၊ ဂဏန်း သို့ _ )။ နောက်ပိုင်း ပြောင်း၍မရပါ။",
+  "handle.mustStartLetter": "ID သည် စာလုံးဖြင့် စရမည် (ဂဏန်း သို့ _ မဖြစ်ရ)။",
+  "handle.min4": "အနည်းဆုံး စာလုံး 4 လုံး သုံးပါ။",
+  "handle.checking": "စစ်ဆေးနေသည်…",
+  "handle.noConn": "ယခု စစ်ဆေး၍မရပါ — အင်တာနက်ကို စစ်ဆေးပါ။",
+  "handle.rule": "စာလုံး 4 မှ 20 အတွင်း သုံးပြီး စာလုံးဖြင့် စပါ။",
+  "handle.available": "သုံးနိုင်ပါသည်",
+  "handle.notAvailable": "မရနိုင်ပါ။",
+  "handle.locked": "ဤ ID ကို ပြောင်း၍မရပါ — သင့်မျှဝေလင့်ခ်များတွင် သုံးထားသောကြောင့်ဖြစ်သည်။",
+  "map.fallback": "မြေပုံကို ဖော်ပြ၍မရပါ။ အင်တာနက်ကို စစ်ဆေးပါ — ဤအဆင့်ကို ကျော်နိုင်ပါသေးသည်။",
+  "map.dragChange": "ပင်ကို ဆွဲပါ သို့မဟုတ် မြေပုံကို နှိပ်၍ ပြောင်းပါ။",
+  "map.pinSet": "ပင်ထိုးပြီးပါပြီ — ဆွဲ၍ သို့မဟုတ် မြေပုံကို နှိပ်၍ ချိန်ညှိနိုင်သည်။",
+  "map.noGeo": "ဤစက်မှ တည်နေရာကို မျှဝေ၍မရပါ — မြေပုံကို နှိပ်ပါ သို့မဟုတ် ကျော်ထားပါ။",
+  "map.getting": "သင့်တည်နေရာကို ရယူနေသည်…",
+  "map.geoFail": "သင့်တည်နေရာကို မရရှိပါ။ တည်နေရာအသုံးပြုခွင့် ပေးပါ၊ မြေပုံကို နှိပ်ပါ သို့မဟုတ် ယခု ကျော်ထားပါ။",
+  "status.open": "ဖွင့်ထားသည်",
+  "status.busy": "အလုပ်များနေသည်",
+  "status.closed": "ပိတ်ထားသည်",
+  "sm.openT": "အော်ဒါလက်ခံနေသည်",
+  "sm.openS": "အော်ဒါအသစ်များကို ပုံမှန်လက်ခံနေသည်",
+  "sm.busyT": "အလုပ်များနေသည် (+15 မိနစ်)",
+  "sm.busyS": "ဆက်ဖွင့်ထားသည် — ပြင်ဆင်ချိန်ခန့်မှန်းချက်တွင် 15 မိနစ် ထပ်တိုးမည်",
+  "sm.closedT": "ပိတ်ထားသည် / ခဏရပ်ထားသည်",
+  "sm.closedS": "ပြန်မဖွင့်မချင်း အော်ဒါအသစ် မလက်ခံပါ",
+  "banner.closedTitle": "သင့်ဆိုင် ပိတ်ထားပါသည်။",
+  "banner.closedBody": "ဖောက်သည်များ အော်ဒါအသစ် မမှာနိုင်ပါ။ လက်ခံပြီးသား အော်ဒါများကို ပုံမှန်ဆက်လုပ်နိုင်ပါသည်။",
+  "banner.reopen": "ပြန်ဖွင့်မည်",
+  "seg.current": "လက်ရှိ",
+  "seg.history": "မှတ်တမ်း",
+  "seg.settlements": "ငွေရှင်းတမ်းများ",
+  "range.today": "ယနေ့",
+  "range.7": "7 ရက်",
+  "range.30": "30 ရက်",
+  "stat.delivered": "ပို့ဆောင်ပြီး",
+  "stat.revenue": "ဝင်ငွေ (MMK)",
+  "toast.newOrder": "အော်ဒါအသစ် {id}",
+  "empty.cantLoadOrders": "အော်ဒါများ ဖွင့်၍မရပါ",
+  "st.new": "အသစ်",
+  "st.finding": "ပို့ဆောင်သူ ရှာနေသည်",
+  "st.assigned": "ပို့ဆောင်သူ သတ်မှတ်ပြီး",
+  "st.delivered": "ပို့ဆောင်ပြီး",
+  "st.rejected": "ငြင်းပယ်ထားသည်",
+  "st.canceled": "ပယ်ဖျက်ထားသည်",
+  "st.preparing": "ပြင်ဆင်နေသည်",
+  "st.ready": "အသင့်ဖြစ်ပြီ",
+  "chip.pickup": "ဆိုင်တွင် လာယူမည်",
+  "chip.delivery": "ပို့ဆောင်ရန်",
+  "time.justNow": "ယခုလေးတင်",
+  "time.minAgo": "လွန်ခဲ့သော {n} မိနစ်",
+  "time.hAgo": "လွန်ခဲ့သော {n} နာရီ",
+  "order.pickup": "လာယူမည်",
+  "act.reject": "ငြင်းပယ်မည်",
+  "act.accept": "လက်ခံမည်",
+  "act.pickedUp": "လာယူပြီး",
+  "act.markReady": "အသင့်ဖြစ်ပြီဟု မှတ်မည်",
+  "empty.noActive": "လက်ရှိ အော်ဒါ မရှိပါ",
+  "empty.noActiveBody": "အော်ဒါအသစ်များကို အသံသတိပေးချက်ဖြင့် ဤနေရာတွင် မြင်ရမည်။",
+  "empty.noPeriod": "ဤကာလအတွင်း အော်ဒါ မရှိပါ",
+  "confirm.reject": "ဤအော်ဒါကို ငြင်းပယ်မှာ သေချာပါသလား?",
+  "toast.accepted": "အော်ဒါ လက်ခံပြီးပါပြီ။",
+  "toast.rejected": "အော်ဒါ ငြင်းပယ်ပြီးပါပြီ။",
+  "toast.completed": "အော်ဒါ ပြီးစီးပါပြီ။",
+  "toast.markedReady": "အသင့်ဖြစ်ကြောင်း မှတ်ပြီးပါပြီ။",
+  "toast.couldNotUpdate": "ပြင်၍မရပါ - {msg}",
+  "confirm.close": "ဆိုင်ကို ပိတ်မလား? ပြန်မဖွင့်မချင်း ဖောက်သည်များ အော်ဒါအသစ် မမှာနိုင်ပါ။",
+  "toast.nowOpen": "ဆိုင်ဖွင့်ထားသည် — အော်ဒါများ ဝင်လာနိုင်ပါပြီ။",
+  "toast.busyOn": "အလုပ်များနေမုဒ် ဖွင့်ထားသည် — ပြင်ဆင်ချိန်ခန့်မှန်းချက် +{n} မိနစ်။",
+  "toast.nowClosed": "ဆိုင်ပိတ်ထားသည် — အော်ဒါအသစ်များ ခဏရပ်ထားသည်။",
+  "prep.ready": "အသင့်ဖြစ်ပြီ",
+  "prep.waitCustomer": "ဖောက်သည်ကို စောင့်နေသည်",
+  "prep.waitRider": "ပို့ဆောင်သူကို စောင့်နေသည်",
+  "prep.estTitle": "ခန့်မှန်း ပြင်ဆင်ချိန်",
+  "prep.estBusy": "+{n} မိနစ် အလုပ်များချိန် ပါဝင်သည် · ",
+  "prep.estSub": "လက်မခံမီ ပြောင်းလိုပါက စက်ဝိုင်းကို နှိပ်ပါ",
+  "prep.noTimer": "အချိန်တိုင်းကိရိယာ မရှိသေးပါ",
+  "prep.startTimer": "စတင်ရန် စက်ဝိုင်းကို နှိပ်ပါ",
+  "prep.timeLeft": "ပြင်ဆင်ရန် ကျန်ချိန်",
+  "prep.adjust": "မိနစ်တိုး/လျှော့ရန် စက်ဝိုင်းကို နှိပ်ပါ",
+  "prep.ariaAdjust": "ပြင်ဆင်ချိန် ချိန်ညှိရန်",
+  "prep.ariaMinus": "တစ်မိနစ် လျှော့ရန်",
+  "prep.ariaPlus": "တစ်မိနစ် တိုးရန်",
+  "prep.minus": "−1 မိနစ်",
+  "prep.plus": "+1 မိနစ်",
+  "ring.min": "မိနစ်",
+  "ring.set": "စတင်",
+  "ring.sec": "စက္ကန့်",
+  "ring.late": "နောက်ကျ",
+  "now.min": "{n} မိနစ်",
+  "now.minLeft": "{n} မိနစ်ကျန်",
+  "now.secLeft": "{n} စက္ကန့်ကျန်",
+  "now.overdue": "နောက်ကျနေသည်",
+  "toast.prepFail": "အချိန်တိုင်းကိရိယာ ပြင်၍မရပါ - {msg}",
+  "mon.1": "ဇန်",
+  "mon.2": "ဖေ",
+  "mon.3": "မတ်",
+  "mon.4": "ဧပြီ",
+  "mon.5": "မေ",
+  "mon.6": "ဇွန်",
+  "mon.7": "ဇူ",
+  "mon.8": "ဩ",
+  "mon.9": "စက်",
+  "mon.10": "အောက်",
+  "mon.11": "နို",
+  "mon.12": "ဒီ",
+  "pay.digital": "ဒစ်ဂျစ်တယ်",
+  "pay.cod": "COD",
+  "sb.settled": "ရှင်းပြီး (အစုအဖွဲ့ #{b})",
+  "sb.requested": "ငွေရှင်းရန် တောင်းခံထားသည် (အစုအဖွဲ့ #{b})",
+  "sb.unsettled": "မရှင်းရသေးပါ",
+  "fin.food": "အစားအစာ (သင့်အတွက်):",
+  "fin.delivery": "ပို့ဆောင်ခ",
+  "settle.loading": "ဖွင့်နေသည်…",
+  "settle.cantLoad": "ငွေရှင်းတမ်းများ ဖွင့်၍မရပါ",
+  "common.tryAgain": "ထပ်ကြိုးစားမည်",
+  "settle.totalLabel": "မရှင်းရသေးသော စုစုပေါင်းလက်ကျန်",
+  "settle.sub_1": "ပြီးစီးသော အော်ဒါ {n} ခု",
+  "settle.sub_n": "ပြီးစီးသော အော်ဒါ {n} ခု",
+  "settle.foodOnly": "အစားအစာတန်ဖိုးသာ — ပို့ဆောင်ခသည် သင့်ရရန်ငွေတွင် မပါဝင်ပါ။",
+  "settle.waitOne": "တောင်းခံမှု #{id} ကို ပလပ်ဖောင်းမှ ငွေပေးချေရန် စောင့်ဆိုင်းနေသည်။",
+  "settle.waitMany": "တောင်းခံမှု {n} ခုကို ပလပ်ဖောင်းမှ ငွေပေးချေရန် စောင့်ဆိုင်းနေသည်။",
+  "settle.from": "မှ",
+  "settle.to": "အထိ",
+  "settle.endBefore": "ပြီးဆုံးရက်သည် စတင်ရက်ထက် မစောရပါ။",
+  "settle.submit": "ငွေရှင်းရန် တောင်းခံမည်",
+  "settle.nothing": "ယခု ရှင်းရန် မရှိပါ။ ပို့ဆောင်ပြီးသော အော်ဒါများ ဤနေရာတွင် အလိုအလျောက် ပေါ်လာမည်။",
+  "settle.batches": "ငွေရှင်းအစုအဖွဲ့များ",
+  "filt.all": "အားလုံး",
+  "filt.requested": "တောင်းခံထားသည်",
+  "filt.settled": "ရှင်းပြီး",
+  "ph.searchBatch": "အစုအဖွဲ့ သို့မဟုတ် အော်ဒါ ID ရှာမည်",
+  "settle.selected_1": "အော်ဒါ {n} ခု ရွေးထားသည်",
+  "settle.selected_n": "အော်ဒါ {n} ခု ရွေးထားသည်",
+  "settle.noMatch": "ကိုက်ညီသော အစုအဖွဲ့ မရှိပါ",
+  "settle.none": "ငွေရှင်းမှု မရှိသေးပါ",
+  "settle.noneBody": "ငွေရှင်းရန် တောင်းခံပြီး ရရှိသည်နှင့် ဤနေရာတွင် မှတ်တမ်းတင်မည်။",
+  "batch.viaOther": "ဘဏ် / အခြား",
+  "batch.title": "အစုအဖွဲ့ #{id}",
+  "batch.settled": "ရှင်းပြီး",
+  "batch.requested": "တောင်းခံထားသည်",
+  "order.count_1": "အော်ဒါ {n} ခု",
+  "order.count_n": "အော်ဒါ {n} ခု",
+  "batch.totalPaid": "ပေးချေပြီး စုစုပေါင်း",
+  "batch.totalReq": "တောင်းခံထားသော စုစုပေါင်း",
+  "batch.settledOn": "{d} တွင် ရှင်းပြီး",
+  "batch.requestedOn": "{d} တွင် တောင်းခံထားသည်",
+  "batch.paidVia": "ပေးချေသည့်နည်း",
+  "batch.ref": "ကိုးကားအမှတ်",
+  "batch.waiting": "ပလပ်ဖောင်းမှ သင့်ငွေပေးချေရန် စောင့်ဆိုင်းနေသည်။",
+  "batch.foodTotal": "အစားအစာ စုစုပေါင်း",
+  "batch.deliveryNote": "ပို့ဆောင်ခများ (ဤငွေပေးချေမှုတွင် မပါဝင်):",
+  "batch.cancel": "တောင်းခံမှု ပယ်ဖျက်မည်",
+  "confirm.settle": "{cnt} အတွက် {amt} MMK ငွေရှင်းရန် တောင်းခံမလား ({from} - {to})?\n\nပလပ်ဖောင်းမှ ပေးချေသည် သို့မဟုတ် ငြင်းပယ်သည်အထိ ဤအော်ဒါများကို ပိတ်ထားမည်။",
+  "toast.reqSent": "တောင်းခံမှု #{id} ကို ပလပ်ဖောင်းသို့ ပို့ပြီးပါပြီ။",
+  "confirm.cancelReq": "တောင်းခံမှု #{id} ကို ပယ်ဖျက်မလား? ၎င်း၏ အော်ဒါများသည် \"မရှင်းရသေးပါ\" သို့ ပြန်ရောက်ပြီး ထပ်မံတောင်းခံနိုင်ပါသည်။",
+  "toast.reqCancelled": "တောင်းခံမှု ပယ်ဖျက်ပြီးပါပြီ။",
+  "menu.newItem": "ဟင်းလျာအသစ်",
+  "cat.chipAdd": "＋ အမျိုးအစား",
+  "empty.noCat": "အမျိုးအစား မရှိသေးပါ",
+  "empty.noCatBody": "အပေါ်ရှိ “＋ အမျိုးအစား” ကို နှိပ်၍ ပထမဆုံးတစ်ခု ဖန်တီးပါ။",
+  "empty.noItems": "\"{name}\" ထဲတွင် ဟင်းလျာ မရှိသေးပါ",
+  "empty.noItemsBody": "အပေါ်ရှိ \"+ ဟင်းလျာအသစ်\" ကို နှိပ်၍ ပထမဆုံးဟင်းလျာကို ထည့်ပါ။",
+  "hint.sharedGroups_1": "မျှဝေရွေးချယ်စရာအုပ်စု {n} ခုသည် \"{name}\" ထဲရှိ ဟင်းလျာအားလုံးတွင် အကျုံးဝင်သည်",
+  "hint.sharedGroups_n": "မျှဝေရွေးချယ်စရာအုပ်စု {n} ခုသည် \"{name}\" ထဲရှိ ဟင်းလျာအားလုံးတွင် အကျုံးဝင်သည်",
+  "badge.groups_1": "ရွေးချယ်စရာအုပ်စု {n} ခု",
+  "badge.groups_n": "ရွေးချယ်စရာအုပ်စု {n} ခု",
+  "stock.soldOutTip": "ကုန်သွားပြီ — နှိပ်၍ ပြန်ရနေကြောင်း ပြင်ပါ",
+  "stock.inStockTip": "ရနေသည် — နှိပ်၍ ကုန်သွားကြောင်း မှတ်ပါ",
+  "common.delete": "ဖျက်မည်",
+  "toast.soldOut": "ကုန်သွားကြောင်း မှတ်ပြီးပါပြီ။",
+  "toast.backInStock": "ပြန်ရနေပါပြီ။",
+  "confirm.delItem": "\"{name}\" ကို ဖျက်မလား?",
+  "confirm.delCat": "\"{name}\" နှင့် ၎င်းအထဲရှိ ဟင်းလျာ {n} ခုလုံးကို ဖျက်မလား? ပြန်ယူ၍မရပါ။",
+  "ctx.edit": "အမျိုးအစား ပြင်မည်",
+  "ctx.left": "ဘယ်ဘက်သို့ ရွှေ့မည်",
+  "ctx.right": "ညာဘက်သို့ ရွှေ့မည်",
+  "ctx.delete": "အမျိုးအစား ဖျက်မည်",
+  "launch.successTitle": "ဂုဏ်ယူပါတယ်!",
+  "launch.successBody": "သင့်ဆိုင်သည် IWTEAT ပင်မစာမျက်နှာတွင် ယခု တင်ပြီးပါပြီ။ ဖောက်သည်များ သင့်ဆိုင်ကို ရှာတွေ့ပြီး မှာယူနိုင်ပါပြီ။",
+  "common.done": "ပြီးပါပြီ",
+  "launch.readyTitle": "ဂုဏ်ယူပါတယ်! သင့်မီနူး အဆင်သင့်ဖြစ်ပါပြီ",
+  "launch.notPublished": "သင့်ဆိုင်ကို မထုတ်ပြန်ရသေးပါ",
+  "launch.readyBody": "လိုအပ်သော ဟင်းလျာများ ထည့်ပြီးပါပြီ။ အောက်ကို နှိပ်၍ စတင်ပါ — ဖောက်သည်များ သင့်ဆိုင်ကို မြင်နိုင်ပါမည်။",
+  "launch.needMore": "စတင်မထုတ်မချင်း ဖောက်သည်များ မမြင်နိုင်ပါ။ မီနူးဟင်းလျာ အနည်းဆုံး {n} ခု အရင်ထည့်ပါ။",
+  "launch.allAdded": "ဟင်းလျာ {n} ခုအနက် {n} ခု ထည့်ပြီး — စတင်ရန် အဆင်သင့်ပါ!",
+  "launch.progress": "ဟင်းလျာ {n} ခုအနက် {c} ခု ထည့်ပြီး — နောက်ထပ် {r} ခု ထည့်ပါ",
+  "launch.start": "စတင်ထုတ်ပြန်မည်",
+  "launch.launching": "စတင်နေသည်…",
+  "toast.addAtLeast": "ဟင်းလျာ အနည်းဆုံး {n} ခု အရင်ထည့်ပါ။",
+  "toast.launchFail": "စတင်၍မရပါ - {msg}",
+  "toast.profileSavedLaunch": "ပရိုဖိုင် သိမ်းပြီးပါပြီ — စတင်ရန် မီနူးဟင်းလျာ အနည်းဆုံး {n} ခု ထည့်ပါ။",
+  "settings.title": "ဆိုင်ဆက်တင်များ",
+  "settings.editProfile": "ပရိုဖိုင် ပြင်မည်",
+  "share.label": "မျှဝေနိုင်သောလင့်ခ်",
+  "share.notLive": "မထုတ်ပြန်ရသေးပါ",
+  "share.btn": "ပရိုဖိုင် မျှဝေမည်",
+  "share.text": "IWTEAT တွင် ကျွန်ုပ်တို့၏ မီနူးကို ကြည့်ပါ!",
+  "share.copied": "လင့်ခ်ကို ကူးယူပြီးပါပြီ!",
+  "share.copyFail": "ကူး၍မရပါ — {url}",
+  "profile.shown": "အက်ပ်တွင် ဖောက်သည်များ မြင်ရမည့် အချက်အလက်။",
+  "f.logo": "လိုဂို",
+  "f.pin": "တည်နေရာပင်",
+  "common.optional": "(မဖြည့်လည်းရ)",
+  "common.save": "သိမ်းမည်",
+  "common.cancel": "မလုပ်တော့ပါ",
+  "tax.title": "5% ကုန်သွယ်ခွန်",
+  "tax.incl": "ခွန်ပါပြီးသား",
+  "tax.excl": "ခွန်ထပ်ပေါင်း",
+  "backup.title": "အရန်ကူးယူခြင်းနှင့် ပြန်လည်ရယူခြင်း",
+  "backup.desc": "မီနူးအားလုံးကို JSON ဖိုင်အဖြစ် ထုတ်ယူနိုင်ပြီး ပြန်ထည့်၍လည်း ပြန်လည်ရယူနိုင်သည်။ ပြောင်းလဲမှုကြီးများ မလုပ်မီ သို့မဟုတ် နောက်ပိုင်း ဆိုင်များအကြား မီနူးကူးယူရန် အသုံးဝင်သည်။",
+  "backup.export": "JSON ထုတ်မည်",
+  "backup.import": "JSON ထည့်မည်",
+  "prompt.json": "ထုတ်ယူထားသော JSON ကို ဤနေရာတွင် ကူးထည့်ပါ -",
+  "err.jsonArray": "အမျိုးအစားများပါသော JSON array လိုအပ်ပါသည်။",
+  "toast.imported": "မီနူး ထည့်သွင်းပြီးပါပြီ။",
+  "toast.invalidJson": "JSON မမှန်ကန်ပါ - {msg}",
+  "sync.title": "ထပ်တူကျစေခြင်း",
+  "sync.desc": "မီနူးကို ဤဘရောက်ဇာတွင်မဟုတ်ဘဲ ဆာဗာတွင် သိမ်းထားသည် — စက်အားလုံးသည် တူညီသောဒေတာကို ဖတ်ပါသည်။ ဤစာမျက်နှာ ဟောင်းနေသည်ဟု ထင်ပါက ဤခလုတ်ကို သုံးပါ။",
+  "sync.reload": "ဆာဗာမှ ပြန်ယူမည်",
+  "toast.nameRequired": "ဆိုင်အမည် လိုအပ်ပါသည်။",
+  "toast.pickId": "အသုံးပြုနိုင်သော ဆိုင် ID ကို အရင်ရွေးပါ (သို့မဟုတ် အလွတ်ထားပါ)။",
+  "toast.profileUpdated": "ဆိုင်ပရိုဖိုင် ပြင်ပြီးပါပြီ။",
+  "toast.noServer": "ဆာဗာနှင့် ချိတ်ဆက်၍မရပါ - {msg}",
+  "toast.couldNotSave": "သိမ်း၍မရပါ - {msg}",
+  "toast.saveConn": "သိမ်း၍မရပါ — အင်တာနက်ကို စစ်ဆေးပါ။",
+  "toast.taxExcl": "ခွန်ဖွင့်ထားသည် — ငွေရှင်းချိန်တွင် ထပ်ပေါင်းမည်။",
+  "toast.taxIncl": "ခွန်ဖွင့်ထားသည် — ဈေးနှုန်းထဲတွင် ပါဝင်ပြီးဖြစ်သည်။",
+  "toast.taxOff": "ခွန်ကို ပိတ်ထားသည်။",
+  "cat.new": "အမျိုးအစားအသစ်",
+  "edit.title": "\"{name}\" ကို ပြင်မည်",
+  "f.catName": "အမျိုးအစားအမည်",
+  "ph.catName": "ဥပမာ - အမျိုးအစားအမည်",
+  "cat.note": "အမျိုးအစားထဲတွင် အရွယ်အစားနှင့် ရွေးချယ်စရာများ ထည့်ပါက ဤအမျိုးအစားအောက်ရှိ ဟင်းလျာအားလုံးတွင် အကျုံးဝင်မည်။",
+  "f.sizes": "အရွယ်အစားများ",
+  "ph.size": "ဥပမာ - အသေး",
+  "cat.addSize": "အရွယ်အစား ထည့်မည်",
+  "f.pricePerSize": "အရွယ်အစားအလိုက် ဈေးနှုန်း",
+  "f.options": "ရွေးချယ်စရာများ",
+  "group.single": "တစ်ခုရွေး အုပ်စု",
+  "group.multi": "အပို (Add-on) အုပ်စု",
+  "cat.save": "အမျိုးအစား သိမ်းမည်",
+  "cat.startPrice": "ဟင်းလျာအားလုံးအတွက် စတင်ဈေးနှုန်း",
+  "size.noneCat": "အရွယ်အစား မရှိပါ — ဟင်းလျာများသည် ဈေးတစ်မျိုးတည်း သုံးမည်။",
+  "size.exists": "ထိုအရွယ်အစား ရှိပြီးသားဖြစ်သည်။",
+  "confirm.unsavedCat": "ဤအမျိုးအစားတွင် မသိမ်းရသေးသော ပြောင်းလဲမှုများ ရှိသည်။ မသိမ်းဘဲ ထွက်မလား?",
+  "toast.catRequired": "အမျိုးအစားအမည် လိုအပ်ပါသည်။",
+  "toast.catSaved": "အမျိုးအစား သိမ်းပြီးပါပြီ။",
+  "item.new": "ဟင်းလျာအသစ်",
+  "upload.photo": "ဓာတ်ပုံ တင်မည်",
+  "f.itemName": "အမည်",
+  "f.desc": "ဖော်ပြချက်",
+  "f.descMax": "(စာလုံး 150 အထိ)",
+  "ph.food": "ဥပမာ - အစားအစာအမည်",
+  "ph.desc": "ဘာတွေပါသလဲ၊ ဘာကြောင့် ကောင်းသလဲ…",
+  "item.priceMMK": "ဈေးနှုန်း (MMK)",
+  "item.priceSizeMMK": "အရွယ်အစားအလိုက် ဈေးနှုန်း (MMK)",
+  "common.add": "ထည့်မည်",
+  "size.resetCat": "အမျိုးအစား၏ အရွယ်အစားများကို ပြန်သုံးမည်",
+  "f.prepTime": "ပြင်ဆင်ချိန်",
+  "time.5": "5 မိနစ်",
+  "time.10": "10 မိနစ်",
+  "time.15": "15 မိနစ်",
+  "time.20": "20 မိနစ်",
+  "time.25": "25 မိနစ်",
+  "time.30": "30 မိနစ်",
+  "time.40": "40 မိနစ်",
+  "time.50": "50+ မိနစ်",
+  "time.current": "(လက်ရှိ)",
+  "item.inherited": "ဤအမျိုးအစားမှ ရွေးချယ်စရာများ",
+  "item.own": "ဤဟင်းလျာ၏ ကိုယ်ပိုင်ရွေးချယ်စရာများ",
+  "item.save": "ဟင်းလျာ သိမ်းမည်",
+  "size.noneItem": "အရွယ်အစား မရှိပါ — ဈေးတစ်မျိုးတည်း။",
+  "size.hintOwnVs": "အမျိုးအစား၏ အရွယ်အစားများ ({list}) အစား ဤဟင်းလျာ၏ ကိုယ်ပိုင်အရွယ်အစားများကို သုံးထားသည်။",
+  "size.hintOwn": "ဤဟင်းလျာ၏ ကိုယ်ပိုင်အရွယ်အစားများကို သုံးထားသည်။",
+  "size.hintInherit": "လက်ရှိတွင် ဤအမျိုးအစား၏ အရွယ်အစားများကို သုံးထားသည်။ ဤဟင်းလျာတစ်ခုတည်းအတွက် ပြောင်းလိုပါက အောက်တွင် အရွယ်အစား ထည့်ပါ။",
+  "size.hintNone": "ဤအမျိုးအစားတွင် အရွယ်အစား မရှိပါ — ဤဟင်းလျာတစ်ခုတည်းအတွက် အောက်တွင် ထည့်ပါ။",
+  "common.none": "မရှိ",
+  "upload.uploading": "တင်နေသည်…",
+  "upload.done": "တင်ပြီးပါပြီ",
+  "upload.failed": "တင်၍မရပါ — ထပ်မံကြိုးစားပါ။",
+  "toast.itemName": "ဟင်းလျာအမည် လိုအပ်ပါသည်။",
+  "toast.itemFill": "အမည်၊ ဖော်ပြချက်နှင့် ဈေးနှုန်းကို အရင်ဖြည့်ပါ။",
+  "toast.descLong": "ဖော်ပြချက်သည် စာလုံး {max} ထက် မကျော်ရပါ (ယခု {n})။",
+  "toast.itemSaved": "ဟင်းလျာ သိမ်းပြီးပါပြီ။",
+  "toast.createCatFirst": "အမျိုးအစားတစ်ခု အရင်ဖန်တီးပါ။",
+  "group.newTitle": "ရွေးချယ်စရာအုပ်စုအသစ်",
+  "group.newSingle": "တစ်ခုရွေးအုပ်စုအသစ်",
+  "group.newMulti": "အပို (Add-on) အုပ်စုအသစ်",
+  "group.optionGroup": "ရွေးချယ်စရာအုပ်စု",
+  "f.groupTitle": "အုပ်စုခေါင်းစဉ် (ဖောက်သည်များ မြင်ရမည်)",
+  "ph.group": "ဥပမာ - အုပ်စုအမည်",
+  "group.mustChoose": "ဖောက်သည် မဖြစ်မနေ ရွေးရမည်",
+  "group.hintSingle": "(တစ်ခုတည်း ရွေးရမည်)",
+  "group.hintMulti": "(အနည်းဆုံး တစ်ခု ရွေးရမည်)",
+  "group.addOption": "ရွေးချယ်စရာ ထည့်မည်",
+  "group.save": "အုပ်စု သိမ်းမည်",
+  "ph.optName": "ရွေးချယ်စရာအမည်",
+  "group.untitled": "အမည်မရှိသော အုပ်စု",
+  "group.required": "မဖြစ်မနေ",
+  "group.optional": "ရွေးချယ်နိုင်သည်",
+  "opt.count_1": "ရွေးချယ်စရာ {n} ခု",
+  "opt.count_n": "ရွေးချယ်စရာ {n} ခု",
+  "group.editInCat": "ဤအမျိုးအစား၏ ဆက်တင်တွင် ပြင်ပါ",
+  "common.noneYet": "မရှိသေးပါ။",
+  "toast.groupTitle": "အုပ်စုခေါင်းစဉ် လိုအပ်ပါသည်။",
+  "confirm.delGroup": "ဤရွေးချယ်စရာအုပ်စုကို ဖျက်မလား?"
+ }
+};
+  let currentLang = 'en';
+  try { const saved = localStorage.getItem(LANG_KEY); if (saved === 'my' || saved === 'en') currentLang = saved; } catch (e) {}
+
+  function tr(key, vars) {
+    let str = (I18N[currentLang] && I18N[currentLang][key]);
+    if (str === undefined) str = I18N.en[key];
+    if (str === undefined) return key;
+    return vars ? str.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? vars[k] : '{' + k + '}')) : str;
+  }
+  // Plural helper: trn('opt.count', 3) looks up opt.count_1 (n = 1) or opt.count_n, with {n} filled in.
+  function trn(base, n, vars) { return tr(base + (n === 1 ? '_1' : '_n'), Object.assign({ n }, vars)); }
+
+  // Sets an element's text AND remembers its key, so switchLanguage() can re-translate it later.
+  function setI18n(el, key, vars) {
+    if (!el) return;
+    el.dataset.i18n = key;
+    if (vars) el.dataset.i18nVars = JSON.stringify(vars); else delete el.dataset.i18nVars;
+    el.textContent = tr(key, vars);
+  }
+  function clearI18n(el) { if (!el) return; delete el.dataset.i18n; delete el.dataset.i18nVars; el.textContent = ''; }
+
+  function applyI18n(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-i18n]').forEach(el => {
+      let vars; if (el.dataset.i18nVars) { try { vars = JSON.parse(el.dataset.i18nVars); } catch (e) {} }
+      el.textContent = tr(el.dataset.i18n, vars);
+    });
+    scope.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = tr(el.dataset.i18nPlaceholder); });
+    scope.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', tr(el.dataset.i18nAria)); });
+    scope.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = tr(el.dataset.i18nTitle); });
+  }
+  function syncLangButtons() {
+    document.querySelectorAll('.lang-switch button[data-lang]').forEach(b => {
+      const on = b.dataset.lang === currentLang;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  // The "idle" hint under the Restaurant ID box is written by JS, so it needs its own refresh.
+  function refreshHandleIdleText() {
+    ['setup', 'settings'].forEach(p => {
+      if (handleStatus[p] !== 'idle') return;
+      const input = document.getElementById(p + '-handle-input');
+      setHandleStatus(p, 'idle', handleLocked() ? tr('handle.locked')
+        : p === 'setup' ? tr('handle.idleSetup')
+        : (input && input.value ? '' : tr('handle.idleSettings')));
+    });
+  }
+
+  function switchLanguage(lang) {
+    if (lang !== 'en' && lang !== 'my') return;
+    currentLang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}          // remembered for the next launch
+    document.documentElement.lang = lang;
+    applyI18n();                                                         // everything tagged in the HTML
+    syncLangButtons();
+    // Parts of the screen that JavaScript draws are redrawn in the new language.
+    const safely = fn => { try { fn(); } catch (e) {} };
+    safely(refreshHandleIdleText);
+    safely(() => { if (!restaurantProfile.name) document.getElementById('brand-restaurant-name').textContent = tr('brand.default'); });
+    safely(renderRestaurantStatus);                                      // Open / Busy / Closed pill + order cards
+    safely(renderItemsView);                                             // category chips, hints, item list
+    safely(renderLaunchCard);
+    safely(() => { if (ordersScope === 'settlements' && settleData) renderSettlements(); });
+    safely(() => { if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); });
+  }
+  document.documentElement.lang = currentLang;
+  applyI18n();
+  syncLangButtons();
+
   // ================= ICONS (inline SVG — replaces the old emojis) =================
   const ICONS = {
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
     receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
     lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
@@ -1242,7 +2065,7 @@
       applyLoginResult(result.restaurant);
       showApp();
     } catch (err) {
-      showNotApproved('Could not reach the server. Check your connection and try again.');
+      showNotApproved('gate.serverError');
     }
   }
 
@@ -1250,7 +2073,7 @@
     document.getElementById('app').style.display = 'none';
     document.getElementById('setup-gate').style.display = 'none';
     document.getElementById('outside-gate').style.display = 'none';
-    if (customMessage) document.getElementById('not-approved-message').textContent = customMessage;
+    if (customMessage) setI18n(document.getElementById('not-approved-message'), customMessage);
     document.getElementById('not-approved-gate').style.display = 'flex';
   }
 
@@ -1289,7 +2112,7 @@
     const nameEl = document.getElementById('brand-restaurant-name');
     const logoImg = document.getElementById('brand-logo-img');
     const logoFallback = document.getElementById('brand-logo-fallback');
-    if (nameEl) nameEl.textContent = restaurantProfile.name || 'My Restaurant';
+    if (nameEl) nameEl.textContent = restaurantProfile.name || tr('brand.default');
     if (restaurantProfile.logoUrl && logoImg && logoFallback) {
       logoImg.src = restaurantProfile.logoUrl;
       logoImg.style.display = 'block';
@@ -1316,7 +2139,7 @@
       return true;
     } catch (err) {
       lastSaveError = err.message;
-      showToast('Could not save: ' + err.message);
+      showToast(tr('toast.couldNotSave', { msg: err.message }));
       return false;
     }
   }
@@ -1336,7 +2159,7 @@
   const HANDLE_RE = /^[a-z][a-z0-9_]{3,19}$/;
   function handleIdleText(prefix) {
     return prefix === 'setup'
-      ? "4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later."
+      ? tr('handle.idleSetup')
       : '';
   }
   function onHandleInput(prefix) {
@@ -1346,22 +2169,22 @@
     document.getElementById(prefix + '-handle-count').textContent = cleaned.length + '/20';
     clearTimeout(handleTimers[prefix]);
     if (!cleaned) setHandleStatus(prefix, 'idle', handleIdleText(prefix));
-    else if (!/^[a-z]/.test(cleaned)) setHandleStatus(prefix, 'bad', 'The ID must start with a letter (not a number or _).');
-    else if (cleaned.length < 4) setHandleStatus(prefix, 'bad', 'Use at least 4 characters.');
+    else if (!/^[a-z]/.test(cleaned)) setHandleStatus(prefix, 'bad', tr('handle.mustStartLetter'));
+    else if (cleaned.length < 4) setHandleStatus(prefix, 'bad', tr('handle.min4'));
     else {
-      setHandleStatus(prefix, 'checking', 'Checking…');
+      setHandleStatus(prefix, 'checking', tr('handle.checking'));
       handleTimers[prefix] = setTimeout(() => checkHandle(prefix, cleaned), 400);
     }
     if (prefix === 'setup') updateSetupNextState();
   }
   async function checkHandle(prefix, value) {
-    let state = 'bad', text = "Couldn't check right now — check your connection.";
-    if (!HANDLE_RE.test(value)) { setHandleStatus(prefix, 'bad', 'Use 4–20 characters, starting with a letter.'); if (prefix === 'setup') updateSetupNextState(); return; }
+    let state = 'bad', text = tr('handle.noConn');
+    if (!HANDLE_RE.test(value)) { setHandleStatus(prefix, 'bad', tr('handle.rule')); if (prefix === 'setup') updateSetupNextState(); return; }
     try {
       const res = await fetch(`${API_BASE}/api/restaurant-handle/check?handle=${encodeURIComponent(value)}&restaurantId=${encodeURIComponent(currentRestaurantId)}`);
       const d = await res.json();
-      if (d.available) { state = 'ok'; text = 'Available'; }
-      else text = d.reason || 'Not available.';
+      if (d.available) { state = 'ok'; text = tr('handle.available'); }
+      else text = d.reason || tr('handle.notAvailable');
     } catch (e) { /* keep the connection message */ }
     if (document.getElementById(prefix + '-handle-input').value !== value) return;   // typed on since — stale answer
     setHandleStatus(prefix, state, text);
@@ -1373,13 +2196,13 @@
     input.value = restaurantProfile.handle;
     input.readOnly = true;
     document.getElementById(prefix + '-handle-count').textContent = restaurantProfile.handle.length + '/20';
-    setHandleStatus(prefix, 'idle', "This ID can't be changed — your shared links use it.");
+    setHandleStatus(prefix, 'idle', tr('handle.locked'));
   }
   function unlockHandleField(prefix) {
     const input = document.getElementById(prefix + '-handle-input');
     input.readOnly = false; input.value = '';
     document.getElementById(prefix + '-handle-count').textContent = '0/20';
-    setHandleStatus(prefix, 'idle', prefix === 'setup' ? "4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later." : 'Pick a unique ID (4–20 characters, starts with a letter; letters, numbers or _). It can\'t be changed later.');
+    setHandleStatus(prefix, 'idle', prefix === 'setup' ? tr('handle.idleSetup') : tr('handle.idleSettings'));
   }
 
   /* ---------- Map picker (Leaflet + OpenStreetMap) ---------- */
@@ -1394,7 +2217,7 @@
     const ids = pickerIds(key);
     const el = document.getElementById(ids.map);
     if (!window.L) {
-      el.innerHTML = '<div class="map-fallback">The map preview couldn\'t load. Check your connection — you can still skip this step.</div>';
+      el.innerHTML = '<div class="map-fallback">' + tr('map.fallback') + '</div>';
       return;
     }
     let p = pickers[key];
@@ -1422,18 +2245,18 @@
     if (recenter) p.map.setView([lat, lng], 17);
     document.getElementById(ids.input).value = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
     document.getElementById(ids.status).classList.remove('error');
-    document.getElementById(ids.status).textContent = quiet ? 'Drag the pin or tap the map to change it.' : 'Pin set — drag it or tap the map to fine-tune.';
+    setI18n(document.getElementById(ids.status), quiet ? 'map.dragChange' : 'map.pinSet');
     if (key === 'setup') updateSetupPinState();
   }
   function useMyLocation(key) {
     const ids = pickerIds(key);
     const status = document.getElementById(ids.status);
     status.classList.remove('error');
-    if (!navigator.geolocation) { status.textContent = "This device can't share its location — you can tap the map instead, or skip."; status.classList.add('error'); return; }
-    status.textContent = 'Getting your location…';
+    if (!navigator.geolocation) { setI18n(status, 'map.noGeo'); status.classList.add('error'); return; }
+    setI18n(status, 'map.getting');
     navigator.geolocation.getCurrentPosition(
       pos => setPickerPoint(key, pos.coords.latitude, pos.coords.longitude, true),
-      () => { status.textContent = "Couldn't get your location. Allow location access, tap the map instead, or skip for now."; status.classList.add('error'); },
+      () => { setI18n(status, 'map.geoFail'); status.classList.add('error'); },
       { enableHighAccuracy: true, timeout: 15000 }
     );
   }
@@ -1497,11 +2320,11 @@
   function completeSetup() {
     const profile = readSetupProfile();
     if (!profile.name || !profile.tagline || !profile.logoUrl || !profile.address || (!handleLocked() && !profile.handle)) {
-      document.getElementById('setup-error').textContent = 'Please fill in every field.';
+      document.getElementById('setup-error').textContent = tr('setup.fillAll');
       return;
     }
     if (!handleLocked() && (!HANDLE_RE.test(profile.handle) || handleStatus.setup !== 'ok')) {
-      document.getElementById('setup-error').textContent = 'Please choose an available restaurant ID.';
+      document.getElementById('setup-error').textContent = tr('setup.chooseId');
       return;
     }
     document.getElementById('setup-error').textContent = '';
@@ -1532,12 +2355,12 @@
     }
     if (!profile.name || !profile.tagline || !profile.logoUrl || !profile.address || (!handleLocked() && !profile.handle)) {
       backToStep1();
-      document.getElementById('setup-error').textContent = 'Please fill in every field.';
+      document.getElementById('setup-error').textContent = tr('setup.fillAll');
       return;
     }
     if (!handleLocked() && !HANDLE_RE.test(profile.handle)) {
       backToStep1();
-      setHandleStatus('setup', 'bad', 'Use 4–20 characters, starting with a letter.');
+      setHandleStatus('setup', 'bad', tr('handle.rule'));
       updateSetupNextState();
       return;
     }
@@ -1548,7 +2371,7 @@
       // The server is the final judge of the ID (someone may have taken it a moment ago) —
       // if it refused, send the owner back to fix it; nothing was saved.
       backToStep1();
-      document.getElementById('setup-error').textContent = lastSaveError || 'Could not save — check your connection and try again.';
+      document.getElementById('setup-error').textContent = lastSaveError || tr('setup.saveFail');
       if (/taken|already|ID/i.test(lastSaveError)) setHandleStatus('setup', 'bad', lastSaveError);
       updateSetupNextState();
       return;
@@ -1559,7 +2382,7 @@
     document.getElementById('app').style.display = 'flex';
     switchView('items');
     renderLaunchCard();
-    showToast('Profile saved — now add at least 5 menu items to launch.');
+    showToast(tr('toast.profileSavedLaunch', { n: MIN_ITEMS_TO_PUBLISH }));
   }
 
   /* ================= TAX SETTINGS (5% Government Commercial Tax) ================= */
@@ -1593,8 +2416,8 @@
     });
     taxSaving = false;
     if (taxResave) { taxResave = false; paintTax(); return saveTaxSettings(); }   // changed again while saving
-    if (ok) showToast(sent.enableTax ? (sent.taxMode === 'exclusive' ? 'Tax on — added at checkout.' : 'Tax on — included in prices.') : 'Tax is off.');
-    else { showToast(lastSaveError || 'Could not save — check your connection.'); renderTaxSettings(); }   // put the controls back to what's really saved
+    if (ok) showToast(sent.enableTax ? (sent.taxMode === 'exclusive' ? tr('toast.taxExcl') : tr('toast.taxIncl')) : tr('toast.taxOff'));
+    else { showToast(lastSaveError || tr('toast.saveConn')); renderTaxSettings(); }   // put the controls back to what's really saved
     paintTax();
   }
 
@@ -1619,18 +2442,18 @@
     card.style.display = 'block';
     card.classList.toggle('done', ready);
     card.innerHTML = `
-      <h3>${icon(ready ? 'check' : 'send')} ${ready ? 'Congratulations! Your menu is ready' : "Your restaurant isn't published yet"}</h3>
-      <p>${ready ? 'You added all the items you need. Tap below to go live — customers will be able to see your restaurant.' : `Customers can't see it until you launch. Add at least ${MIN_ITEMS_TO_PUBLISH} menu items first.`}</p>
+      <h3>${icon(ready ? 'check' : 'send')} ${ready ? tr('launch.readyTitle') : tr('launch.notPublished')}</h3>
+      <p>${ready ? tr('launch.readyBody') : tr('launch.needMore', { n: MIN_ITEMS_TO_PUBLISH })}</p>
       <div class="launch-bar"><i style="width:${pct}%"></i></div>
       <div class="launch-progress">${ready
-        ? `<span class="launch-done-badge">${icon('check')}</span><span>${MIN_ITEMS_TO_PUBLISH} of ${MIN_ITEMS_TO_PUBLISH} items added — ready to launch!</span>`
-        : `${Math.min(n, MIN_ITEMS_TO_PUBLISH)} of ${MIN_ITEMS_TO_PUBLISH} items added — add ${MIN_ITEMS_TO_PUBLISH - n} more`}</div>
-      <button class="btn btn-primary btn-wide" id="launch-btn" onclick="startLaunching()" ${ready ? '' : 'disabled'}>Start launching</button>`;
+        ? `<span class="launch-done-badge">${icon('check')}</span><span>${tr('launch.allAdded', { n: MIN_ITEMS_TO_PUBLISH })}</span>`
+        : tr('launch.progress', { c: Math.min(n, MIN_ITEMS_TO_PUBLISH), n: MIN_ITEMS_TO_PUBLISH, r: MIN_ITEMS_TO_PUBLISH - n })}</div>
+      <button class="btn btn-primary btn-wide" id="launch-btn" onclick="startLaunching()" ${ready ? '' : 'disabled'}>${tr('launch.start')}</button>`;
   }
   async function startLaunching() {
-    if (countMenuItems() < MIN_ITEMS_TO_PUBLISH) { showToast(`Add at least ${MIN_ITEMS_TO_PUBLISH} items first.`); return; }
+    if (countMenuItems() < MIN_ITEMS_TO_PUBLISH) { showToast(tr('toast.addAtLeast', { n: MIN_ITEMS_TO_PUBLISH })); return; }
     const btn = document.getElementById('launch-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Launching…'; }
+    if (btn) { btn.disabled = true; btn.textContent = tr('launch.launching'); }
     try {
       await saveMenu(); // make sure the server has the latest items before it counts them
       const res = await fetch(`${API_BASE}/api/admin/publish`, {
@@ -1645,7 +2468,7 @@
       renderLaunchCard();                                     // removes the card for good
       document.getElementById('launch-success').classList.add('open');
     } catch (err) {
-      showToast("Couldn't launch: " + err.message);
+      showToast(tr('toast.launchFail', { msg: err.message }));
       renderLaunchCard();
     }
   }
@@ -1669,10 +2492,10 @@
     const shareUrl = shareLinkFor(handle);
     const restaurantName = restaurantProfile.name || 'Our restaurant';
     if (navigator.share) {
-      navigator.share({ title: restaurantName, text: 'Check out our menu on IWTEAT!', url: shareUrl })
+      navigator.share({ title: restaurantName, text: tr('share.text'), url: shareUrl })
         .catch(() => {});                       // closing the share sheet without choosing isn't an error
     } else {
-      copyTextToClipboard(shareUrl).then(ok => showToast(ok ? 'Link copied to clipboard!' : 'Could not copy — ' + shareUrl));
+      copyTextToClipboard(shareUrl).then(ok => showToast(ok ? tr('share.copied') : tr('share.copyFail', { url: shareUrl })));
     }
   }
   async function copyTextToClipboard(text) {
@@ -1693,7 +2516,7 @@
     document.getElementById('settings-logo-input').value = restaurantProfile.logoUrl;
     document.getElementById('settings-address-input').value = restaurantProfile.address;
     document.getElementById('settings-pin-input').value = restaurantProfile.locationPin || '';
-    document.getElementById('settings-pin-status').textContent = '';
+    clearI18n(document.getElementById('settings-pin-status'));
     if (handleLocked()) lockHandleField('settings'); else unlockHandleField('settings');
     document.getElementById('hero-handle').textContent = restaurantProfile.handle ? 'ID: ' + restaurantProfile.handle : '';
     renderShareLink();
@@ -1708,7 +2531,7 @@
 
   async function saveSettingsProfile() {
     const name = document.getElementById('settings-name-input').value.trim();
-    if (!name) { showToast('Restaurant name is required.'); return; }
+    if (!name) { showToast(tr('toast.nameRequired')); return; }
     const profile = {
       name,
       tagline: document.getElementById('settings-tagline-input').value.trim(),
@@ -1719,7 +2542,7 @@
     if (!handleLocked()) {
       const chosen = document.getElementById('settings-handle-input').value.trim();
       if (chosen) {
-        if (handleStatus.settings !== 'ok') { showToast('Pick an available restaurant ID first (or leave it empty).'); return; }
+        if (handleStatus.settings !== 'ok') { showToast(tr('toast.pickId')); return; }
         profile.handle = chosen;
       }
     }
@@ -1728,7 +2551,7 @@
       renderSettingsProfileFields();
       toggleProfileEdit(false);
       applyBrandHeader();
-      showToast('Restaurant profile updated.');
+      showToast(tr('toast.profileUpdated'));
     }
   }
 
@@ -1755,7 +2578,7 @@
       renderAll();
     } catch (err) {
       setSyncStatus('error', 'Offline');
-      showToast('Could not reach the server: ' + err.message);
+      showToast(tr('toast.noServer', { msg: err.message }));
       menuCategories = menuCategories || [];
       renderAll();
     }
@@ -1774,7 +2597,7 @@
       setSyncStatus('saved', 'Saved · live for everyone');
     } catch (err) {
       setSyncStatus('error', 'Save failed');
-      showToast('Could not save: ' + err.message);
+      showToast(tr('toast.couldNotSave', { msg: err.message }));
     }
   }
 
@@ -1812,7 +2635,7 @@
 
   function deleteCategory(index) {
     const cat = menuCategories[index];
-    if (!confirm(`Delete "${cat.name}" and all ${cat.items.length} item(s) inside it? This can't be undone.`)) return;
+    if (!confirm(tr('confirm.delCat', { name: cat.name, n: cat.items.length }))) return;
     menuCategories.splice(index, 1);
     saveMenu();
     renderAll();
@@ -1856,7 +2679,7 @@
   function openCategoryDrawer(index = null) {
     if (index === null) {
       catDraft = { editIndex: null, name: '', icon: '🍽️', sizeNames: [], optionGroups: [], defaultPrices: [], defaultFlatPrice: null };
-      document.getElementById('cat-drawer-title').textContent = 'New Category';
+      document.getElementById('cat-drawer-title').textContent = tr('cat.new');
     } else {
       const cat = menuCategories[index];
       const hasSizes = (cat.sizeNames || []).length > 0;
@@ -1868,7 +2691,7 @@
         defaultPrices: hasSizes ? (cat.defaultPrices ? [...cat.defaultPrices] : cat.sizeNames.map(() => null)) : [],
         defaultFlatPrice: hasSizes ? null : (cat.defaultFlatPrice != null ? cat.defaultFlatPrice : null)
       };
-      document.getElementById('cat-drawer-title').textContent = `Edit "${cat.name}"`;
+      document.getElementById('cat-drawer-title').textContent = tr('edit.title', { name: cat.name });
     }
     document.getElementById('cat-name-input').value = catDraft.name;
     document.getElementById('cat-new-size-input').value = '';
@@ -1902,7 +2725,7 @@
 
   function closeCategoryDrawer(force) {
     if (!force && catDraft && catDraftSnapshot != null && JSON.stringify(collectCategoryFormState()) !== catDraftSnapshot) {
-      if (!confirm('You have unsaved changes to this category. Leave without saving?')) return;
+      if (!confirm(tr('confirm.unsavedCat'))) return;
     }
     document.getElementById('cat-drawer-overlay').classList.remove('open');
     catDraft = null;
@@ -1913,7 +2736,7 @@
   function renderCatSizeChips() {
     const box = document.getElementById('cat-size-chips');
     if (catDraft.sizeNames.length === 0) {
-      box.innerHTML = `<span class="sub-hint">No sizes — items use one flat price.</span>`;
+      box.innerHTML = `<span class="sub-hint">${tr('size.noneCat')}</span>`;
       return;
     }
     box.innerHTML = catDraft.sizeNames.map((s, i) => `
@@ -1925,7 +2748,7 @@
     const name = input.value.trim();
     if (!name) return;
     if (catDraft.sizeNames.some(s => s.toLowerCase() === name.toLowerCase())) {
-      showToast('That size already exists.');
+      showToast(tr('size.exists'));
       return;
     }
     catDraft.sizeNames.push(name);
@@ -1971,15 +2794,15 @@
   // tapping a card reopens it in the Option Group drawer for editing.
   function renderOptionGroupsList(containerId, groups, scope) {
     const box = document.getElementById(containerId);
-    if (!groups.length) { box.innerHTML = `<p class="sub-hint">None yet.</p>`; return; }
+    if (!groups.length) { box.innerHTML = `<p class="sub-hint">${tr('common.noneYet')}</p>`; return; }
     box.innerHTML = groups.map(g => `
       <div class="group-card" onclick="openGroupDrawer('${scope}','${g.id}')">
         <div class="group-card-top">
           <span class="group-card-icon">${icon(g.kind === 'single' ? 'circleDot' : 'checkSquare')}</span>
-          <span class="group-card-title">${escapeHtml(g.title || 'Untitled group')}</span>
-          <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? 'Required' : 'Optional'}</span>
+          <span class="group-card-title">${escapeHtml(g.title || tr('group.untitled'))}</span>
+          <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? tr('group.required') : tr('group.optional')}</span>
         </div>
-        <div class="group-card-sub">${g.options.length} option${g.options.length === 1 ? '' : 's'}</div>
+        <div class="group-card-sub">${trn('opt.count', g.options.length)}</div>
       </div>
     `).join('');
   }
@@ -1990,7 +2813,7 @@
   // checked "Price per size" defaults to the category's existing items.
   function commitCategoryDraft() {
     const name = document.getElementById('cat-name-input').value.trim();
-    if (!name) { showToast('Category name is required.'); return null; }
+    if (!name) { showToast(tr('toast.catRequired')); return null; }
     const icon = (catDraft.editIndex !== null && menuCategories[catDraft.editIndex] && menuCategories[catDraft.editIndex].icon) || '🍽️';   // no icon field any more: keep whatever an old category already has
 
     let cat;
@@ -2045,7 +2868,7 @@
     saveMenu();
     closeCategoryDrawer(true);
     renderAll();
-    showToast('Category saved.');
+    showToast(tr('toast.catSaved'));
   }
 
   /* ---- Price per size (this category's default, and every new item's starting price) ---- */
@@ -2056,7 +2879,7 @@
       const checked = catDraft.defaultFlatPrice != null;
       box.innerHTML = `
         <div class="size-check-row">
-          <label class="chk-label"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCatFlatPriceChk(this.checked)">Starting price for every item</label>
+          <label class="chk-label"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCatFlatPriceChk(this.checked)">${tr('cat.startPrice')}</label>
           <input type="text" inputmode="numeric" class="price-input" id="cat-bulk-flat-price" placeholder="MMK" value="${checked ? priceText(catDraft.defaultFlatPrice) : ''}" ${checked ? '' : 'disabled'} oninput="updateCatFlatPrice(this.value)">
         </div>`;
     } else {
@@ -2092,10 +2915,10 @@
     const tabsEl = document.getElementById('item-cat-tabs');
     const addBtn = document.getElementById('add-item-btn');
     if (menuCategories.length === 0) {
-      tabsEl.innerHTML = ADD_CHIP;
+      tabsEl.innerHTML = addCategoryChip();
       addBtn.disabled = true;
       document.getElementById('cat-options-hint').textContent = '';
-      document.getElementById('item-grid').innerHTML = `<div class="empty-state"><div class="display">No categories yet</div>Tap “＋ Category” above to create your first one.</div>`;
+      document.getElementById('item-grid').innerHTML = `<div class="empty-state"><div class="display">${tr('empty.noCat')}</div>${tr('empty.noCatBody')}</div>`;
       renderLaunchCard();
       return;
     }
@@ -2107,7 +2930,7 @@
     }
     tabsEl.innerHTML = menuCategories.map(c => `
       <button class="cat-chip-tab ${c.id === activeItemCategoryId ? 'active' : ''}" data-id="${c.id}" onclick="selectItemCategory('${c.id}')">${escapeHtml(c.name)}</button>
-    `).join('') + ADD_CHIP;
+    `).join('') + addCategoryChip();
     renderCatOptionsHint();
     renderItemGrid();
   }
@@ -2118,7 +2941,7 @@
     const cat = getSelectedCategory();
     if (!cat) { hint.textContent = ''; return; }
     const n = (cat.optionGroups || []).length;
-    hint.innerHTML = n > 0 ? `${icon('circleDot')} ${n} shared option group${n === 1 ? '' : 's'} apply to every item in "${escapeHtml(cat.name)}"` : '';
+    hint.innerHTML = n > 0 ? `${icon('circleDot')} ${trn('hint.sharedGroups', n, { name: escapeHtml(cat.name) })}` : '';
   }
   function selectItemCategory(catId) {
     if (longPressed) { longPressed = false; return; }
@@ -2136,7 +2959,7 @@
     const grid = document.getElementById('item-grid');
     if (!cat) { grid.innerHTML = ''; renderLaunchCard(); return; }
     if (cat.items.length === 0) {
-      grid.innerHTML = `<div class="empty-state"><div class="display">No items in "${escapeHtml(cat.name)}" yet</div>Tap "+ New Item" above to add the first dish.</div>`;
+      grid.innerHTML = `<div class="empty-state"><div class="display">${tr('empty.noItems', { name: escapeHtml(cat.name) })}</div>${tr('empty.noItemsBody')}</div>`;
       renderLaunchCard();
       return;
     }
@@ -2154,14 +2977,14 @@
           <div class="item-info">
             ${item.image ? `<img class="item-thumb" src="${escapeHtml(item.image)}" onerror="this.style.opacity=0.25;">` : `<div class="item-thumb ph">${icon('utensils')}</div>`}
             <div class="item-text">
-              <div class="item-name">${escapeHtml(item.name)}${optCount ? `<span class="item-badge">${optCount} option group${optCount===1?'':'s'}</span>` : ''}</div>
+              <div class="item-name">${escapeHtml(item.name)}${optCount ? `<span class="item-badge">${trn('badge.groups', optCount)}</span>` : ''}</div>
               ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ''}
               <div class="item-price">${priceLabel}</div>
             </div>
           </div>
           <div class="item-actions">
-            <button class="btn btn-outline btn-icon btn-sm ${item.soldOut ? 'stock-off' : 'stock-on'}" title="${item.soldOut ? 'Sold out — tap to restock' : 'In stock — tap to mark sold out'}" onclick="event.stopPropagation(); toggleSoldOut(${i})">${icon(item.soldOut ? 'ban' : 'check')}</button>
-            <button class="btn btn-danger-ghost btn-icon btn-sm" title="Delete" onclick="event.stopPropagation(); deleteItem(${i})">${icon('trash')}</button>
+            <button class="btn btn-outline btn-icon btn-sm ${item.soldOut ? 'stock-off' : 'stock-on'}" title="${item.soldOut ? tr('stock.soldOutTip') : tr('stock.inStockTip')}" onclick="event.stopPropagation(); toggleSoldOut(${i})">${icon(item.soldOut ? 'ban' : 'check')}</button>
+            <button class="btn btn-danger-ghost btn-icon btn-sm" title="${tr('common.delete')}" onclick="event.stopPropagation(); deleteItem(${i})">${icon('trash')}</button>
           </div>
         </div>
       `;
@@ -2172,7 +2995,7 @@
   function deleteItem(itemIndex) {
     const cat = getSelectedCategory();
     if (!cat) return;
-    if (!confirm(`Delete "${cat.items[itemIndex].name}"?`)) return;
+    if (!confirm(tr('confirm.delItem', { name: cat.items[itemIndex].name }))) return;
     cat.items.splice(itemIndex, 1);
     saveMenu();
     renderItemGrid();
@@ -2193,7 +3016,7 @@
   /* ---- Item drawer ---- */
   function openItemDrawer(itemIndex) {
     const cat = getSelectedCategory();
-    if (!cat) { showToast('Create a category first.'); return; }
+    if (!cat) { showToast(tr('toast.createCatFirst')); return; }
     const catSizeNames = cat.sizeNames || [];
 
     if (itemIndex === null) {
@@ -2208,7 +3031,7 @@
         sizes: catSizeNames.map((n, i) => ({ name: n, price: catDefaults[i] != null ? catDefaults[i] : 0 })),
         optionGroups: []
       };
-      document.getElementById('item-drawer-title').textContent = 'New Item';
+      document.getElementById('item-drawer-title').textContent = tr('item.new');
     } else {
       const item = cat.items[itemIndex];
       const usingCustomSizes = !!(item.customSizeNames && item.customSizeNames.length);
@@ -2224,7 +3047,7 @@
         }),
         optionGroups: JSON.parse(JSON.stringify(item.optionGroups || []))
       };
-      document.getElementById('item-drawer-title').textContent = `Edit "${item.name}"`;
+      document.getElementById('item-drawer-title').textContent = tr('edit.title', { name: item.name });
     }
 
     document.getElementById('item-image-input').value = itemDraft.image;
@@ -2251,7 +3074,7 @@
     sel.querySelectorAll('option[data-extra]').forEach(o => o.remove());
     if (value && ![...sel.options].some(o => o.value === value)) {
       const o = document.createElement('option');
-      o.value = value; o.textContent = value + ' (current)'; o.setAttribute('data-extra', '1');
+      o.value = value; o.textContent = value + ' ' + tr('time.current'); o.setAttribute('data-extra', '1');
       sel.appendChild(o);
     }
     sel.value = value || '15 mins';
@@ -2303,10 +3126,10 @@
       <div class="group-card group-card-readonly">
         <div class="group-card-top">
           <span class="group-card-icon">${icon(g.kind === 'single' ? 'circleDot' : 'checkSquare')}</span>
-          <span class="group-card-title">${escapeHtml(g.title || 'Untitled group')}</span>
-          <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? 'Required' : 'Optional'}</span>
+          <span class="group-card-title">${escapeHtml(g.title || tr('group.untitled'))}</span>
+          <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? tr('group.required') : tr('group.optional')}</span>
         </div>
-        <div class="group-card-sub">${g.options.length} option${g.options.length === 1 ? '' : 's'} · edit in this category's settings</div>
+        <div class="group-card-sub">${trn('opt.count', g.options.length)} · ${tr('group.editInCat')}</div>
       </div>
     `).join('');
   }
@@ -2320,18 +3143,18 @@
     const catSizeNames = (cat && cat.sizeNames) || [];
 
     box.innerHTML = itemDraft.sizeNames.length === 0
-      ? `<span class="sub-hint">No sizes — flat price.</span>`
+      ? `<span class="sub-hint">${tr('size.noneItem')}</span>`
       : itemDraft.sizeNames.map((s, i) => `<span class="chip">${escapeHtml(s)}<button onclick="removeItemSizeChip(${i})">×</button></span>`).join('');
 
     if (itemDraft.usingCustomSizes) {
       hintEl.textContent = catSizeNames.length
-        ? `Using this item's own sizes instead of the category's (${catSizeNames.join(', ') || 'none'}).`
-        : `Using this item's own sizes.`;
+        ? tr('size.hintOwnVs', { list: catSizeNames.join(', ') || tr('common.none') })
+        : tr('size.hintOwn');
       resetBtn.style.display = catSizeNames.length ? 'inline-flex' : 'none';
     } else {
       hintEl.textContent = catSizeNames.length
-        ? `Currently using this category's sizes. Add a size below to override it just for this item.`
-        : `This category has no sizes — add one below to give just this item its own sizes.`;
+        ? tr('size.hintInherit')
+        : tr('size.hintNone');
       resetBtn.style.display = 'none';
     }
   }
@@ -2370,7 +3193,7 @@
     const name = input.value.trim();
     if (!name) return;
     if (itemDraft.sizeNames.some(s => s.toLowerCase() === name.toLowerCase())) {
-      showToast('That size already exists.');
+      showToast(tr('size.exists'));
       return;
     }
     captureItemPricingFromDom();
@@ -2421,7 +3244,7 @@
     img.style.opacity = 1;
     img.src = URL.createObjectURL(file);
 
-    if (statusEl) { statusEl.textContent = 'Uploading…'; statusEl.classList.remove('error'); }
+    if (statusEl) { statusEl.textContent = tr('upload.uploading'); statusEl.classList.remove('error'); }
     if (btn) btn.disabled = true;
 
     try {
@@ -2443,10 +3266,10 @@
       urlInput.value = data.secure_url;
       urlInput.dispatchEvent(new Event('input'));
       img.src = data.secure_url;
-      if (statusEl) statusEl.textContent = '✓ Uploaded';
+      if (statusEl) statusEl.textContent = '✓ ' + tr('upload.done');
     } catch (err) {
       console.error('Cloudinary upload failed:', err);
-      if (statusEl) { statusEl.textContent = 'Upload failed — try again.'; statusEl.classList.add('error'); }
+      if (statusEl) { statusEl.textContent = tr('upload.failed'); statusEl.classList.add('error'); }
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -2477,10 +3300,10 @@
     const label = document.getElementById('item-price-label');
     const box = document.getElementById('item-price-inputs');
     if (itemDraft.sizeNames.length === 0) {
-      label.textContent = 'Price (MMK)';
+      label.textContent = tr('item.priceMMK');
       box.innerHTML = `<input type="text" inputmode="numeric" class="price-input" id="item-flat-price" placeholder="MMK" autocomplete="off" value="${priceText(itemDraft.price)}">`;
     } else {
-      label.textContent = 'Price per size (MMK)';
+      label.textContent = tr('item.priceSizeMMK');
       box.innerHTML = `<div class="size-price-grid">` + itemDraft.sizeNames.map((n, i) => `
         <div class="size-price-cell">
           <label>${escapeHtml(n)}</label>
@@ -2493,10 +3316,10 @@
 
   function saveItemDrawer() {
     const name = document.getElementById('item-name-input').value.trim();
-    if (!name) { showToast('Item name is required.'); return; }
-    if (!itemFormComplete()) { showToast('Fill in the name, description and price first.'); return; }
+    if (!name) { showToast(tr('toast.itemName')); return; }
+    if (!itemFormComplete()) { showToast(tr('toast.itemFill')); return; }
     const descText = document.getElementById('item-desc-input').value.trim();
-    if (descText.length > ITEM_DESC_MAX) { showToast(`Description must be ${ITEM_DESC_MAX} characters or fewer (now ${descText.length}).`); return; }
+    if (descText.length > ITEM_DESC_MAX) { showToast(tr('toast.descLong', { max: ITEM_DESC_MAX, n: descText.length })); return; }
     const cat = menuCategories.find(c => c.id === itemDraft.catId);
     if (!cat) return;
 
@@ -2533,7 +3356,7 @@
     saveMenu();
     closeItemDrawer();
     renderItemGrid();
-    showToast('Item saved.');
+    showToast(tr('toast.itemSaved'));
   }
 
   /* ================= OPTION GROUP DRAWER ================= */
@@ -2550,19 +3373,19 @@
     groupDraftCtx = { scope };
     if (groupId === null) {
       groupDraft = { id: newGroupId(), kind: kindIfNew, title: '', required: false, options: [] };
-      document.getElementById('group-drawer-title').textContent = kindIfNew === 'single' ? 'New Single-choice Group' : 'New Add-on Group';
+      document.getElementById('group-drawer-title').textContent = kindIfNew === 'single' ? tr('group.newSingle') : tr('group.newMulti');
       document.getElementById('group-delete-btn').style.display = 'none';
     } else {
       const existing = parentDraft.optionGroups.find(g => g.id === groupId);
       if (!existing) return;
       groupDraft = JSON.parse(JSON.stringify(existing));
-      document.getElementById('group-drawer-title').textContent = `Edit "${existing.title || 'Option Group'}"`;
+      document.getElementById('group-drawer-title').textContent = tr('edit.title', { name: existing.title || tr('group.optionGroup') });
       document.getElementById('group-delete-btn').style.display = '';
     }
     document.getElementById('group-title-input').value = groupDraft.title;
     document.getElementById('group-required-input').checked = !!groupDraft.required;
     document.getElementById('group-required-hint').textContent =
-      groupDraft.kind === 'single' ? '(customer must pick exactly one)' : '(customer must pick at least one)';
+      groupDraft.kind === 'single' ? tr('group.hintSingle') : tr('group.hintMulti');
     renderGroupOptionsList();
     document.getElementById('group-drawer-overlay').classList.add('open');
     afterDrawerOpen('group-drawer-overlay');
@@ -2576,7 +3399,7 @@
   function renderGroupOptionsList() {
     const box = document.getElementById('group-options-list');
     const sizeNames = groupDraftSizeNames();
-    if (!groupDraft.options.length) { box.innerHTML = `<p class="sub-hint">None yet.</p>`; return; }
+    if (!groupDraft.options.length) { box.innerHTML = `<p class="sub-hint">${tr('common.noneYet')}</p>`; return; }
     const hasSizes = sizeNames.length > 0;
     box.innerHTML = groupDraft.options.map((opt, i) => {
       const priceInputs = hasSizes
@@ -2589,11 +3412,11 @@
                 <input type="text" inputmode="numeric" class="price-input" placeholder="MMK" value="${checked ? priceText(val) : ''}" ${checked ? '' : 'disabled'} oninput="updateGroupOptionPrice(${i},${si},this.value)">
               </div>`;
           }).join('') + `</div>`
-        : `<div class="option-price-grid"><div><label>Price (MMK)</label><input type="text" inputmode="numeric" class="price-input" placeholder="MMK" value="${priceText(opt.price)}" oninput="updateGroupOptionFlatPrice(${i},this.value)"></div></div>`;
+        : `<div class="option-price-grid"><div><label>${tr('item.priceMMK')}</label><input type="text" inputmode="numeric" class="price-input" placeholder="MMK" value="${priceText(opt.price)}" oninput="updateGroupOptionFlatPrice(${i},this.value)"></div></div>`;
       return `
         <div class="option-row">
           <div class="option-row-top">
-            <input type="text" value="${escapeHtml(opt.name)}" placeholder="Option name" oninput="updateGroupOptionName(${i},this.value)">
+            <input type="text" value="${escapeHtml(opt.name)}" placeholder="${tr('ph.optName')}" oninput="updateGroupOptionName(${i},this.value)">
             <button class="btn btn-danger-ghost btn-icon btn-sm" onclick="removeGroupOption(${i})">${icon('trash')}</button>
           </div>
           ${priceInputs}
@@ -2625,7 +3448,7 @@
   }
   function saveGroupDrawer() {
     const title = document.getElementById('group-title-input').value.trim();
-    if (!title) { showToast('Group title is required.'); return; }
+    if (!title) { showToast(tr('toast.groupTitle')); return; }
     groupDraft.title = title;
     groupDraft.required = document.getElementById('group-required-input').checked;
 
@@ -2640,7 +3463,7 @@
     else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
   }
   function deleteGroupFromDrawer() {
-    if (!confirm('Delete this option group?')) return;
+    if (!confirm(tr('confirm.delGroup'))) return;
     const parentDraft = groupDraftCtx.scope === 'category' ? catDraft : itemDraft;
     parentDraft.optionGroups = parentDraft.optionGroups.filter(g => g.id !== groupDraft.id);
     const scope = groupDraftCtx.scope;
@@ -2658,24 +3481,24 @@
     anchor.click();
   }
   function importMenuBackup() {
-    const jsonStr = prompt('Paste your exported JSON here:');
+    const jsonStr = prompt(tr('prompt.json'));
     if (!jsonStr) return;
     try {
       const parsed = JSON.parse(jsonStr);
-      if (!Array.isArray(parsed)) throw new Error('Expected a JSON array of categories.');
+      if (!Array.isArray(parsed)) throw new Error(tr('err.jsonArray'));
       menuCategories = parsed;
       saveMenu();
       renderAll();
-      showToast('Menu imported.');
+      showToast(tr('toast.imported'));
     } catch (e) {
-      showToast('Invalid JSON: ' + e.message);
+      showToast(tr('toast.invalidJson', { msg: e.message }));
     }
   }
   /* ================= ORDERS ================= */
   let ordersData = [], ordersScope = 'current', historyRange = 1, seenOrders = new Set(), ordersFirst = true, ordersTimer = null;
   const CURRENT = ['restaurant_pending', 'awaiting_rider', 'rider_assigned'];
-  const STATUS = { restaurant_pending: ['New', 'new'], awaiting_rider: ['Finding rider', 'wait'], rider_assigned: ['Rider assigned', 'wait'],
-                   delivered: ['Delivered', 'ok'], order_rejected: ['Rejected', 'bad'], user_canceled: ['Canceled', 'bad'] };
+  const STATUS = { restaurant_pending: ['st.new', 'new'], awaiting_rider: ['st.finding', 'wait'], rider_assigned: ['st.assigned', 'wait'],
+                   delivered: ['st.delivered', 'ok'], order_rejected: ['st.rejected', 'bad'], user_canceled: ['st.canceled', 'bad'] };
   const money = n => (Number(n) || 0).toLocaleString();
 
   function adminHeaders() {
@@ -2698,13 +3521,13 @@
       reapplyPendingPrep();
       const fresh = ordersData.filter(o => o.status === 'restaurant_pending' && !seenOrders.has(o.orderId));
       fresh.forEach(o => seenOrders.add(o.orderId));
-      if (fresh.length && !ordersFirst) { beep(); tg?.HapticFeedback?.notificationOccurred('success'); showToast('New order ' + fresh[0].orderId); }
+      if (fresh.length && !ordersFirst) { beep(); tg?.HapticFeedback?.notificationOccurred('success'); showToast(tr('toast.newOrder', { id: fresh[0].orderId })); }
       ordersFirst = false;
       const n = ordersData.filter(o => o.status === 'restaurant_pending').length, b = document.getElementById('orders-badge');
       b.textContent = n; b.style.display = n ? 'block' : 'none';
       renderOrders();
     } catch (e) {
-      if (ordersFirst) document.getElementById('orders-list').innerHTML = `<div class="empty-state"><div class="display">Can't load orders</div>${escapeHtml(String(e.message || e))}</div>`;
+      if (ordersFirst) document.getElementById('orders-list').innerHTML = `<div class="empty-state"><div class="display">${tr('empty.cantLoadOrders')}</div>${escapeHtml(String(e.message || e))}</div>`;
     }
   }
   function beep() {
@@ -2728,14 +3551,14 @@
   }
   function ago(ts) {
     const m = Math.max(0, Math.round((Date.now() / 1000 - ts) / 60));
-    if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; if (m < 1440) return Math.floor(m / 60) + ' h ago';
+    if (m < 1) return tr('time.justNow'); if (m < 60) return tr('time.minAgo', { n: m }); if (m < 1440) return tr('time.hAgo', { n: Math.floor(m / 60) });
     return new Date(ts * 1000).toLocaleDateString();
   }
   function orderBody(o) {
     const items = o.items.map(i => `<div class="o-item"><b>${i.quantity}×</b> ${escapeHtml(i.name)}${i.options && i.options !== 'Standard' ? `<div class="o-opt">${escapeHtml(i.options).replace(/ \| /g, ' · ')}</div>` : ''}</div>`).join('');
     const phone = o.customerPhone ? `<a href="tel:${escapeHtml(o.customerPhone)}">${icon('call')} ${escapeHtml(o.customerPhone)}</a>` : '';
     return `<div class="o-who">${escapeHtml(o.customerName)}${phone}</div>
-      <div class="o-addr">${o.address ? icon('pin') + ' ' + escapeHtml(o.address) : icon('package') + ' Pickup'}</div>${o.note ? `<div class="o-note">${icon('clipboard')} ${escapeHtml(o.note)}</div>` : ''}${items}
+      <div class="o-addr">${o.address ? icon('pin') + ' ' + escapeHtml(o.address) : icon('package') + ' ' + tr('order.pickup')}</div>${o.note ? `<div class="o-note">${icon('clipboard')} ${escapeHtml(o.note)}</div>` : ''}${items}
       <div class="o-foot"><span>${escapeHtml((o.paymentMethod || '').toUpperCase())}${o.riderName ? ' · ' + icon('bike') + ' ' + escapeHtml(o.riderName) : ''}</span><b>${money(o.total)} MMK</b></div>`;
   }
   // Left stripe: red = new, orange = preparing, green = ready for the rider
@@ -2746,9 +3569,10 @@
   const isPickup = o => o.deliveryMethod === 'pickup';
   function orderHead(o) {
     let [label, cls] = STATUS[o.status] || [o.status, 'wait'];
-    if (isPickup(o) && o.status === 'awaiting_rider') label = 'Preparing';          // Self-pick up has no rider to find
-    const method = isPickup(o) ? `<span class="mchip pickup">Self-pick up</span>` : `<span class="mchip">Delivery</span>`;
-    return `<div class="o-top"><span><span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span><span class="pill ${o.readyAt && CURRENT.includes(o.status) ? 'ok' : cls}">${o.readyAt && CURRENT.includes(o.status) ? 'Ready' : label}</span></div>`;
+    if (STATUS[o.status]) label = tr(label);
+    if (isPickup(o) && o.status === 'awaiting_rider') label = tr('st.preparing');          // Self-pick up has no rider to find
+    const method = isPickup(o) ? `<span class="mchip pickup">${tr('chip.pickup')}</span>` : `<span class="mchip">${tr('chip.delivery')}</span>`;
+    return `<div class="o-top"><span><span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span><span class="pill ${o.readyAt && CURRENT.includes(o.status) ? 'ok' : cls}">${o.readyAt && CURRENT.includes(o.status) ? tr('st.ready') : label}</span></div>`;
   }
   function renderOrders() {
     if (ordersScope === 'settlements') return;       // that tab draws itself (renderSettlements)
@@ -2757,11 +3581,11 @@
       const list = ordersData.filter(o => CURRENT.includes(o.status)).sort((a, b) => (a.status === 'restaurant_pending' ? 0 : 1) - (b.status === 'restaurant_pending' ? 0 : 1));
       box.innerHTML = list.length ? list.map(o => `<div class="o-card ${cardState(o)}">${orderHead(o)}${prepTimerHtml(o)}${orderBody(o)}${
         o.status === 'restaurant_pending'
-          ? `<div class="o-actions"><button class="btn btn-danger-ghost" onclick="orderAction('${o.orderId}','reject')">Reject</button><button class="btn btn-primary" onclick="orderAction('${o.orderId}','accept')">Accept</button></div>`
+          ? `<div class="o-actions"><button class="btn btn-danger-ghost" onclick="orderAction('${o.orderId}','reject')">${tr('act.reject')}</button><button class="btn btn-primary" onclick="orderAction('${o.orderId}','accept')">${tr('act.accept')}</button></div>`
           : (o.readyAt
-              ? (isPickup(o) ? `<div class="o-actions"><button class="btn btn-primary" onclick="orderAction('${o.orderId}','handover')">${icon('check')} Picked up</button></div>` : '')
-              : `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} Mark ready</button></div>`)}</div>`).join('')
-        : `<div class="empty-state"><div class="display">No active orders</div>New orders appear here with a sound alert.</div>`;
+              ? (isPickup(o) ? `<div class="o-actions"><button class="btn btn-primary" onclick="orderAction('${o.orderId}','handover')">${icon('check')} ${tr('act.pickedUp')}</button></div>` : '')
+              : `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} ${tr('act.markReady')}</button></div>`)}</div>`).join('')
+        : `<div class="empty-state"><div class="display">${tr('empty.noActive')}</div>${tr('empty.noActiveBody')}</div>`;
       tickPrep();
       return;
     }
@@ -2772,27 +3596,27 @@
     document.getElementById('st-count').textContent = done.length;
     document.getElementById('st-rev').textContent = money(done.reduce((t, o) => t + (Number(o.total) || 0), 0));
     box.innerHTML = list.length ? list.map(o => `<details class="o-card"><summary>${orderHead(o)}${settleBadgeRow(o)}</summary>${orderBody(o)}${finRow(o)}</details>`).join('')
-      : `<div class="empty-state"><div class="display">No orders in this period</div></div>`;
+      : `<div class="empty-state"><div class="display">${tr('empty.noPeriod')}</div></div>`;
   }
 
   /* ================= SETTLEMENTS (what the platform owes this restaurant) ================= */
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const fmtDay = ymd => { const [, m, d] = String(ymd || '').split('-'); return m ? MONTHS[+m - 1] + ' ' + d : ''; };
-  const fmtTsDay = ts => { const d = new Date(ts * 1000); return MONTHS[d.getMonth()] + ' ' + String(d.getDate()).padStart(2, '0'); };
-  const payKind = k => k === 'cod' ? 'COD' : 'Digital';
+  const monthName = i => tr('mon.' + (i + 1));   // i = 0..11
+  const fmtDay = ymd => { const [, m, d] = String(ymd || '').split('-'); return m ? monthName(+m - 1) + ' ' + d : ''; };
+  const fmtTsDay = ts => { const d = new Date(ts * 1000); return monthName(d.getMonth()) + ' ' + String(d.getDate()).padStart(2, '0'); };
+  const payKind = k => k === 'cod' ? tr('pay.cod') : tr('pay.digital');
 
   // Order History: audit badge on every completed order (stops double claims, shows where the money is)
   function settleBadgeRow(o) {
     if (o.status !== 'delivered') return '';
     const st = o.settlementStatus || 'unsettled', b = escapeHtml(o.settlementBatchId || '');
-    const badge = st === 'settled' ? `<span class="sbadge settled"><i></i>Settled (Batch #${b})</span>`
-                : st === 'requested' ? `<span class="sbadge requested"><i></i>Settlement Requested (Batch #${b})</span>`
-                : `<span class="sbadge unsettled"><i></i>Unsettled</span>`;
+    const badge = st === 'settled' ? `<span class="sbadge settled"><i></i>${tr('sb.settled', { b })}</span>`
+                : st === 'requested' ? `<span class="sbadge requested"><i></i>${tr('sb.requested', { b })}</span>`
+                : `<span class="sbadge unsettled"><i></i>${tr('sb.unsettled')}</span>`;
     return `<div class="o-badges">${badge}</div>`;
   }
   function finRow(o) {
     if (o.status !== 'delivered' || o.foodAmount == null) return '';
-    return `<div class="o-fin"><span>Food (yours): <b>${money(o.foodAmount)} MMK</b></span><span>${payKind(o.paymentKind)} · Delivery fee ${money(o.deliveryFee)}</span></div>`;
+    return `<div class="o-fin"><span>${tr('fin.food')} <b>${money(o.foodAmount)} MMK</b></span><span>${payKind(o.paymentKind)} · ${tr('fin.delivery')} ${money(o.deliveryFee)}</span></div>`;
   }
 
   let settleData = null, settleSig = '', settleRange = { from: '', to: '' }, settleFilter = 'all', settleQuery = '', settleOpen = new Set(), settleBusy = false;
@@ -2800,7 +3624,7 @@
   async function loadSettlements(quiet) {
     const box = document.getElementById('settle-view');
     if (quiet && document.activeElement && /^settle-/.test(document.activeElement.id || '')) return;   // don't redraw under a date picker
-    if (!quiet && !settleData) box.innerHTML = '<div class="empty-state"><div class="display">Loading…</div></div>';
+    if (!quiet && !settleData) box.innerHTML = '<div class="empty-state"><div class="display">' + tr('settle.loading') + '</div></div>';
     try {
       const res = await fetch(`${API_BASE}/api/admin/settlements`, { headers: adminHeaders(), cache: 'no-store' });
       const d = await res.json();
@@ -2810,7 +3634,7 @@
       settleSig = sig; settleData = d;
       renderSettlements();
     } catch (e) {
-      if (!quiet || !settleData) box.innerHTML = `<div class="empty-state"><div class="display">Couldn't load settlements</div>${escapeHtml(e.message)}<br><button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="loadSettlements()">Try again</button></div>`;
+      if (!quiet || !settleData) box.innerHTML = `<div class="empty-state"><div class="display">${tr('settle.cantLoad')}</div>${escapeHtml(e.message)}<br><button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="loadSettlements()">${tr('common.tryAgain')}</button></div>`;
     }
   }
 
@@ -2832,25 +3656,25 @@
     const first = rows.length ? rows[0].completedDate : '', last = rows.length ? rows[rows.length - 1].completedDate : '';
     document.getElementById('settle-view').innerHTML = `
       <div class="settle-card">
-        <div class="settle-label">Total Unsettled Balance</div>
+        <div class="settle-label">${tr('settle.totalLabel')}</div>
         <div class="settle-big">${money(u.foodTotal)} <small>MMK</small></div>
-        <div class="settle-sub">${u.count} completed order${u.count === 1 ? '' : 's'} · Digital ${money(u.digitalTotal)} · COD ${money(u.codTotal)}<br>Food amounts only — delivery fees are not part of your payout.</div>
-        ${waiting.length ? `<div class="settle-notice">${waiting.length === 1 ? 'Request #' + escapeHtml(waiting[0].batchId) + ' is' : waiting.length + ' requests are'} waiting for the platform to pay.</div>` : ''}
+        <div class="settle-sub">${trn('settle.sub', u.count)} · ${tr('pay.digital')} ${money(u.digitalTotal)} · ${tr('pay.cod')} ${money(u.codTotal)}<br>${tr('settle.foodOnly')}</div>
+        ${waiting.length ? `<div class="settle-notice">${waiting.length === 1 ? tr('settle.waitOne', { id: escapeHtml(waiting[0].batchId) }) : tr('settle.waitMany', { n: waiting.length })}</div>` : ''}
         ${rows.length ? `
         <div class="settle-dates">
-          <label>From<input type="date" id="settle-from" value="${settleRange.from}" min="${first}" max="${last}" onchange="settleRangeChanged()"></label>
-          <label>To<input type="date" id="settle-to" value="${settleRange.to}" min="${first}" max="${last}" onchange="settleRangeChanged()"></label>
+          <label>${tr('settle.from')}<input type="date" id="settle-from" value="${settleRange.from}" min="${first}" max="${last}" onchange="settleRangeChanged()"></label>
+          <label>${tr('settle.to')}<input type="date" id="settle-to" value="${settleRange.to}" min="${first}" max="${last}" onchange="settleRangeChanged()"></label>
         </div>
-        <div class="settle-warn" id="settle-warn" style="display:none">The end date can't be before the start date.</div>
+        <div class="settle-warn" id="settle-warn" style="display:none">${tr('settle.endBefore')}</div>
         <div class="settle-sel"><span id="settle-sel-count"></span><b id="settle-sel-amount"></b></div>
-        <button class="btn btn-primary settle-submit" id="settle-submit" onclick="submitSettlement()">Submit Settlement Request</button>`
-        : `<div class="settle-sub" style="margin-top:12px">Nothing to settle right now. Delivered orders show up here automatically.</div>`}
+        <button class="btn btn-primary settle-submit" id="settle-submit" onclick="submitSettlement()">${tr('settle.submit')}</button>`
+        : `<div class="settle-sub" style="margin-top:12px">${tr('settle.nothing')}</div>`}
       </div>
-      <div class="settle-h"><span>Settlement Batches</span></div>
+      <div class="settle-h"><span>${tr('settle.batches')}</span></div>
       <div class="cat-chip-bar" id="settle-chips">
-        ${[['all', 'All'], ['requested', 'Requested'], ['settled', 'Settled']].map(([k, l]) => `<button class="cat-chip-tab ${settleFilter === k ? 'active' : ''}" onclick="setSettleFilter('${k}')">${l}</button>`).join('')}
+        ${[['all', tr('filt.all')], ['requested', tr('filt.requested')], ['settled', tr('filt.settled')]].map(([k, l]) => `<button class="cat-chip-tab ${settleFilter === k ? 'active' : ''}" onclick="setSettleFilter('${k}')">${l}</button>`).join('')}
       </div>
-      <input class="settle-search" id="settle-search" type="search" placeholder="Search batch or order ID" value="${escapeHtml(settleQuery)}" oninput="settleQuery=this.value;renderSettleLedger()">
+      <input class="settle-search" id="settle-search" type="search" placeholder="${tr('ph.searchBatch')}" value="${escapeHtml(settleQuery)}" oninput="settleQuery=this.value;renderSettleLedger()">
       <div id="settle-ledger"></div>`;
     updateSettleSelection();
     renderSettleLedger();
@@ -2864,7 +3688,7 @@
   function updateSettleSelection() {
     const cnt = document.getElementById('settle-sel-count'); if (!cnt) return;
     const sel = settleSelection();
-    cnt.textContent = sel.bad ? '' : `${sel.count} order${sel.count === 1 ? '' : 's'} selected`;
+    cnt.textContent = sel.bad ? '' : trn('settle.selected', sel.count);
     document.getElementById('settle-sel-amount').textContent = sel.bad ? '' : money(sel.food) + ' MMK';
     document.getElementById('settle-warn').style.display = sel.bad ? 'block' : 'none';
     document.getElementById('settle-submit').disabled = settleBusy || sel.bad || !sel.count;
@@ -2876,68 +3700,67 @@
     const list = settleData.batches.filter(b => (settleFilter === 'all' || b.status === settleFilter) &&
       (!q || b.batchId.toLowerCase().includes(q) || b.orders.some(o => o.orderId.toLowerCase().includes(q))));
     document.getElementById('settle-ledger').innerHTML = list.length ? list.map(batchHtml).join('')
-      : `<div class="empty-state"><div class="display">${settleData.batches.length ? 'No batches match' : 'No settlements yet'}</div>${settleData.batches.length ? '' : 'Once you request and receive a payout, it is recorded here.'}</div>`;
+      : `<div class="empty-state"><div class="display">${settleData.batches.length ? tr('settle.noMatch') : tr('settle.none')}</div>${settleData.batches.length ? '' : tr('settle.noneBody')}</div>`;
   }
   function batchHtml(b) {
     const paid = b.status === 'settled';
-    const via = { kbzpay: 'KBZPay', wavepay: 'WavePay' }[b.payoutMethod] || 'bank / other';
+    const via = { kbzpay: 'KBZPay', wavepay: 'WavePay' }[b.payoutMethod] || tr('batch.viaOther');
     return `<details class="batch" ${settleOpen.has(b.batchId) ? 'open' : ''} ontoggle="this.open ? settleOpen.add('${b.batchId}') : settleOpen.delete('${b.batchId}')">
       <summary>
-        <div class="batch-top"><b>Batch #${escapeHtml(b.batchId)}</b><span class="bstatus ${b.status}">${paid ? 'Settled' : 'Requested'}</span></div>
-        <div class="batch-meta">${fmtDay(b.dateFrom)} - ${fmtDay(b.dateTo)} · ${b.orderCount} order${b.orderCount === 1 ? '' : 's'}</div>
-        <div class="batch-line"><span>${paid ? 'Total Paid' : 'Total Requested'}: <b>${money(b.foodTotal)} MMK</b></span><span>${paid ? 'Settled on ' + fmtTsDay(b.settledAt) : 'Requested on ' + fmtTsDay(b.requestedAt)}</span></div>
+        <div class="batch-top"><b>${tr('batch.title', { id: escapeHtml(b.batchId) })}</b><span class="bstatus ${b.status}">${paid ? tr('batch.settled') : tr('batch.requested')}</span></div>
+        <div class="batch-meta">${fmtDay(b.dateFrom)} - ${fmtDay(b.dateTo)} · ${trn('order.count', b.orderCount)}</div>
+        <div class="batch-line"><span>${paid ? tr('batch.totalPaid') : tr('batch.totalReq')}: <b>${money(b.foodTotal)} MMK</b></span><span>${paid ? tr('batch.settledOn', { d: fmtTsDay(b.settledAt) }) : tr('batch.requestedOn', { d: fmtTsDay(b.requestedAt) })}</span></div>
       </summary>
       <div class="batch-body">
-        <div class="batch-pay">${paid ? `Paid via <b>${via}</b>${b.payoutReference ? ' · Ref ' + escapeHtml(b.payoutReference) : ''}${b.note ? '<br>' + escapeHtml(b.note) : ''}` : 'Waiting for the platform to send your payout.'}</div>
+        <div class="batch-pay">${paid ? `${tr('batch.paidVia')} <b>${via}</b>${b.payoutReference ? ' · ' + tr('batch.ref') + ' ' + escapeHtml(b.payoutReference) : ''}${b.note ? '<br>' + escapeHtml(b.note) : ''}` : tr('batch.waiting')}</div>
         ${b.orders.map(o => `<div class="batch-row"><span><span class="oid">${escapeHtml(o.orderId)}</span><span class="od">${fmtDay(o.completedDate)}</span><span class="kchip">${payKind(o.paymentMethod)}</span></span><b>${money(o.foodAmount)}</b></div>`).join('')}
-        <div class="batch-foot">Food total <b>${money(b.foodTotal)} MMK</b> · Digital ${money(b.digitalTotal)} · COD ${money(b.codTotal)}<br>Delivery fees (not part of this payout): ${money(b.deliveryFeeTotal)} MMK</div>
-        ${paid ? '' : `<button class="btn btn-outline batch-cancel" onclick="cancelSettlement('${b.batchId}')">Cancel request</button>`}
+        <div class="batch-foot">${tr('batch.foodTotal')} <b>${money(b.foodTotal)} MMK</b> · ${tr('pay.digital')} ${money(b.digitalTotal)} · ${tr('pay.cod')} ${money(b.codTotal)}<br>${tr('batch.deliveryNote')} ${money(b.deliveryFeeTotal)} MMK</div>
+        ${paid ? '' : `<button class="btn btn-outline batch-cancel" onclick="cancelSettlement('${b.batchId}')">${tr('batch.cancel')}</button>`}
       </div>
     </details>`;
   }
 
   async function submitSettlement() {
     const sel = settleSelection(); if (!sel.count || sel.bad || settleBusy) return;
-    if (!confirm(`Request settlement of ${money(sel.food)} MMK for ${sel.count} order${sel.count === 1 ? '' : 's'} (${fmtDay(settleRange.from)} - ${fmtDay(settleRange.to)})?\n\nThese orders are locked until the platform pays or declines the request.`)) return;
+    if (!confirm(tr('confirm.settle', { amt: money(sel.food), cnt: trn('order.count', sel.count), from: fmtDay(settleRange.from), to: fmtDay(settleRange.to) }))) return;
     settleBusy = true; updateSettleSelection();
     try {
       const res = await fetch(`${API_BASE}/api/admin/settlements/request`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify({ from: settleRange.from, to: settleRange.to }) });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || res.status);
       tg?.HapticFeedback?.notificationOccurred('success');
-      showToast(`Request #${d.batch.batchId} sent to the platform.`);
+      showToast(tr('toast.reqSent', { id: d.batch.batchId }));
       settleRange = { from: '', to: '' }; settleOpen.add(d.batch.batchId);
     } catch (e) { showToast(e.message); }
     settleBusy = false;
     await loadSettlements(); loadOrders();
   }
   async function cancelSettlement(batchId) {
-    if (!confirm(`Cancel request #${batchId}? Its orders go back to Unsettled and you can request them again.`)) return;
+    if (!confirm(tr('confirm.cancelReq', { id: batchId }))) return;
     try {
       const res = await fetch(`${API_BASE}/api/admin/settlements/cancel`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify({ batchId }) });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || res.status);
-      showToast('Request cancelled.');
+      showToast(tr('toast.reqCancelled'));
     } catch (e) { showToast(e.message); }
     await loadSettlements(); loadOrders();
   }
 
   async function orderAction(id, action) {
-    if (action === 'reject' && !confirm('Are you sure to reject the order?')) return;
+    if (action === 'reject' && !confirm(tr('confirm.reject'))) return;
     try {
       const res = await fetch(`${API_BASE}/api/admin/order-action`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify(action === 'accept' ? { orderId: id, action, prepMinutes: pendingPrepMinutes(id) } : { orderId: id, action }) });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || res.status);
-      showToast(action === 'accept' ? 'Order accepted.' : action === 'reject' ? 'Order rejected.' : action === 'handover' ? 'Order completed.' : 'Marked ready.');
-    } catch (e) { showToast('Could not update: ' + e.message); }
+      showToast(action === 'accept' ? tr('toast.accepted') : action === 'reject' ? tr('toast.rejected') : action === 'handover' ? tr('toast.completed') : tr('toast.markedReady'));
+    } catch (e) { showToast(tr('toast.couldNotUpdate', { msg: e.message })); }
     loadOrders();
   }
 
 
   /* ================= RESTAURANT STATUS: open / busy / closed ================= */
   const BUSY_EXTRA_MIN = 15;
-  const STATUS_TEXT = { open: 'Open', busy: 'Busy', closed: 'Closed' };
-  function restaurantStatus() {
+    function restaurantStatus() {
     if (restaurantProfile.isOpen === false) return 'closed';
     return (restaurantProfile.busyMinutes || 0) > 0 ? 'busy' : 'open';
   }
@@ -2954,7 +3777,7 @@
     const st = restaurantStatus();
     const pill = document.getElementById('status-pill');
     pill.className = 'status-pill ' + st;
-    document.getElementById('status-pill-text').textContent = STATUS_TEXT[st];
+    document.getElementById('status-pill-text').textContent = tr('status.' + st);
     document.querySelectorAll('#status-overlay button[data-s]').forEach(b => b.classList.toggle('active', b.dataset.s === st));
     document.getElementById('closed-banner').style.display = st === 'closed' ? 'flex' : 'none';
     try { renderOrders(); } catch (e) {}     // estimates on new orders include the busy minutes
@@ -2975,7 +3798,7 @@
   async function chooseStatus(next) {
     closeStatusMenu();
     if (next === restaurantStatus()) return;
-    if (next === 'closed' && !confirm('Close the restaurant? Customers will not be able to place new orders until you reopen.')) return;
+    if (next === 'closed' && !confirm(tr('confirm.close'))) return;
     const prev = { isOpen: restaurantProfile.isOpen, busyMinutes: restaurantProfile.busyMinutes || 0 };
     const patch = { isOpen: next !== 'closed', busyMinutes: next === 'busy' ? BUSY_EXTRA_MIN : 0 };
     Object.assign(restaurantProfile, patch);
@@ -2990,9 +3813,9 @@
     pill.disabled = false;
     if (!ok) { Object.assign(restaurantProfile, prev); renderRestaurantStatus(); return; }   // roll back
     tg?.HapticFeedback?.notificationOccurred(next === 'closed' ? 'warning' : 'success');
-    showToast(next === 'open' ? 'You are open — orders can come in.'
-            : next === 'busy' ? `Busy mode on — prep estimates are +${BUSY_EXTRA_MIN} min.`
-            : 'Restaurant closed — new orders are paused.');
+    showToast(next === 'open' ? tr('toast.nowOpen')
+            : next === 'busy' ? tr('toast.busyOn', { n: BUSY_EXTRA_MIN })
+            : tr('toast.nowClosed'));
   }
   function reopenRestaurant() { chooseStatus('open'); }
 
@@ -3049,34 +3872,34 @@
     return { rem, total: Math.max(total, rem) };
   }
   function ringText(st) {
-    if (st.waiting) return ['' + st.minutes, 'min'];
-    if (st.unset) return ['--', 'set'];
-    if (st.rem > 60) return ['' + Math.ceil(st.rem / 60), 'min'];
-    if (st.rem > 0) return ['' + Math.ceil(st.rem), 'sec'];
-    return ['' + Math.floor(-st.rem / 60), 'late'];
+    if (st.waiting) return ['' + st.minutes, tr('ring.min')];
+    if (st.unset) return ['--', tr('ring.set')];
+    if (st.rem > 60) return ['' + Math.ceil(st.rem / 60), tr('ring.min')];
+    if (st.rem > 0) return ['' + Math.ceil(st.rem), tr('ring.sec')];
+    return ['' + Math.floor(-st.rem / 60), tr('ring.late')];
   }
   function prepTimerHtml(o) {
     const st = prepState(o), id = escapeHtml(o.orderId);
     if (st.done) {
       return `<div class="o-prep"><div class="prep-main"><span class="prep-ring done"><svg viewBox="0 0 56 56"><circle class="trk" cx="28" cy="28" r="${RING_R}"/><circle class="arc" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><span class="prep-txt">${icon('check')}</span></span>
-        <div class="prep-label"><b>Ready</b><small>${isPickup(o) ? 'Waiting for the customer' : 'Waiting for the rider'}</small></div></div></div>`;
+        <div class="prep-label"><b>${tr('prep.ready')}</b><small>${isPickup(o) ? tr('prep.waitCustomer') : tr('prep.waitRider')}</small></div></div></div>`;
     }
     const open = openPrepId === o.orderId;
-    const label = st.waiting ? ['Estimated prep time', (restaurantProfile.busyMinutes > 0 ? 'Includes +' + restaurantProfile.busyMinutes + ' min busy time · ' : '') + 'Tap the circle to change before accepting']
-                : st.unset   ? ['No timer yet', 'Tap the circle to start one']
-                :              ['Time left to prepare', 'Tap the circle to add or remove minutes'];
+    const label = st.waiting ? [tr('prep.estTitle'), (restaurantProfile.busyMinutes > 0 ? tr('prep.estBusy', { n: restaurantProfile.busyMinutes }) : '') + tr('prep.estSub')]
+                : st.unset   ? [tr('prep.noTimer'), tr('prep.startTimer')]
+                :              [tr('prep.timeLeft'), tr('prep.adjust')];
     return `<div class="o-prep" data-oid="${id}">
       <div class="prep-main">
-        <button type="button" class="prep-ring" data-oid="${id}" aria-label="Adjust preparation time" aria-expanded="${open}" onclick="togglePrepPop('${id}', event)">
+        <button type="button" class="prep-ring" data-oid="${id}" aria-label="${tr('prep.ariaAdjust')}" aria-expanded="${open}" onclick="togglePrepPop('${id}', event)">
           <svg viewBox="0 0 56 56"><circle class="trk" cx="28" cy="28" r="${RING_R}"/><circle class="arc" cx="28" cy="28" r="${RING_R}" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg>
-          <span class="prep-txt"><b>--</b><small>min</small></span>
+          <span class="prep-txt"><b>--</b><small>${tr('ring.min')}</small></span>
         </button>
         <div class="prep-label"><b>${label[0]}</b><small>${label[1]}</small></div>
       </div>
       ${open ? `<div class="prep-pop">
-        <button type="button" onclick="adjustPrep('${id}', -1)" aria-label="Remove one minute">−1 min</button>
+        <button type="button" onclick="adjustPrep('${id}', -1)" aria-label="${tr('prep.ariaMinus')}">${tr('prep.minus')}</button>
         <span class="prep-now" data-oid="${id}"></span>
-        <button type="button" onclick="adjustPrep('${id}', 1)" aria-label="Add one minute">+1 min</button>
+        <button type="button" onclick="adjustPrep('${id}', 1)" aria-label="${tr('prep.ariaPlus')}">${tr('prep.plus')}</button>
       </div>` : ''}
     </div>`;
   }
@@ -3098,7 +3921,7 @@
     document.querySelectorAll('.prep-now[data-oid]').forEach(el => {
       const o = ordersData.find(x => x.orderId === el.dataset.oid); if (!o) return;
       const st = prepState(o);
-      el.textContent = st.waiting ? st.minutes + ' min' : st.unset ? '' : st.rem > 0 ? (st.rem > 60 ? Math.ceil(st.rem / 60) + ' min left' : Math.ceil(st.rem) + ' s left') : 'overdue';
+      el.textContent = st.waiting ? tr('now.min', { n: st.minutes }) : st.unset ? '' : st.rem > 0 ? (st.rem > 60 ? tr('now.minLeft', { n: Math.ceil(st.rem / 60) }) : tr('now.secLeft', { n: Math.ceil(st.rem) })) : tr('now.overdue');
     });
   }
   setInterval(() => { if (!document.hidden) tickPrep(); }, 1000);
@@ -3148,17 +3971,17 @@
         body: JSON.stringify({ orderId: id, action: 'adjust_prep', delta: q.delta, prepMinutes: defaultPrepMinutes(o) }) });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || res.status);
-    } catch (e) { showToast('Could not update the timer: ' + e.message); }
+    } catch (e) { showToast(tr('toast.prepFail', { msg: e.message })); }
     loadOrders();
   }
 
-  const ADD_CHIP = '<button class="cat-chip-tab add" onclick="openCategoryDrawer()">＋ Category</button>';
+  const addCategoryChip = () => '<button class="cat-chip-tab add" onclick="openCategoryDrawer()">' + tr('cat.chipAdd') + '</button>';
 
   function toggleSoldOut(i) {
     const cat = getSelectedCategory(); if (!cat) return;
     cat.items[i].soldOut = !cat.items[i].soldOut;
     saveMenu(); renderItemGrid();
-    showToast(cat.items[i].soldOut ? 'Marked sold out.' : 'Back in stock.');
+    showToast(cat.items[i].soldOut ? tr('toast.soldOut') : tr('toast.backInStock'));
   }
 
   /* ---- profile hero ---- */
