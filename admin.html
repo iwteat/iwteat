@@ -684,6 +684,17 @@
   html[lang="my"] .tab-btn { font-size: 11px; }
   html[lang="my"] .prep-txt small { font-size: 8px; letter-spacing: 0; }
 
+  /* ---- Notification sound picker ---- */
+  .sound-row { flex-wrap: nowrap; }
+  .sound-row select {
+    flex: 1; min-width: 0; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line);
+    font-size: 13.5px; background: #fff; color: var(--ink);
+  }
+  .sound-row select:focus { outline: none; border-color: var(--primary); }
+  .sound-row .btn { flex-shrink: 0; white-space: nowrap; }
+  #wake-card .switch-row { padding: 0; }
+  #wake-card.unsupported { opacity: .6; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -914,6 +925,28 @@
         </div>
       </div>
 
+      <!-- NOTIFICATION SOUND -->
+      <div class="settings-card" id="sound-card">
+        <h3><i class="ico ico-accent" data-icon="bell"></i> <span data-i18n="sound.title">Notification Sound</span></h3>
+        <p data-i18n="sound.desc">Plays (and vibrates on phones) when a new order arrives.</p>
+        <div class="settings-row sound-row">
+          <select id="noti-sound-select" onchange="onNotiSoundChange()" aria-label="Notification Sound" data-i18n-aria="sound.title">
+            <option value="0" data-i18n="sound.opt0">Sound 1 (sound.mp3)</option>
+            <option value="1" data-i18n="sound.opt1">Sound 2 (sound1.mp3)</option>
+            <option value="2" data-i18n="sound.opt2">Sound 3 (sound2.mp3)</option>
+          </select>
+          <button type="button" class="btn btn-outline btn-sm" onclick="testNotiSound()" data-i18n="sound.test">🔊 Test</button>
+        </div>
+      </div>
+
+      <!-- KEEP SCREEN ON -->
+      <div class="settings-card" id="wake-card">
+        <label class="switch-row" for="wake-input">
+          <span class="switch-text"><b data-i18n="wake.title">Keep Screen On</b><small id="wake-hint" data-i18n="wake.desc">Stops the phone from dimming or sleeping while this app is open, so you never miss an order.</small></span>
+          <span class="switch"><input type="checkbox" id="wake-input" onchange="onWakeToggle()"><i></i></span>
+        </label>
+      </div>
+
       <div class="settings-card" id="tax-card">
         <div class="tax-head">
           <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> <span data-i18n="tax.title">5% Commercial Tax</span></span>
@@ -1125,6 +1158,11 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Order alert sounds — the MP3 files sit in the same folder as admin.html -->
+<audio id="orderAlertSound0" src="./sound.mp3" preload="auto" hidden></audio>
+<audio id="orderAlertSound1" src="./sound1.mp3" preload="auto" hidden></audio>
+<audio id="orderAlertSound2" src="./sound2.mp3" preload="auto" hidden></audio>
+
 <script>
   const API_BASE = 'https://chitkool.pythonanywhere.com';
 
@@ -1136,6 +1174,18 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "sound.title": "Notification Sound",
+  "sound.desc": "Plays (and vibrates on phones) when a new order arrives.",
+  "sound.opt0": "Sound 1 (sound.mp3)",
+  "sound.opt1": "Sound 2 (sound1.mp3)",
+  "sound.opt2": "Sound 3 (sound2.mp3)",
+  "sound.test": "🔊 Test",
+  "sound.testFail": "Couldn't play the sound — check that the MP3 file is in the same folder as admin.html and the phone isn't on silent.",
+  "wake.title": "Keep Screen On",
+  "wake.desc": "Stops the phone from dimming or sleeping while this app is open, so you never miss an order.",
+  "wake.unsupported": "This phone or app doesn't support keeping the screen on.",
+  "toast.wakeOn": "Screen will stay on.",
+  "toast.wakeOff": "Screen can sleep again.",
   "tab.orders": "Orders",
   "tab.menu": "Menu",
   "tab.settings": "Settings",
@@ -1481,6 +1531,18 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "sound.title": "အော်ဒါသတိပေးအသံ",
+  "sound.desc": "အော်ဒါအသစ်ဝင်လာသည့်အခါ အသံမြည်ပြီး ဖုန်းတွင် တုန်ခါမည်။",
+  "sound.opt0": "အသံ 1 (sound.mp3)",
+  "sound.opt1": "အသံ 2 (sound1.mp3)",
+  "sound.opt2": "အသံ 3 (sound2.mp3)",
+  "sound.test": "🔊 စမ်းနားထောင်မည်",
+  "sound.testFail": "အသံ မဖွင့်နိုင်ပါ — MP3 ဖိုင်သည် admin.html နှင့် folder တူညီမှု ရှိမရှိနှင့် ဖုန်းကို silent မထားမိကြောင်း စစ်ဆေးပါ။",
+  "wake.title": "မျက်နှာပြင် ဆက်ဖွင့်ထားမည်",
+  "wake.desc": "ဤအက်ပ် ဖွင့်ထားစဉ် ဖုန်းမျက်နှာပြင် မှိန်မသွားစေရန်နှင့် အိပ်မသွားစေရန် ထိန်းထားသည် — အော်ဒါများ မလွတ်စေရန်။",
+  "wake.unsupported": "ဤဖုန်း သို့မဟုတ် အက်ပ်တွင် မျက်နှာပြင်ဆက်ဖွင့်ထားခြင်းကို မထောက်ပံ့ပါ။",
+  "toast.wakeOn": "မျက်နှာပြင် ဆက်ဖွင့်ထားပါမည်။",
+  "toast.wakeOff": "မျက်နှာပြင် ပြန်အိပ်နိုင်ပါပြီ။",
   "tab.orders": "အော်ဒါများ",
   "tab.menu": "မီနူး",
   "tab.settings": "ဆိုင်ဆက်တင်များ",
@@ -1898,6 +1960,7 @@
   // ================= ICONS (inline SVG — replaces the old emojis) =================
   const ICONS = {
     globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
     lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
@@ -2476,7 +2539,7 @@
 
   /* ================= SHAREABLE DEEP LINK ================= */
   // Opens the Mini App straight on this restaurant: index.html reads the part after "startapp=".
-  const SHARE_LINK_BASE = 'https://t.me/iwteat_bot/order?startapp=';
+  const SHARE_LINK_BASE = 'https://t.me/assichit_bot/tgipizza?startapp=';
   function shareLinkFor(handle) { return SHARE_LINK_BASE + encodeURIComponent(handle); }
   function renderShareLink() {
     const box = document.getElementById('share-box');
@@ -3521,7 +3584,7 @@
       reapplyPendingPrep();
       const fresh = ordersData.filter(o => o.status === 'restaurant_pending' && !seenOrders.has(o.orderId));
       fresh.forEach(o => seenOrders.add(o.orderId));
-      if (fresh.length && !ordersFirst) { beep(); tg?.HapticFeedback?.notificationOccurred('success'); showToast(tr('toast.newOrder', { id: fresh[0].orderId })); }
+      if (fresh.length && !ordersFirst) { playNewOrderSound(); tg?.HapticFeedback?.notificationOccurred('success'); showToast(tr('toast.newOrder', { id: fresh[0].orderId })); }
       ordersFirst = false;
       const n = ordersData.filter(o => o.status === 'restaurant_pending').length, b = document.getElementById('orders-badge');
       b.textContent = n; b.style.display = n ? 'block' : 'none';
@@ -3530,6 +3593,99 @@
       if (ordersFirst) document.getElementById('orders-list').innerHTML = `<div class="empty-state"><div class="display">${tr('empty.cantLoadOrders')}</div>${escapeHtml(String(e.message || e))}</div>`;
     }
   }
+  /* ================= ORDER ALERT SOUND (3 choices) ================= */
+  const NOTI_SOUND_KEY = 'adminNotiSound';          // '0' | '1' | '2'  ->  orderAlertSound0 / 1 / 2
+  function getNotiSound() {
+    try { const v = localStorage.getItem(NOTI_SOUND_KEY); if (v === '0' || v === '1' || v === '2') return v; } catch (e) {}
+    return '0';
+  }
+  const alertAudio = idx => document.getElementById('orderAlertSound' + idx);
+  function onNotiSoundChange() {
+    const v = document.getElementById('noti-sound-select').value;
+    try { localStorage.setItem(NOTI_SOUND_KEY, v); } catch (e) {}
+    testNotiSound();                                   // audition it straight away
+  }
+  // Plays one alert; resolves false when the browser/file refuses (no gesture yet, missing MP3, ...).
+  function playAlert(idx) {
+    const a = alertAudio(idx);
+    if (!a) return Promise.resolve(false);
+    try {
+      ['0', '1', '2'].forEach(i => { const o = alertAudio(i); if (o && o !== a) { o.pause(); } });
+      a._unlocking = false; a.muted = false;
+      a.currentTime = 0;
+      const p = a.play();
+      return p && p.then ? p.then(() => true, () => false) : Promise.resolve(true);
+    } catch (e) { return Promise.resolve(false); }
+  }
+  function testNotiSound() {
+    playAlert(getNotiSound()).then(ok => { if (!ok) showToast(tr('sound.testFail')); });
+  }
+  // Called for every new order (status "restaurant_pending") that shows up while polling.
+  function playNewOrderSound() {
+    playAlert(getNotiSound()).then(ok => { if (!ok) beep(); });        // synth beep if the MP3 can't play
+    try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch (e) {}
+  }
+  // Browsers only allow sound after a tap. The first tap anywhere silently "primes" the three
+  // alert files so later alerts (triggered by polling, not by a tap) are allowed to play.
+  let alertsPrimed = false;
+  function primeAlertAudio() {
+    if (alertsPrimed) return;
+    alertsPrimed = true;
+    ['click', 'touchend', 'keydown'].forEach(t => document.removeEventListener(t, primeAlertAudio, true));
+    ['0', '1', '2'].forEach(i => {
+      const a = alertAudio(i); if (!a) return;
+      try {
+        a._unlocking = true; a.muted = true;
+        const p = a.play();
+        if (p && p.then) p.then(() => { if (a._unlocking) { a.pause(); a.currentTime = 0; } a.muted = false; a._unlocking = false; })
+                          .catch(() => { a.muted = false; a._unlocking = false; });
+      } catch (e) { a.muted = false; a._unlocking = false; }
+    });
+  }
+  ['click', 'touchend', 'keydown'].forEach(t => document.addEventListener(t, primeAlertAudio, true));
+  document.getElementById('noti-sound-select').value = getNotiSound();
+
+  /* ================= KEEP SCREEN ON (Screen Wake Lock) ================= */
+  const WAKE_KEY = 'adminKeepScreenOn';              // 'on' | 'off' — on unless the owner switched it off
+  const wakeSupported = !!(navigator.wakeLock && navigator.wakeLock.request);
+  let wakeLock = null;
+  function keepScreenOn() {
+    try { return localStorage.getItem(WAKE_KEY) !== 'off'; } catch (e) { return true; }
+  }
+  async function requestWakeLock() {
+    if (!wakeSupported || !keepScreenOn() || document.hidden || wakeLock) return;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      wakeLock = lock;
+      lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });   // the browser drops it when the app is hidden
+      if (!keepScreenOn()) releaseWakeLock();          // switched off while the request was pending
+    } catch (e) { wakeLock = null; }                   // refused (battery saver, unsupported WebView, ...)
+  }
+  async function releaseWakeLock() {
+    const lock = wakeLock; wakeLock = null;
+    if (lock) { try { await lock.release(); } catch (e) {} }
+  }
+  function onWakeToggle() {
+    const on = document.getElementById('wake-input').checked;
+    try { localStorage.setItem(WAKE_KEY, on ? 'on' : 'off'); } catch (e) {}
+    if (on) requestWakeLock(); else releaseWakeLock();
+    showToast(tr(on ? 'toast.wakeOn' : 'toast.wakeOff'));
+  }
+  // Back in Telegram (or the screen was turned on again) -> take the lock again.
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) requestWakeLock(); });
+  window.addEventListener('focus', requestWakeLock);
+  document.addEventListener('click', requestWakeLock);   // some WebViews only grant it after a tap
+  (function initWake() {
+    const input = document.getElementById('wake-input');
+    input.checked = keepScreenOn();
+    if (!wakeSupported) {
+      input.disabled = true; input.checked = false;
+      document.getElementById('wake-card').classList.add('unsupported');
+      setI18n(document.getElementById('wake-hint'), 'wake.unsupported');
+    }
+    requestWakeLock();
+  })();
+
   function beep() {
     try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
       o.connect(g); g.connect(c.destination); o.frequency.value = 880; g.gain.value = 0.15; o.start(); o.stop(c.currentTime + 0.25); } catch (e) {}
