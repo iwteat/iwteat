@@ -524,8 +524,8 @@
 
 
   /* ============ TOP STATUS PILL + DROPDOWN ============ */
-  .status-bar{position:sticky;top:0;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:calc(8px + var(--top-inset)) 16px 8px}
-  .status-brand{font-size:15px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .status-bar{position:sticky;top:0;z-index:25;display:flex;align-items:center;justify-content:center;gap:10px;box-sizing:border-box;min-height:calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + max(var(--tg-content-safe-area-inset-top, 0px), 48px));background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) 16px 0}
+  .status-brand{display:none;font-size:15px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .status-pill{display:inline-flex;align-items:center;gap:7px;flex-shrink:0;border:1.5px solid var(--ok);background:var(--ok-tint);color:var(--ok);border-radius:999px;padding:6px 11px 6px 10px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;transition:background .2s,color .2s,border-color .2s}
   .status-pill .dot,.sm-dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex-shrink:0}
   .status-pill svg{width:10px;height:10px;transition:transform .15s}
@@ -535,7 +535,7 @@
   .status-pill:disabled{opacity:.6;cursor:wait}
   .status-overlay{position:fixed;inset:0;z-index:1065;display:none;background:rgba(0,0,0,.18)}
   .status-overlay.open{display:block}
-  .status-menu{position:absolute;top:calc(50px + var(--top-inset));right:12px;left:12px;max-width:340px;margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:6px;animation:popIn .15s ease-out}
+  .status-menu{position:absolute;top:calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px)) + max(var(--tg-content-safe-area-inset-top, 0px), 48px) + 4px);right:12px;left:12px;max-width:340px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:6px;animation:popIn .15s ease-out}
   .status-menu button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;border-radius:11px;padding:12px;text-align:left;cursor:pointer;color:var(--ink)}
   .status-menu button.active{background:var(--paper)}
   .status-menu button:active{background:var(--paper)}
@@ -558,11 +558,6 @@
   .mchip{display:inline-block;font-size:10.5px;font-weight:600;border-radius:20px;padding:2px 8px;margin-left:8px;background:var(--paper);border:1px solid var(--line);color:var(--muted);vertical-align:middle}
   .mchip.pickup{background:var(--primary-tint);border-color:#F9C79B;color:var(--primary-dark)}
   .o-badges{margin-top:2px}
-  .sbadge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:3px 10px 3px 8px;border-radius:999px;margin-top:8px}
-  .sbadge i{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
-  .sbadge.unsettled{background:var(--primary-tint);color:var(--primary-dark)}
-  .sbadge.requested{background:#EEF2FF;color:#4F46E5}
-  .sbadge.settled{background:var(--ok-tint);color:var(--ok)}
   .o-fin{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
   .settle-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
   .settle-label{font-size:12px;font-weight:600;color:var(--muted)}
@@ -692,8 +687,23 @@
   }
   .sound-row select:focus { outline: none; border-color: var(--primary); }
   .sound-row .btn { flex-shrink: 0; white-space: nowrap; }
-  #wake-card .switch-row { padding: 0; }
-  #wake-card.unsupported { opacity: .6; }
+
+  /* ---- History: minimal coloured dot before the order ID ---- */
+  .sdot { font-size: 22px; line-height: 0; vertical-align: -3px; margin-right: 4px; font-weight: 700; }
+  .sdot.settled { color: #22c55e; }
+  .sdot.unsettled { color: #f59e0b; }
+  .sdot.requested { color: #3b82f6; }
+  /* ---- Settings: History / Settlements entries + their sub-screen ---- */
+  .settings-card.nav-card { padding: 0; overflow: hidden; }
+  .nav-row { display: flex; align-items: center; gap: 12px; width: 100%; background: none; border: 0; padding: 14px 16px;
+    font: inherit; font-size: 14.5px; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; touch-action: manipulation; }
+  .nav-row + .nav-row { border-top: 1px solid var(--line); }
+  .nav-row .nav-label { flex: 1; }
+  .nav-row .chev { color: var(--muted); }
+  .sub-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .sub-head h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .sub-back { width: 36px; height: 36px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; touch-action: manipulation; }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -828,21 +838,7 @@
     </div>
     <!-- ITEMS VIEW -->
     <div class="view active" id="view-orders">
-      <div class="seg">
-        <button class="active" id="seg-current" onclick="setOrdersScope('current')" data-i18n="seg.current">Current</button>
-        <button id="seg-history" onclick="setOrdersScope('history')" data-i18n="seg.history">History</button>
-        <button id="seg-settle" onclick="setOrdersScope('settlements')" data-i18n="seg.settlements">Settlements</button>
-      </div>
-      <div id="history-summary" style="display:none">
-        <div class="cat-chip-bar">
-          <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)" data-i18n="range.today">Today</button>
-          <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)" data-i18n="range.7">7 days</button>
-          <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)" data-i18n="range.30">30 days</button>
-        </div>
-        <div class="stats"><div><b id="st-count">0</b><span data-i18n="stat.delivered">Delivered</span></div><div><b id="st-rev">0</b><span data-i18n="stat.revenue">Revenue (MMK)</span></div></div>
-      </div>
       <div id="orders-list"></div>
-      <div id="settle-view" style="display:none"></div>
     </div>
 
     <!-- ITEMS VIEW -->
@@ -856,6 +852,7 @@
 
     <!-- SETTINGS VIEW -->
     <div class="view" id="view-settings">
+      <div id="settings-main">
       <div class="section-head"><h2 data-i18n="settings.title">Settings</h2></div>
 
       <div class="hero" id="profile-hero">
@@ -914,6 +911,12 @@
         </div>
       </div>
 
+      <!-- ORDER HISTORY + SETTLEMENTS (moved here from the Orders tab) -->
+      <div class="settings-card nav-card" id="orders-nav-card">
+        <button type="button" class="nav-row" onclick="openSettingsPanel('history')"><i class="ico ico-accent" data-icon="clock"></i><span class="nav-label" data-i18n="seg.history">History</span><i class="ico chev" data-icon="chevronRight"></i></button>
+        <button type="button" class="nav-row" onclick="openSettingsPanel('settlements')"><i class="ico ico-accent" data-icon="wallet"></i><span class="nav-label" data-i18n="seg.settlements">Settlements</span><i class="ico chev" data-icon="chevronRight"></i></button>
+      </div>
+
       <!-- LANGUAGE -->
       <div class="settings-card" id="lang-card">
         <div class="lang-row">
@@ -939,14 +942,6 @@
         </div>
       </div>
 
-      <!-- KEEP SCREEN ON -->
-      <div class="settings-card" id="wake-card">
-        <label class="switch-row" for="wake-input">
-          <span class="switch-text"><b data-i18n="wake.title">Keep Screen On</b><small id="wake-hint" data-i18n="wake.desc">Stops the phone from dimming or sleeping while this app is open, so you never miss an order.</small></span>
-          <span class="switch"><input type="checkbox" id="wake-input" onchange="onWakeToggle()"><i></i></span>
-        </label>
-      </div>
-
       <div class="settings-card" id="tax-card">
         <div class="tax-head">
           <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> <span data-i18n="tax.title">5% Commercial Tax</span></span>
@@ -958,23 +953,25 @@
         </div>
       </div>
 
-      <div class="settings-card">
-        <h3><i class="ico ico-accent" data-icon="download"></i> <span data-i18n="backup.title">Backup &amp; restore</span></h3>
-        <p data-i18n="backup.desc">Export the full menu as a JSON file, or paste one back in to restore it. Useful before making big changes, or to copy a menu between restaurants later.</p>
-        <div class="settings-row">
-          <button class="btn btn-outline btn-sm" onclick="exportMenuBackup()" data-i18n="backup.export">Export JSON</button>
-          <button class="btn btn-outline btn-sm" onclick="importMenuBackup()" data-i18n="backup.import">Import JSON</button>
-        </div>
-      </div>
+      </div><!-- /settings-main -->
 
-      <div class="settings-card">
-        <h3><i class="ico ico-accent" data-icon="refresh"></i> <span data-i18n="sync.title">Sync</span></h3>
-        <p data-i18n="sync.desc">The menu is stored on your server, not in this browser — every device reads the same data. Use this if you suspect this tab is showing something stale.</p>
-        <div class="settings-row">
-          <button class="btn btn-outline btn-sm" onclick="loadMenu(true)" data-i18n="sync.reload">Reload from server</button>
+      <!-- History / Settlements sub-screen -->
+      <div id="settings-sub" style="display:none">
+        <div class="sub-head">
+          <button type="button" class="sub-back" onclick="closeSettingsPanel()" aria-label="Back" data-i18n-aria="aria.back"><i class="ico" data-icon="arrowLeft"></i></button>
+          <h2 id="settings-sub-title" data-i18n="seg.history">History</h2>
         </div>
+        <div id="history-summary" style="display:none">
+          <div class="cat-chip-bar">
+            <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)" data-i18n="range.today">Today</button>
+            <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)" data-i18n="range.7">7 days</button>
+            <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)" data-i18n="range.30">30 days</button>
+          </div>
+          <div class="stats"><div><b id="st-count">0</b><span data-i18n="stat.delivered">Delivered</span></div><div><b id="st-rev">0</b><span data-i18n="stat.revenue">Revenue (MMK)</span></div></div>
+        </div>
+        <div id="history-list"></div>
+        <div id="settle-view" style="display:none"></div>
       </div>
-
     </div>
   </main>
 </div>
@@ -1174,6 +1171,7 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "toast.autoReady": "Order {id} marked ready automatically.",
   "sound.title": "Notification Sound",
   "sound.desc": "Plays (and vibrates on phones) when a new order arrives.",
   "sound.opt0": "Sound 1 (sound.mp3)",
@@ -1181,11 +1179,6 @@
   "sound.opt2": "Sound 3 (sound2.mp3)",
   "sound.test": "🔊 Test",
   "sound.testFail": "Couldn't play the sound — check that the MP3 file is in the same folder as admin.html and the phone isn't on silent.",
-  "wake.title": "Keep Screen On",
-  "wake.desc": "Stops the phone from dimming or sleeping while this app is open, so you never miss an order.",
-  "wake.unsupported": "This phone or app doesn't support keeping the screen on.",
-  "toast.wakeOn": "Screen will stay on.",
-  "toast.wakeOff": "Screen can sleep again.",
   "tab.orders": "Orders",
   "tab.menu": "Menu",
   "tab.settings": "Settings",
@@ -1309,11 +1302,9 @@
   "ring.min": "min",
   "ring.set": "set",
   "ring.sec": "sec",
-  "ring.late": "late",
   "now.min": "{n} min",
   "now.minLeft": "{n} min left",
   "now.secLeft": "{n} s left",
-  "now.overdue": "overdue",
   "toast.prepFail": "Could not update the timer: {msg}",
   "mon.1": "Jan",
   "mon.2": "Feb",
@@ -1430,17 +1421,6 @@
   "tax.title": "5% Commercial Tax",
   "tax.incl": "Tax Inclusive",
   "tax.excl": "Tax Exclusive",
-  "backup.title": "Backup & restore",
-  "backup.desc": "Export the full menu as a JSON file, or paste one back in to restore it. Useful before making big changes, or to copy a menu between restaurants later.",
-  "backup.export": "Export JSON",
-  "backup.import": "Import JSON",
-  "prompt.json": "Paste your exported JSON here:",
-  "err.jsonArray": "Expected a JSON array of categories.",
-  "toast.imported": "Menu imported.",
-  "toast.invalidJson": "Invalid JSON: {msg}",
-  "sync.title": "Sync",
-  "sync.desc": "The menu is stored on your server, not in this browser — every device reads the same data. Use this if you suspect this tab is showing something stale.",
-  "sync.reload": "Reload from server",
   "toast.nameRequired": "Restaurant name is required.",
   "toast.pickId": "Pick an available restaurant ID first (or leave it empty).",
   "toast.profileUpdated": "Restaurant profile updated.",
@@ -1531,6 +1511,7 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "toast.autoReady": "အော်ဒါ {id} ကို အသင့်ဖြစ်ပြီဟု အလိုအလျောက် မှတ်ပြီးပါပြီ။",
   "sound.title": "အော်ဒါသတိပေးအသံ",
   "sound.desc": "အော်ဒါအသစ်ဝင်လာသည့်အခါ အသံမြည်ပြီး ဖုန်းတွင် တုန်ခါမည်။",
   "sound.opt0": "အသံ 1 (sound.mp3)",
@@ -1538,11 +1519,6 @@
   "sound.opt2": "အသံ 3 (sound2.mp3)",
   "sound.test": "🔊 စမ်းနားထောင်မည်",
   "sound.testFail": "အသံ မဖွင့်နိုင်ပါ — MP3 ဖိုင်သည် admin.html နှင့် folder တူညီမှု ရှိမရှိနှင့် ဖုန်းကို silent မထားမိကြောင်း စစ်ဆေးပါ။",
-  "wake.title": "မျက်နှာပြင် ဆက်ဖွင့်ထားမည်",
-  "wake.desc": "ဤအက်ပ် ဖွင့်ထားစဉ် ဖုန်းမျက်နှာပြင် မှိန်မသွားစေရန်နှင့် အိပ်မသွားစေရန် ထိန်းထားသည် — အော်ဒါများ မလွတ်စေရန်။",
-  "wake.unsupported": "ဤဖုန်း သို့မဟုတ် အက်ပ်တွင် မျက်နှာပြင်ဆက်ဖွင့်ထားခြင်းကို မထောက်ပံ့ပါ။",
-  "toast.wakeOn": "မျက်နှာပြင် ဆက်ဖွင့်ထားပါမည်။",
-  "toast.wakeOff": "မျက်နှာပြင် ပြန်အိပ်နိုင်ပါပြီ။",
   "tab.orders": "အော်ဒါများ",
   "tab.menu": "မီနူး",
   "tab.settings": "ဆိုင်ဆက်တင်များ",
@@ -1666,11 +1642,9 @@
   "ring.min": "မိနစ်",
   "ring.set": "စတင်",
   "ring.sec": "စက္ကန့်",
-  "ring.late": "နောက်ကျ",
   "now.min": "{n} မိနစ်",
   "now.minLeft": "{n} မိနစ်ကျန်",
   "now.secLeft": "{n} စက္ကန့်ကျန်",
-  "now.overdue": "နောက်ကျနေသည်",
   "toast.prepFail": "အချိန်တိုင်းကိရိယာ ပြင်၍မရပါ - {msg}",
   "mon.1": "ဇန်",
   "mon.2": "ဖေ",
@@ -1787,17 +1761,6 @@
   "tax.title": "5% ကုန်သွယ်ခွန်",
   "tax.incl": "ခွန်ပါပြီးသား",
   "tax.excl": "ခွန်ထပ်ပေါင်း",
-  "backup.title": "အရန်ကူးယူခြင်းနှင့် ပြန်လည်ရယူခြင်း",
-  "backup.desc": "မီနူးအားလုံးကို JSON ဖိုင်အဖြစ် ထုတ်ယူနိုင်ပြီး ပြန်ထည့်၍လည်း ပြန်လည်ရယူနိုင်သည်။ ပြောင်းလဲမှုကြီးများ မလုပ်မီ သို့မဟုတ် နောက်ပိုင်း ဆိုင်များအကြား မီနူးကူးယူရန် အသုံးဝင်သည်။",
-  "backup.export": "JSON ထုတ်မည်",
-  "backup.import": "JSON ထည့်မည်",
-  "prompt.json": "ထုတ်ယူထားသော JSON ကို ဤနေရာတွင် ကူးထည့်ပါ -",
-  "err.jsonArray": "အမျိုးအစားများပါသော JSON array လိုအပ်ပါသည်။",
-  "toast.imported": "မီနူး ထည့်သွင်းပြီးပါပြီ။",
-  "toast.invalidJson": "JSON မမှန်ကန်ပါ - {msg}",
-  "sync.title": "ထပ်တူကျစေခြင်း",
-  "sync.desc": "မီနူးကို ဤဘရောက်ဇာတွင်မဟုတ်ဘဲ ဆာဗာတွင် သိမ်းထားသည် — စက်အားလုံးသည် တူညီသောဒေတာကို ဖတ်ပါသည်။ ဤစာမျက်နှာ ဟောင်းနေသည်ဟု ထင်ပါက ဤခလုတ်ကို သုံးပါ။",
-  "sync.reload": "ဆာဗာမှ ပြန်ယူမည်",
   "toast.nameRequired": "ဆိုင်အမည် လိုအပ်ပါသည်။",
   "toast.pickId": "အသုံးပြုနိုင်သော ဆိုင် ID ကို အရင်ရွေးပါ (သို့မဟုတ် အလွတ်ထားပါ)။",
   "toast.profileUpdated": "ဆိုင်ပရိုဖိုင် ပြင်ပြီးပါပြီ။",
@@ -1961,6 +1924,9 @@
   const ICONS = {
     globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    wallet: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    chevronRight: '<path d="m9 18 6-6-6-6"/>',
     receipt: '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
     lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
     ban: '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
@@ -2539,7 +2505,7 @@
 
   /* ================= SHAREABLE DEEP LINK ================= */
   // Opens the Mini App straight on this restaurant: index.html reads the part after "startapp=".
-  const SHARE_LINK_BASE = 'https://t.me/assichit_bot/tgipizza?startapp=';
+  const SHARE_LINK_BASE = 'https://t.me/iwteat_bot/order?startapp=';
   function shareLinkFor(handle) { return SHARE_LINK_BASE + encodeURIComponent(handle); }
   function renderShareLink() {
     const box = document.getElementById('share-box');
@@ -2666,6 +2632,7 @@
 
   /* ================= NAV ================= */
   function switchView(view) {
+    if (view !== 'settings' || currentView === 'settings') closeSettingsPanel();   // Settings tab always opens on its main screen
     currentView = view;
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -3536,27 +3503,6 @@
   }
 
   /* ================= SETTINGS ================= */
-  function exportMenuBackup() {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(menuCategories, null, 2));
-    const anchor = document.createElement('a');
-    anchor.setAttribute('href', dataStr);
-    anchor.setAttribute('download', 'menu_backup.json');
-    anchor.click();
-  }
-  function importMenuBackup() {
-    const jsonStr = prompt(tr('prompt.json'));
-    if (!jsonStr) return;
-    try {
-      const parsed = JSON.parse(jsonStr);
-      if (!Array.isArray(parsed)) throw new Error(tr('err.jsonArray'));
-      menuCategories = parsed;
-      saveMenu();
-      renderAll();
-      showToast(tr('toast.imported'));
-    } catch (e) {
-      showToast(tr('toast.invalidJson', { msg: e.message }));
-    }
-  }
   /* ================= ORDERS ================= */
   let ordersData = [], ordersScope = 'current', historyRange = 1, seenOrders = new Set(), ordersFirst = true, ordersTimer = null;
   const CURRENT = ['restaurant_pending', 'awaiting_rider', 'rider_assigned'];
@@ -3584,10 +3530,12 @@
       reapplyPendingPrep();
       const fresh = ordersData.filter(o => o.status === 'restaurant_pending' && !seenOrders.has(o.orderId));
       fresh.forEach(o => seenOrders.add(o.orderId));
-      if (fresh.length && !ordersFirst) { playNewOrderSound(); tg?.HapticFeedback?.notificationOccurred('success'); showToast(tr('toast.newOrder', { id: fresh[0].orderId })); }
+      ackedOrders.forEach(id => { if (!ordersData.some(o => o.orderId === id && o.status === 'restaurant_pending')) ackedOrders.delete(id); });
+      if (fresh.length && !ordersFirst) { tg?.HapticFeedback?.notificationOccurred('success'); showToast(tr('toast.newOrder', { id: fresh[0].orderId })); }
       ordersFirst = false;
       const n = ordersData.filter(o => o.status === 'restaurant_pending').length, b = document.getElementById('orders-badge');
       b.textContent = n; b.style.display = n ? 'block' : 'none';
+      syncOrderAlarm();                                // new pending order -> loop the alarm until it is answered
       renderOrders();
     } catch (e) {
       if (ordersFirst) document.getElementById('orders-list').innerHTML = `<div class="empty-state"><div class="display">${tr('empty.cantLoadOrders')}</div>${escapeHtml(String(e.message || e))}</div>`;
@@ -3603,28 +3551,76 @@
   function onNotiSoundChange() {
     const v = document.getElementById('noti-sound-select').value;
     try { localStorage.setItem(NOTI_SOUND_KEY, v); } catch (e) {}
-    testNotiSound();                                   // audition it straight away
+    if (alarmActive) { stopAlarmAudio(); startAlarmAudio(); }   // an alarm is ringing: carry on with the new sound
+    else testNotiSound();                                        // otherwise audition it straight away
   }
-  // Plays one alert; resolves false when the browser/file refuses (no gesture yet, missing MP3, ...).
+  // Plays one alert once; resolves false when the browser/file refuses (no gesture yet, missing MP3, ...).
   function playAlert(idx) {
     const a = alertAudio(idx);
     if (!a) return Promise.resolve(false);
     try {
       ['0', '1', '2'].forEach(i => { const o = alertAudio(i); if (o && o !== a) { o.pause(); } });
-      a._unlocking = false; a.muted = false;
+      a._unlocking = false; a.muted = false; a.loop = false;
       a.currentTime = 0;
       const p = a.play();
       return p && p.then ? p.then(() => true, () => false) : Promise.resolve(true);
     } catch (e) { return Promise.resolve(false); }
   }
   function testNotiSound() {
+    if (alarmActive) return;                           // the real alarm is already ringing
     playAlert(getNotiSound()).then(ok => { if (!ok) showToast(tr('sound.testFail')); });
   }
-  // Called for every new order (status "restaurant_pending") that shows up while polling.
-  function playNewOrderSound() {
-    playAlert(getNotiSound()).then(ok => { if (!ok) beep(); });        // synth beep if the MP3 can't play
-    try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch (e) {}
+
+  /* ---- Looping alarm: rings (and vibrates) until every pending order has been accepted or rejected ---- */
+  let alarmActive = false, alarmVibeTimer = null, alarmBeepTimer = null;
+  const ackedOrders = new Set();                       // pending orders the owner just tapped Accept / Reject on
+  const pendingForAlarm = () => ordersData.filter(o => o.status === 'restaurant_pending' && !ackedOrders.has(o.orderId));
+  const vibrateAlarm = () => { try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch (e) {} };
+  function startBeepFallback() {                       // only used when the MP3 can't play
+    if (alarmBeepTimer || !alarmActive) return;
+    beep(); alarmBeepTimer = setInterval(() => { if (alarmActive) beep(); }, 1200);
   }
+  function stopBeepFallback() { clearInterval(alarmBeepTimer); alarmBeepTimer = null; }
+  function stopAlarmAudio() {                          // sound.pause() + sound.currentTime = 0, on all three
+    ['0', '1', '2'].forEach(i => {
+      const a = alertAudio(i); if (!a) return;
+      try { a.loop = false; a.pause(); a.currentTime = 0; } catch (e) {}
+    });
+  }
+  function startAlarmAudio() {
+    const a = alertAudio(getNotiSound());
+    if (!a) { startBeepFallback(); return; }
+    ['0', '1', '2'].forEach(i => { const o = alertAudio(i); if (o && o !== a) { o.loop = false; o.pause(); o.currentTime = 0; } });
+    try {
+      a._unlocking = false; a.muted = false; a.loop = true;       // sound.loop = true
+      if (!a.paused && !a.ended) { stopBeepFallback(); return; }  // already ringing
+      const p = a.play();
+      if (p && p.then) p.then(stopBeepFallback, startBeepFallback);
+    } catch (e) { startBeepFallback(); }
+  }
+  function startOrderAlarm() {
+    if (!alarmActive) {
+      alarmActive = true;
+      vibrateAlarm(); clearInterval(alarmVibeTimer); alarmVibeTimer = setInterval(vibrateAlarm, 3000);
+    }
+    startAlarmAudio();                                 // also retries every poll if the browser blocked it earlier
+  }
+  function stopOrderAlarm() {
+    alarmActive = false;
+    clearInterval(alarmVibeTimer); alarmVibeTimer = null;
+    stopBeepFallback();
+    try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {}
+    stopAlarmAudio();
+  }
+  // Ring while there is at least one pending order nobody has answered yet; stop the moment there is none.
+  function syncOrderAlarm() {
+    if (pendingForAlarm().length) startOrderAlarm();
+    else if (alarmActive) stopOrderAlarm();
+  }
+  function playNewOrderSound() { startOrderAlarm(); }
+  // After a tap the browser allows sound, so retry the alarm if it was blocked before.
+  ['click', 'touchend'].forEach(t => document.addEventListener(t, () => { if (alarmActive) startAlarmAudio(); }, true));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && alarmActive) startAlarmAudio(); });
   // Browsers only allow sound after a tap. The first tap anywhere silently "primes" the three
   // alert files so later alerts (triggered by polling, not by a tap) are allowed to play.
   let alertsPrimed = false;
@@ -3645,60 +3641,28 @@
   ['click', 'touchend', 'keydown'].forEach(t => document.addEventListener(t, primeAlertAudio, true));
   document.getElementById('noti-sound-select').value = getNotiSound();
 
-  /* ================= KEEP SCREEN ON (Screen Wake Lock) ================= */
-  const WAKE_KEY = 'adminKeepScreenOn';              // 'on' | 'off' — on unless the owner switched it off
-  const wakeSupported = !!(navigator.wakeLock && navigator.wakeLock.request);
-  let wakeLock = null;
-  function keepScreenOn() {
-    try { return localStorage.getItem(WAKE_KEY) !== 'off'; } catch (e) { return true; }
-  }
-  async function requestWakeLock() {
-    if (!wakeSupported || !keepScreenOn() || document.hidden || wakeLock) return;
-    try {
-      const lock = await navigator.wakeLock.request('screen');
-      wakeLock = lock;
-      lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });   // the browser drops it when the app is hidden
-      if (!keepScreenOn()) releaseWakeLock();          // switched off while the request was pending
-    } catch (e) { wakeLock = null; }                   // refused (battery saver, unsupported WebView, ...)
-  }
-  async function releaseWakeLock() {
-    const lock = wakeLock; wakeLock = null;
-    if (lock) { try { await lock.release(); } catch (e) {} }
-  }
-  function onWakeToggle() {
-    const on = document.getElementById('wake-input').checked;
-    try { localStorage.setItem(WAKE_KEY, on ? 'on' : 'off'); } catch (e) {}
-    if (on) requestWakeLock(); else releaseWakeLock();
-    showToast(tr(on ? 'toast.wakeOn' : 'toast.wakeOff'));
-  }
-  // Back in Telegram (or the screen was turned on again) -> take the lock again.
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) requestWakeLock(); });
-  window.addEventListener('focus', requestWakeLock);
-  document.addEventListener('click', requestWakeLock);   // some WebViews only grant it after a tap
-  (function initWake() {
-    const input = document.getElementById('wake-input');
-    input.checked = keepScreenOn();
-    if (!wakeSupported) {
-      input.disabled = true; input.checked = false;
-      document.getElementById('wake-card').classList.add('unsupported');
-      setI18n(document.getElementById('wake-hint'), 'wake.unsupported');
-    }
-    requestWakeLock();
-  })();
-
   function beep() {
     try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
       o.connect(g); g.connect(c.destination); o.frequency.value = 880; g.gain.value = 0.15; o.start(); o.stop(c.currentTime + 0.25); } catch (e) {}
   }
-  function setOrdersScope(sc) {
-    ordersScope = sc;
-    document.getElementById('seg-current').classList.toggle('active', sc === 'current');
-    document.getElementById('seg-history').classList.toggle('active', sc === 'history');
-    document.getElementById('seg-settle').classList.toggle('active', sc === 'settlements');
-    document.getElementById('history-summary').style.display = sc === 'history' ? 'block' : 'none';
-    document.getElementById('orders-list').style.display = sc === 'settlements' ? 'none' : '';
-    document.getElementById('settle-view').style.display = sc === 'settlements' ? 'block' : 'none';
-    if (sc === 'settlements') loadSettlements(); else renderOrders();
+  // History and Settlements are screens inside the Settings tab; "current" is the Orders tab itself.
+  function openSettingsPanel(p) {                       // p = 'history' | 'settlements'
+    ordersScope = p;
+    document.getElementById('settings-main').style.display = 'none';
+    document.getElementById('settings-sub').style.display = 'block';
+    setI18n(document.getElementById('settings-sub-title'), p === 'history' ? 'seg.history' : 'seg.settlements');
+    document.getElementById('history-summary').style.display = p === 'history' ? 'block' : 'none';
+    document.getElementById('history-list').style.display = p === 'history' ? '' : 'none';
+    document.getElementById('settle-view').style.display = p === 'settlements' ? 'block' : 'none';
+    window.scrollTo(0, 0);
+    if (p === 'settlements') loadSettlements(); else renderOrders();
+  }
+  function closeSettingsPanel() {
+    ordersScope = 'current';
+    const m = document.getElementById('settings-main'), sub = document.getElementById('settings-sub');
+    if (m) m.style.display = '';
+    if (sub) sub.style.display = 'none';
+    window.scrollTo(0, 0);
   }
   function setHistoryRange(r) {
     historyRange = r;
@@ -3723,17 +3687,20 @@
     return o.readyAt ? 'st-ready' : 'st-prep';
   }
   const isPickup = o => o.deliveryMethod === 'pickup';
-  function orderHead(o) {
+  function orderHead(o, withDot) {
     let [label, cls] = STATUS[o.status] || [o.status, 'wait'];
     if (STATUS[o.status]) label = tr(label);
     if (isPickup(o) && o.status === 'awaiting_rider') label = tr('st.preparing');          // Self-pick up has no rider to find
     const method = isPickup(o) ? `<span class="mchip pickup">${tr('chip.pickup')}</span>` : `<span class="mchip">${tr('chip.delivery')}</span>`;
-    return `<div class="o-top"><span><span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span><span class="pill ${o.readyAt && CURRENT.includes(o.status) ? 'ok' : cls}">${o.readyAt && CURRENT.includes(o.status) ? tr('st.ready') : label}</span></div>`;
+    return `<div class="o-top"><span>${withDot ? settleDot(o) : ''}<span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span><span class="pill ${o.readyAt && CURRENT.includes(o.status) ? 'ok' : cls}">${o.readyAt && CURRENT.includes(o.status) ? tr('st.ready') : label}</span></div>`;
   }
   function renderOrders() {
-    if (ordersScope === 'settlements') return;       // that tab draws itself (renderSettlements)
+    renderCurrentOrders();                            // the Orders tab always stays up to date, even while Settings is open
+    if (ordersScope === 'history') renderHistoryOrders();   // Settlements draws itself (renderSettlements)
+  }
+  function renderCurrentOrders() {
     const box = document.getElementById('orders-list');
-    if (ordersScope === 'current') {
+    {
       const list = ordersData.filter(o => CURRENT.includes(o.status)).sort((a, b) => (a.status === 'restaurant_pending' ? 0 : 1) - (b.status === 'restaurant_pending' ? 0 : 1));
       box.innerHTML = list.length ? list.map(o => `<div class="o-card ${cardState(o)}">${orderHead(o)}${prepTimerHtml(o)}${orderBody(o)}${
         o.status === 'restaurant_pending'
@@ -3743,15 +3710,17 @@
               : `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} ${tr('act.markReady')}</button></div>`)}</div>`).join('')
         : `<div class="empty-state"><div class="display">${tr('empty.noActive')}</div>${tr('empty.noActiveBody')}</div>`;
       tickPrep();
-      return;
     }
+  }
+  function renderHistoryOrders() {
+    const box = document.getElementById('history-list');
     const d0 = new Date(); d0.setHours(0, 0, 0, 0);
     const since = historyRange === 1 ? d0.getTime() / 1000 : Date.now() / 1000 - historyRange * 86400;
     const list = ordersData.filter(o => !CURRENT.includes(o.status) && o.createdAt >= since);
     const done = list.filter(o => o.status === 'delivered');
     document.getElementById('st-count').textContent = done.length;
     document.getElementById('st-rev').textContent = money(done.reduce((t, o) => t + (Number(o.total) || 0), 0));
-    box.innerHTML = list.length ? list.map(o => `<details class="o-card"><summary>${orderHead(o)}${settleBadgeRow(o)}</summary>${orderBody(o)}${finRow(o)}</details>`).join('')
+    box.innerHTML = list.length ? list.map(o => `<details class="o-card"><summary>${orderHead(o, true)}</summary>${orderBody(o)}${finRow(o)}</details>`).join('')
       : `<div class="empty-state"><div class="display">${tr('empty.noPeriod')}</div></div>`;
   }
 
@@ -3761,14 +3730,14 @@
   const fmtTsDay = ts => { const d = new Date(ts * 1000); return monthName(d.getMonth()) + ' ' + String(d.getDate()).padStart(2, '0'); };
   const payKind = k => k === 'cod' ? tr('pay.cod') : tr('pay.digital');
 
-  // Order History: audit badge on every completed order (stops double claims, shows where the money is)
-  function settleBadgeRow(o) {
+  // Order History: a small coloured dot before the order ID shows where the money is
+  // (green = settled, amber = unsettled, blue = settlement requested). No text labels.
+  function settleDot(o) {
     if (o.status !== 'delivered') return '';
     const st = o.settlementStatus || 'unsettled', b = escapeHtml(o.settlementBatchId || '');
-    const badge = st === 'settled' ? `<span class="sbadge settled"><i></i>${tr('sb.settled', { b })}</span>`
-                : st === 'requested' ? `<span class="sbadge requested"><i></i>${tr('sb.requested', { b })}</span>`
-                : `<span class="sbadge unsettled"><i></i>${tr('sb.unsettled')}</span>`;
-    return `<div class="o-badges">${badge}</div>`;
+    const cls = st === 'settled' ? 'settled' : st === 'requested' ? 'requested' : 'unsettled';
+    const tip = cls === 'settled' ? tr('sb.settled', { b }) : cls === 'requested' ? tr('sb.requested', { b }) : tr('sb.unsettled');
+    return `<span class="sdot ${cls}" role="img" aria-label="${tip}" title="${tip}">•</span>`;
   }
   function finRow(o) {
     if (o.status !== 'delivered' || o.foodAmount == null) return '';
@@ -3904,12 +3873,17 @@
 
   async function orderAction(id, action) {
     if (action === 'reject' && !confirm(tr('confirm.reject'))) return;
+    const answers = action === 'accept' || action === 'reject';
+    if (answers) { ackedOrders.add(id); syncOrderAlarm(); }      // alarm stops right away (pause + currentTime = 0)
     try {
       const res = await fetch(`${API_BASE}/api/admin/order-action`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify(action === 'accept' ? { orderId: id, action, prepMinutes: pendingPrepMinutes(id) } : { orderId: id, action }) });
       const d = await res.json();
       if (!res.ok || !d.success) throw new Error(d.error || res.status);
       showToast(action === 'accept' ? tr('toast.accepted') : action === 'reject' ? tr('toast.rejected') : action === 'handover' ? tr('toast.completed') : tr('toast.markedReady'));
-    } catch (e) { showToast(tr('toast.couldNotUpdate', { msg: e.message })); }
+    } catch (e) {
+      if (answers) { ackedOrders.delete(id); syncOrderAlarm(); }   // the call failed, so the order is still waiting: ring again
+      showToast(tr('toast.couldNotUpdate', { msg: e.message }));
+    }
     loadOrders();
   }
 
@@ -4032,7 +4006,7 @@
     if (st.unset) return ['--', tr('ring.set')];
     if (st.rem > 60) return ['' + Math.ceil(st.rem / 60), tr('ring.min')];
     if (st.rem > 0) return ['' + Math.ceil(st.rem), tr('ring.sec')];
-    return ['' + Math.floor(-st.rem / 60), tr('ring.late')];
+    return ['0', tr('ring.sec')];
   }
   function prepTimerHtml(o) {
     const st = prepState(o), id = escapeHtml(o.orderId);
@@ -4071,16 +4045,46 @@
       el.querySelector('.prep-txt small').textContent = small;
       const frac = st.waiting ? 1 : st.unset ? 0 : Math.max(0, Math.min(1, st.rem / st.total));
       el.querySelector('.arc').style.strokeDashoffset = RING_C * (1 - frac);
-      el.classList.toggle('late', !!st.rem && st.rem <= 0);
+      el.classList.remove('late');
       el.classList.toggle('warn', !!st.rem && st.rem > 0 && (st.rem <= 120 || frac <= 0.2));
     });
     document.querySelectorAll('.prep-now[data-oid]').forEach(el => {
       const o = ordersData.find(x => x.orderId === el.dataset.oid); if (!o) return;
       const st = prepState(o);
-      el.textContent = st.waiting ? tr('now.min', { n: st.minutes }) : st.unset ? '' : st.rem > 0 ? (st.rem > 60 ? tr('now.minLeft', { n: Math.ceil(st.rem / 60) }) : tr('now.secLeft', { n: Math.ceil(st.rem) })) : tr('now.overdue');
+      el.textContent = st.waiting ? tr('now.min', { n: st.minutes }) : st.unset ? '' : st.rem > 0 ? (st.rem > 60 ? tr('now.minLeft', { n: Math.ceil(st.rem / 60) }) : tr('now.secLeft', { n: Math.ceil(st.rem) })) : tr('now.secLeft', { n: 0 });
     });
   }
   setInterval(() => { if (!document.hidden) tickPrep(); }, 1000);
+
+  // When the preparation countdown reaches 0:00 the order is marked Ready automatically
+  // (same "ready" action as the Mark ready button) so riders / customers are alerted at once.
+  const autoReadyTried = {};                          // orderId -> last attempt (ms), so a failed call retries every 15 s
+  function autoReadyCheck() {
+    if (typeof ordersData === 'undefined') return;
+    const now = Date.now();
+    ordersData.forEach(o => {
+      if (!CURRENT.includes(o.status) || o.status === 'restaurant_pending' || o.readyAt || !o.prepEndsAt) return;
+      if (o.prepEndsAt - nowSec() > 0) return;        // still counting down
+      if (prepQueue[o.orderId]) return;               // owner is mid-tap on +1 min; wait for it to be sent
+      if (autoReadyTried[o.orderId] && now - autoReadyTried[o.orderId] < 15000) return;
+      autoReadyTried[o.orderId] = now;
+      autoMarkReady(o.orderId);
+    });
+  }
+  async function autoMarkReady(id) {
+    const o = ordersData.find(x => x.orderId === id); if (!o) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/order-action`, { method: 'POST', headers: adminHeaders(), body: JSON.stringify({ orderId: id, action: 'ready' }) });
+      const d = await res.json();
+      if (!res.ok || !d.success) throw new Error(d.error || res.status);
+      o.readyAt = o.readyAt || nowSec();
+      tg?.HapticFeedback?.notificationOccurred('success');
+      showToast(tr('toast.autoReady', { id }));
+      renderOrders();
+      loadOrders();
+    } catch (e) { /* silent: the next check (15 s) tries again */ }
+  }
+  setInterval(autoReadyCheck, 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tickPrep(); });
 
   function togglePrepPop(id, ev) {
