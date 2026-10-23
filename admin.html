@@ -705,6 +705,25 @@
   .sub-back { width: 36px; height: 36px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
     border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; touch-action: manipulation; }
 
+  /* ---- Field tags (Required / Optional) ---- */
+  .field-tag { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 6px; }
+  .handle-wrap input:disabled { background: #f4f4f2; color: var(--muted); cursor: not-allowed; opacity: 1; -webkit-text-fill-color: var(--muted); }
+  /* ---- Audio / screen status chips (Orders tab) ---- */
+  .live-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 14px; }
+  .live-chip { display: inline-flex; align-items: center; gap: 5px; font: inherit; font-size: 12px; font-weight: 600; line-height: 1.35;
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted); }
+  button.live-chip { cursor: pointer; touch-action: manipulation; }
+  .live-chip.ok { color: var(--ok); border-color: var(--ok); background: var(--ok-tint); }
+  .live-chip.off { color: var(--mustard); border-color: var(--mustard); background: var(--mustard-tint); }
+  /* ---- Category drawer: "+ More Options" ---- */
+  .more-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: 0;
+    border-top: 1px solid var(--line); padding: 14px 2px 6px; font: inherit; font-size: 14px; font-weight: 600; color: var(--primary-dark);
+    cursor: pointer; touch-action: manipulation; }
+  .more-toggle .chev { transition: transform .15s; }
+  .more-toggle.open .chev { transform: rotate(180deg); }
+  #cat-more { display: none; }
+  #cat-more.open { display: block; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -745,8 +764,7 @@
     <!-- ---- Step 1: profile ---- -->
     <div class="setup-step" id="setup-step-1">
       <div class="setup-top"><span class="setup-steps" data-i18n="setup.step1">STEP 1 OF 2</span></div>
-      <h1 data-i18n="setup.welcome">Welcome! Let's set up your restaurant</h1>
-      <p class="intro" data-i18n="setup.intro1">Fill in every field to continue. You can change most of this later from Settings.</p>
+      <h1 data-i18n="setup.welcome">Set up your restaurant</h1>
 
       <div class="setup-logo-block">
         <img class="thumb-preview" id="setup-logo-preview" src="" alt="" onerror="this.style.opacity=0.6;" onload="this.style.opacity=1;">
@@ -759,24 +777,24 @@
       </div>
 
       <div class="field">
-        <label data-i18n="f.name">Restaurant name</label>
+        <label><span data-i18n="f.name">Restaurant name</span><span class="field-tag" data-i18n="tag.required">Required</span></label>
         <input type="text" id="setup-name-input" placeholder="e.g. Restaurant name" data-i18n-placeholder="ph.name">
       </div>
       <div class="field">
-        <label><span data-i18n="f.id">Restaurant ID</span> <span style="font-weight:400;" data-i18n="setup.idHint">(unique — used for your shareable link)</span></label>
+        <label data-i18n="f.address">Restaurant address</label>
+        <textarea id="setup-address-input" placeholder="Street, township, city" data-i18n-placeholder="ph.addrSettings"></textarea>
+      </div>
+      <div class="field">
+        <label><span data-i18n="f.tagline">Tagline / title</span><span class="field-tag" data-i18n="tag.optional">Optional</span></label>
+        <input type="text" id="setup-tagline-input" placeholder="e.g. A short line about your food" data-i18n-placeholder="ph.tagline">
+      </div>
+      <div class="field">
+        <label><span data-i18n="f.id">Restaurant ID</span><span class="field-tag" data-i18n="tag.optional">Optional</span></label>
         <div class="handle-wrap">
           <input type="text" id="setup-handle-input" class="mono-input" placeholder="e.g. moon_cafe" data-i18n-placeholder="ph.handle" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" oninput="onHandleInput('setup')">
           <span class="handle-count" id="setup-handle-count">0/20</span>
         </div>
-        <div class="handle-status" id="setup-handle-status">4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later.</div>
-      </div>
-      <div class="field">
-        <label><span data-i18n="f.tagline">Tagline / title</span> <span style="font-weight:400;" data-i18n="setup.taglineHint">(shown under your name to customers)</span></label>
-        <input type="text" id="setup-tagline-input" placeholder="e.g. A short line about your food" data-i18n-placeholder="ph.tagline">
-      </div>
-      <div class="field">
-        <label data-i18n="f.address">Restaurant address</label>
-        <textarea id="setup-address-input" placeholder="Street, township, city — shown to customers at checkout" data-i18n-placeholder="ph.addrSetup"></textarea>
+        <div class="handle-status" id="setup-handle-status"></div>
       </div>
 
       <div class="setup-spacer"></div>
@@ -784,23 +802,21 @@
       <button class="btn btn-primary btn-wide" id="setup-next-btn" onclick="completeSetup()" disabled data-i18n="common.next">Next</button>
     </div>
 
-    <!-- ---- Step 2: location pin (skippable) ---- -->
+    <!-- ---- Step 2: location pin (optional) ---- -->
     <div class="setup-step" id="setup-step-2" style="display:none;">
       <div class="setup-top">
         <button class="setup-back" aria-label="Back" data-i18n-aria="aria.back" onclick="backToStep1()"><i class="ico" data-icon="arrowLeft"></i></button>
         <span class="setup-steps" data-i18n="setup.step2">STEP 2 OF 2</span>
       </div>
-      <h1 data-i18n="setup.pinTitle">Pin your location</h1>
-      <p class="intro" data-i18n="setup.pinIntro">Riders and customers can find you easily with a location pin. Tap the map or drag the pin to fine-tune it.</p>
+      <h1><span data-i18n="setup.pinTitle">Pin your location</span><span class="field-tag" data-i18n="tag.optional">Optional</span></h1>
 
       <div class="map-box" id="setup-map"></div>
       <input type="hidden" id="setup-pin-input">
-      <div class="pin-hint" id="setup-pin-status" data-i18n="setup.pinHint">Stand at your restaurant when you tap the button for the most accurate pin.</div>
+      <div class="pin-hint" id="setup-pin-status"></div>
       <button type="button" class="btn btn-outline-accent btn-wide" style="margin-top:12px;" onclick="useMyLocation('setup')"><i class="ico" data-icon="locate"></i> <span data-i18n="loc.use">Use my current location</span></button>
 
       <div class="setup-spacer"></div>
-      <button class="btn btn-primary btn-wide" id="setup-continue-btn" style="margin-top:18px;" onclick="finishSetup(true)" disabled data-i18n="setup.continue">Continue to Menu</button>
-      <button class="skip-link" onclick="finishSetup(false)" data-i18n="setup.skip">Skip for now</button>
+      <button class="btn btn-primary btn-wide" id="setup-continue-btn" style="margin-top:18px;" onclick="finishSetup()" data-i18n="setup.continue">Continue to Menu</button>
     </div>
 
   </div>
@@ -838,6 +854,10 @@
     </div>
     <!-- ITEMS VIEW -->
     <div class="view active" id="view-orders">
+      <div class="live-chips" id="live-chips">
+        <button type="button" class="live-chip off" id="chip-audio" onclick="enableAudioTap()"></button>
+        <span class="live-chip off" id="chip-screen"></span>
+      </div>
       <div id="orders-list"></div>
     </div>
 
@@ -989,8 +1009,9 @@
         <input type="text" id="cat-name-input" placeholder="e.g. Category name" data-i18n-placeholder="ph.catName">
       </div>
 
-      <p class="important-note" data-i18n="cat.note">Adding sizes and options in the category will apply to all items under this category.</p>
+      <button type="button" class="more-toggle" id="cat-more-toggle" onclick="toggleCatMore()" aria-expanded="false"><span data-i18n="cat.more">+ More Options</span><i class="ico chev" data-icon="chevronDown"></i></button>
 
+      <div id="cat-more">
       <div class="field">
         <label data-i18n="f.sizes">Sizes</label>
         <div class="chip-list" id="cat-size-chips"></div>
@@ -1013,6 +1034,7 @@
           <button class="btn btn-outline btn-sm" onclick="openGroupDrawer('category', null, 'multi')"><i class="ico " data-icon="checkSquare"></i> <span data-i18n="group.multi">Add-on group</span></button>
         </div>
       </div>
+      </div><!-- /cat-more -->
     </div>
     <div class="drawer-foot modal-bottom-actions">
       <button class="btn btn-outline" onclick="closeCategoryDrawer()" data-i18n="common.cancel">Cancel</button>
@@ -1171,6 +1193,15 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "tag.required": "Required",
+  "tag.optional": "Optional",
+  "handle.idle": "4–20 characters",
+  "setup.nameRequired": "Enter your restaurant name.",
+  "cat.more": "+ More Options",
+  "status.audioReady": "🔊 Audio Ready",
+  "status.audioTap": "🔇 Tap to Enable Audio",
+  "status.screenAwake": "💡 Screen Awake",
+  "status.screenNormal": "🌙 Screen Normal",
   "toast.autoReady": "Order {id} marked ready automatically.",
   "sound.title": "Notification Sound",
   "sound.desc": "Plays (and vibrates on phones) when a new order arrives.",
@@ -1190,33 +1221,23 @@
   "gate.openBot": "Open Bot",
   "setup.step1": "STEP 1 OF 2",
   "setup.step2": "STEP 2 OF 2",
-  "setup.welcome": "Welcome! Let's set up your restaurant",
-  "setup.intro1": "Fill in every field to continue. You can change most of this later from Settings.",
+  "setup.welcome": "Set up your restaurant",
   "common.uploadLogo": "Upload Logo",
   "f.name": "Restaurant name",
   "f.id": "Restaurant ID",
-  "setup.idHint": "(unique — used for your shareable link)",
   "f.tagline": "Tagline / title",
-  "setup.taglineHint": "(shown under your name to customers)",
   "f.address": "Restaurant address",
   "ph.name": "e.g. Restaurant name",
   "ph.handle": "e.g. moon_cafe",
   "ph.tagline": "e.g. A short line about your food",
-  "ph.addrSetup": "Street, township, city — shown to customers at checkout",
   "ph.addrSettings": "Street, township, city",
   "common.next": "Next",
   "setup.pinTitle": "Pin your location",
-  "setup.pinIntro": "Riders and customers can find you easily with a location pin. Tap the map or drag the pin to fine-tune it.",
-  "setup.pinHint": "Stand at your restaurant when you tap the button for the most accurate pin.",
   "loc.use": "Use my current location",
   "setup.continue": "Continue to Menu",
-  "setup.skip": "Skip for now",
   "aria.back": "Back",
-  "setup.fillAll": "Please fill in every field.",
   "setup.chooseId": "Please choose an available restaurant ID.",
   "setup.saveFail": "Could not save — check your connection and try again.",
-  "handle.idleSetup": "4–20 characters, starts with a letter. Letters, numbers and _ only. It can't be changed later.",
-  "handle.idleSettings": "Pick a unique ID (4–20 characters, starts with a letter; letters, numbers or _). It can't be changed later.",
   "handle.mustStartLetter": "The ID must start with a letter (not a number or _).",
   "handle.min4": "Use at least 4 characters.",
   "handle.checking": "Checking…",
@@ -1224,7 +1245,7 @@
   "handle.rule": "Use 4–20 characters, starting with a letter.",
   "handle.available": "Available",
   "handle.notAvailable": "Not available.",
-  "handle.locked": "This ID can't be changed — your shared links use it.",
+  "handle.locked": "🔒 Fixed after launch",
   "map.fallback": "The map preview couldn't load. Check your connection — you can still skip this step.",
   "map.dragChange": "Drag the pin or tap the map to change it.",
   "map.pinSet": "Pin set — drag it or tap the map to fine-tune.",
@@ -1434,7 +1455,6 @@
   "edit.title": "Edit \"{name}\"",
   "f.catName": "Category name",
   "ph.catName": "e.g. Category name",
-  "cat.note": "Adding sizes and options in the category will apply to all items under this category.",
   "f.sizes": "Sizes",
   "ph.size": "e.g. Small",
   "cat.addSize": "Add Size",
@@ -1511,6 +1531,15 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "tag.required": "မဖြစ်မနေ လိုအပ်",
+  "tag.optional": "မဖြည့်လည်းရ",
+  "handle.idle": "စာလုံး 4 မှ 20",
+  "setup.nameRequired": "ဆိုင်အမည် ထည့်ပါ။",
+  "cat.more": "+ နောက်ထပ် ရွေးချယ်စရာများ",
+  "status.audioReady": "🔊 အသံ အဆင်သင့်",
+  "status.audioTap": "🔇 အသံဖွင့်ရန် နှိပ်ပါ",
+  "status.screenAwake": "💡 မျက်နှာပြင် ဖွင့်ထားသည်",
+  "status.screenNormal": "🌙 မျက်နှာပြင် ပုံမှန်",
   "toast.autoReady": "အော်ဒါ {id} ကို အသင့်ဖြစ်ပြီဟု အလိုအလျောက် မှတ်ပြီးပါပြီ။",
   "sound.title": "အော်ဒါသတိပေးအသံ",
   "sound.desc": "အော်ဒါအသစ်ဝင်လာသည့်အခါ အသံမြည်ပြီး ဖုန်းတွင် တုန်ခါမည်။",
@@ -1530,33 +1559,23 @@
   "gate.openBot": "Bot ကို ဖွင့်မည်",
   "setup.step1": "အဆင့် 1 / 2",
   "setup.step2": "အဆင့် 2 / 2",
-  "setup.welcome": "ကြိုဆိုပါတယ်! သင့်ဆိုင်ကို စတင်ပြင်ဆင်ကြရအောင်",
-  "setup.intro1": "ဆက်သွားရန် အကွက်အားလုံးကို ဖြည့်ပါ။ အများစုကို နောက်ပိုင်း ဆက်တင်များမှ ပြန်ပြင်နိုင်ပါသည်။",
+  "setup.welcome": "သင့်ဆိုင်ကို စတင်ပြင်ဆင်ပါ",
   "common.uploadLogo": "လိုဂို တင်မည်",
   "f.name": "ဆိုင်အမည်",
   "f.id": "ဆိုင် ID",
-  "setup.idHint": "(သီးသန့်ဖြစ်ရမည် — မျှဝေလင့်ခ်တွင် သုံးမည်)",
   "f.tagline": "ဆိုင်ဆောင်ပုဒ် / ခေါင်းစဉ်",
-  "setup.taglineHint": "(ဆိုင်အမည်အောက်တွင် ဖောက်သည်များ မြင်ရမည်)",
   "f.address": "ဆိုင်လိပ်စာ",
   "ph.name": "ဥပမာ - ဆိုင်အမည်",
   "ph.handle": "ဥပမာ - moon_cafe",
   "ph.tagline": "ဥပမာ - သင့်အစားအစာအကြောင်း စာတိုတစ်ကြောင်း",
-  "ph.addrSetup": "လမ်း၊ မြို့နယ်၊ မြို့ — ငွေရှင်းချိန်တွင် ဖောက်သည်များ မြင်ရမည်",
   "ph.addrSettings": "လမ်း၊ မြို့နယ်၊ မြို့",
   "common.next": "ရှေ့ဆက်မည်",
   "setup.pinTitle": "သင့်တည်နေရာကို ပင်ထိုးပါ",
-  "setup.pinIntro": "တည်နေရာပင်ဖြင့် ပို့ဆောင်သူများနှင့် ဖောက်သည်များ သင့်ဆိုင်ကို လွယ်ကူစွာ ရှာတွေ့နိုင်ပါသည်။ မြေပုံကို နှိပ်ပါ သို့မဟုတ် ပင်ကို ဆွဲ၍ ချိန်ညှိပါ။",
-  "setup.pinHint": "ပိုမိုတိကျစေရန် ခလုတ်နှိပ်ချိန်တွင် ဆိုင်၌ ရပ်နေပါ။",
   "loc.use": "ကျွန်ုပ်၏ လက်ရှိတည်နေရာကို သုံးမည်",
   "setup.continue": "မီနူးသို့ ဆက်သွားမည်",
-  "setup.skip": "ယခု ကျော်ထားမည်",
   "aria.back": "နောက်သို့",
-  "setup.fillAll": "အကွက်အားလုံးကို ဖြည့်ပါ။",
   "setup.chooseId": "အသုံးပြုနိုင်သော ဆိုင် ID တစ်ခု ရွေးပါ။",
   "setup.saveFail": "သိမ်း၍မရပါ — အင်တာနက်ကို စစ်ဆေးပြီး ထပ်မံကြိုးစားပါ။",
-  "handle.idleSetup": "စာလုံး 4 မှ 20 အထိ၊ စာလုံးဖြင့် စရမည်။ စာလုံး၊ ဂဏန်းနှင့် _ သာ သုံးနိုင်သည်။ နောက်ပိုင်း ပြောင်း၍မရပါ။",
-  "handle.idleSettings": "သီးသန့် ID တစ်ခု ရွေးပါ (စာလုံး 4 မှ 20၊ စာလုံးဖြင့်စရမည်၊ စာလုံး၊ ဂဏန်း သို့ _ )။ နောက်ပိုင်း ပြောင်း၍မရပါ။",
   "handle.mustStartLetter": "ID သည် စာလုံးဖြင့် စရမည် (ဂဏန်း သို့ _ မဖြစ်ရ)။",
   "handle.min4": "အနည်းဆုံး စာလုံး 4 လုံး သုံးပါ။",
   "handle.checking": "စစ်ဆေးနေသည်…",
@@ -1564,7 +1583,7 @@
   "handle.rule": "စာလုံး 4 မှ 20 အတွင်း သုံးပြီး စာလုံးဖြင့် စပါ။",
   "handle.available": "သုံးနိုင်ပါသည်",
   "handle.notAvailable": "မရနိုင်ပါ။",
-  "handle.locked": "ဤ ID ကို ပြောင်း၍မရပါ — သင့်မျှဝေလင့်ခ်များတွင် သုံးထားသောကြောင့်ဖြစ်သည်။",
+  "handle.locked": "🔒 ထုတ်ပြန်ပြီးနောက် ပြောင်း၍မရပါ",
   "map.fallback": "မြေပုံကို ဖော်ပြ၍မရပါ။ အင်တာနက်ကို စစ်ဆေးပါ — ဤအဆင့်ကို ကျော်နိုင်ပါသေးသည်။",
   "map.dragChange": "ပင်ကို ဆွဲပါ သို့မဟုတ် မြေပုံကို နှိပ်၍ ပြောင်းပါ။",
   "map.pinSet": "ပင်ထိုးပြီးပါပြီ — ဆွဲ၍ သို့မဟုတ် မြေပုံကို နှိပ်၍ ချိန်ညှိနိုင်သည်။",
@@ -1774,7 +1793,6 @@
   "edit.title": "\"{name}\" ကို ပြင်မည်",
   "f.catName": "အမျိုးအစားအမည်",
   "ph.catName": "ဥပမာ - အမျိုးအစားအမည်",
-  "cat.note": "အမျိုးအစားထဲတွင် အရွယ်အစားနှင့် ရွေးချယ်စရာများ ထည့်ပါက ဤအမျိုးအစားအောက်ရှိ ဟင်းလျာအားလုံးတွင် အကျုံးဝင်မည်။",
   "f.sizes": "အရွယ်အစားများ",
   "ph.size": "ဥပမာ - အသေး",
   "cat.addSize": "အရွယ်အစား ထည့်မည်",
@@ -1892,10 +1910,7 @@
   function refreshHandleIdleText() {
     ['setup', 'settings'].forEach(p => {
       if (handleStatus[p] !== 'idle') return;
-      const input = document.getElementById(p + '-handle-input');
-      setHandleStatus(p, 'idle', handleLocked() ? tr('handle.locked')
-        : p === 'setup' ? tr('handle.idleSetup')
-        : (input && input.value ? '' : tr('handle.idleSettings')));
+      setHandleStatus(p, 'idle', handleLocked() ? tr('handle.locked') : tr('handle.idle'));
     });
   }
 
@@ -1924,6 +1939,7 @@
   const ICONS = {
     globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    chevronDown: '<path d="m6 9 6 6 6-6"/>',
     clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
     wallet: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
     chevronRight: '<path d="m9 18 6-6-6-6"/>',
@@ -2133,7 +2149,7 @@
     // A missing address is a better proxy: it's the detail the owner has to
     // fill in themselves, so its absence means they haven't been through
     // setup yet.
-    return !restaurantProfile.address;
+    return !restaurantProfile.address && !restaurantProfile.handle;
   }
 
   function applyBrandHeader() {
@@ -2182,22 +2198,20 @@
     el.className = 'handle-status' + (state === 'ok' ? ' ok' : state === 'bad' ? ' bad' : '');
     el.innerHTML = (state === 'ok' ? icon('check') + ' ' : '') + escapeHtml(text || '');
   }
-  function handleLocked() { return !!restaurantProfile.handle; }
+  // The ID can be changed freely until the restaurant is launched (published); after that it is fixed for good.
+  function handleLocked() { return !!restaurantProfile.handle && !!restaurantProfile.isPublished; }
   // Same rule as the server: 4–20 chars, first character a letter, then letters / numbers / underscore.
   // Capitals are folded to lowercase, so "Mooncafe" and "mooncafe" are always the SAME ID.
   const HANDLE_RE = /^[a-z][a-z0-9_]{3,19}$/;
-  function handleIdleText(prefix) {
-    return prefix === 'setup'
-      ? tr('handle.idleSetup')
-      : '';
-  }
+  const handleIdleText = () => tr('handle.idle');
   function onHandleInput(prefix) {
     const input = document.getElementById(prefix + '-handle-input');
     const cleaned = input.value.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
     if (input.value !== cleaned) input.value = cleaned;
     document.getElementById(prefix + '-handle-count').textContent = cleaned.length + '/20';
     clearTimeout(handleTimers[prefix]);
-    if (!cleaned) setHandleStatus(prefix, 'idle', handleIdleText(prefix));
+    if (!cleaned) setHandleStatus(prefix, 'idle', handleIdleText());
+    else if (cleaned === restaurantProfile.handle) setHandleStatus(prefix, 'ok', tr('handle.available'));   // their own current ID
     else if (!/^[a-z]/.test(cleaned)) setHandleStatus(prefix, 'bad', tr('handle.mustStartLetter'));
     else if (cleaned.length < 4) setHandleStatus(prefix, 'bad', tr('handle.min4'));
     else {
@@ -2219,22 +2233,41 @@
     setHandleStatus(prefix, state, text);
     if (prefix === 'setup') updateSetupNextState();
   }
-  // Shows the ID field for a restaurant that already has one: read-only, with a short note.
+  // Launched: the ID is fixed — field disabled, with a lock note.
   function lockHandleField(prefix) {
     const input = document.getElementById(prefix + '-handle-input');
     input.value = restaurantProfile.handle;
-    input.readOnly = true;
+    input.disabled = true; input.readOnly = true;
     document.getElementById(prefix + '-handle-count').textContent = restaurantProfile.handle.length + '/20';
     setHandleStatus(prefix, 'idle', tr('handle.locked'));
   }
+  // Not launched yet: editable. Shows the ID that is already saved, if there is one.
   function unlockHandleField(prefix) {
     const input = document.getElementById(prefix + '-handle-input');
-    input.readOnly = false; input.value = '';
-    document.getElementById(prefix + '-handle-count').textContent = '0/20';
-    setHandleStatus(prefix, 'idle', prefix === 'setup' ? tr('handle.idleSetup') : tr('handle.idleSettings'));
+    input.disabled = false; input.readOnly = false;
+    input.value = restaurantProfile.handle || '';
+    document.getElementById(prefix + '-handle-count').textContent = input.value.length + '/20';
+    setHandleStatus(prefix, 'idle', handleIdleText());
+  }
+  // Blank ID -> make one from the restaurant name (e.g. "Moon Café" -> moonCafe style "mooncafe", or mooncafe4821 if taken).
+  async function generateHandle(name) {
+    let base = String(name || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]/g, '');
+    if (!/^[a-z]/.test(base)) base = 'shop' + base;               // Myanmar-script names / names starting with a digit
+    base = base.slice(0, 16);
+    const tries = base.length >= 4 ? [base] : [];
+    for (let i = 0; i < 6; i++) tries.push(base + String(Math.floor(1000 + Math.random() * 9000)));
+    for (const cand of tries) {
+      if (!HANDLE_RE.test(cand)) continue;
+      try {
+        const res = await fetch(`${API_BASE}/api/restaurant-handle/check?handle=${encodeURIComponent(cand)}&restaurantId=${encodeURIComponent(currentRestaurantId)}`);
+        const d = await res.json();
+        if (d.available) return cand;
+      } catch (e) { return ''; }                                   // offline: let the caller show a save error
+    }
+    return '';
   }
 
-  /* ---------- Map picker (Leaflet + OpenStreetMap) ---------- */
+  /* ---------- Map picker (Leaflet + Google Maps tiles) ---------- */
   const pickers = {};
   const DEFAULT_MAP_CENTER = [19.75, 96.1];   // central Myanmar until we know where the restaurant is
   function parsePin(v) {
@@ -2252,7 +2285,7 @@
     let p = pickers[key];
     if (!p) {
       const map = L.map(el, { zoomControl: true, attributionControl: true }).setView(DEFAULT_MAP_CENTER, 5);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: 'Map data © Google' }).addTo(map);
       map.attributionControl.setPrefix(false);
       p = pickers[key] = { map, marker: null };
       map.on('click', e => setPickerPoint(key, e.latlng.lat, e.latlng.lng, false));
@@ -2315,19 +2348,14 @@
     document.getElementById('setup-logo-preview').src = document.getElementById('setup-logo-input').value.trim();
   }
 
-  // "Next" stays disabled until every field is filled in AND the restaurant ID is confirmed free.
+  // "Next" is active as soon as the restaurant name is there; everything else is optional.
   function updateSetupNextState() {
-    const filled = ['setup-name-input', 'setup-tagline-input', 'setup-logo-input', 'setup-address-input']
-      .every(id => document.getElementById(id).value.trim() !== '');
-    const handleOk = handleLocked() || handleStatus.setup === 'ok';
-    document.getElementById('setup-next-btn').disabled = !(filled && handleOk);
+    document.getElementById('setup-next-btn').disabled = !document.getElementById('setup-name-input').value.trim();
   }
-  ['setup-name-input', 'setup-tagline-input', 'setup-logo-input', 'setup-address-input'].forEach(id => {
-    document.getElementById(id).addEventListener('input', updateSetupNextState);
-  });
+  document.getElementById('setup-name-input').addEventListener('input', updateSetupNextState);
 
-  function updateSetupPinState() {
-    document.getElementById('setup-continue-btn').disabled = !document.getElementById('setup-pin-input').value.trim();
+  function updateSetupPinState() {                       // the pin is optional: Continue is never disabled
+    document.getElementById('setup-continue-btn').disabled = false;
   }
 
   // Reads the whole setup form into one profile object (nothing is sent anywhere here).
@@ -2339,23 +2367,18 @@
       address: document.getElementById('setup-address-input').value.trim(),
       locationPin: document.getElementById('setup-pin-input').value.trim()
     };
-    if (!handleLocked()) profile.handle = document.getElementById('setup-handle-input').value.trim().toLowerCase();
+    const typed = document.getElementById('setup-handle-input').value.trim().toLowerCase();
+    if (!handleLocked() && typed) profile.handle = typed;     // blank = keep the saved ID, or get a generated one on save
     return profile;
   }
+  const typedIdIsBad = p => !!p.handle && p.handle !== restaurantProfile.handle && (!HANDLE_RE.test(p.handle) || handleStatus.setup !== 'ok');
 
-  // Step 1 -> step 2. NOTHING is saved here — the logo, name, ID and the rest of the form
-  // stay in the form, so the owner can still come back and change any of it (including the ID).
-  // Everything is saved in one go by finishSetup(), when they leave for the menu.
+  // Step 1 -> step 2. NOTHING is saved here — the form stays as it is, so the owner can still come back
+  // and change any of it (including the ID). Everything is saved in one go by finishSetup().
   function completeSetup() {
     const profile = readSetupProfile();
-    if (!profile.name || !profile.tagline || !profile.logoUrl || !profile.address || (!handleLocked() && !profile.handle)) {
-      document.getElementById('setup-error').textContent = tr('setup.fillAll');
-      return;
-    }
-    if (!handleLocked() && (!HANDLE_RE.test(profile.handle) || handleStatus.setup !== 'ok')) {
-      document.getElementById('setup-error').textContent = tr('setup.chooseId');
-      return;
-    }
+    if (!profile.name) { document.getElementById('setup-error').textContent = tr('setup.nameRequired'); return; }
+    if (typedIdIsBad(profile)) { document.getElementById('setup-error').textContent = tr('setup.chooseId'); return; }
     document.getElementById('setup-error').textContent = '';
     document.getElementById('setup-step-1').style.display = 'none';
     document.getElementById('setup-step-2').style.display = 'flex';
@@ -2371,31 +2394,38 @@
     updateSetupNextState();
   }
 
-  // Step 2 -> the menu: the ONE place the setup form is saved. withPin=false is "Skip for now"
-  // (everything except the location pin is saved).
+  // Step 2 -> the menu: the ONE place the setup form is saved. The location pin is optional.
   let setupSaving = false;
-  async function finishSetup(withPin) {
+  async function finishSetup() {
     if (setupSaving) return;
     const profile = readSetupProfile();
-    if (withPin) {
-      if (!profile.locationPin) return;
-    } else {
-      profile.locationPin = restaurantProfile.locationPin || '';   // skipping must not save a pin
-    }
-    if (!profile.name || !profile.tagline || !profile.logoUrl || !profile.address || (!handleLocked() && !profile.handle)) {
+    if (!profile.locationPin) profile.locationPin = restaurantProfile.locationPin || '';
+    if (!profile.name) {
       backToStep1();
-      document.getElementById('setup-error').textContent = tr('setup.fillAll');
+      document.getElementById('setup-error').textContent = tr('setup.nameRequired');
       return;
     }
-    if (!handleLocked() && !HANDLE_RE.test(profile.handle)) {
+    if (typedIdIsBad(profile)) {
       backToStep1();
-      setHandleStatus('setup', 'bad', tr('handle.rule'));
+      setHandleStatus('setup', 'bad', HANDLE_RE.test(profile.handle) ? tr('handle.notAvailable') : tr('handle.rule'));
       updateSetupNextState();
       return;
     }
     setupSaving = true;
+    const btn = document.getElementById('setup-continue-btn');
+    btn.disabled = true;
+    // No ID typed and none saved yet -> create one from the restaurant name.
+    if (!profile.handle && !restaurantProfile.handle) {
+      profile.handle = await generateHandle(profile.name);
+      if (!profile.handle) {
+        setupSaving = false; btn.disabled = false;
+        backToStep1();
+        document.getElementById('setup-error').textContent = tr('setup.saveFail');
+        return;
+      }
+    }
     const ok = await saveRestaurantProfile(profile);
-    setupSaving = false;
+    setupSaving = false; btn.disabled = false;
     if (!ok) {
       // The server is the final judge of the ID (someone may have taken it a moment ago) —
       // if it refused, send the owner back to fix it; nothing was saved.
@@ -2493,6 +2523,7 @@
       const result = await res.json();
       if (!res.ok || !result.success) throw new Error(result.error || `Server returned ${res.status}`);
       restaurantProfile.isPublished = true;
+      renderSettingsProfileFields();                          // the Restaurant ID is fixed from now on
       renderShareLink();
       renderLaunchCard();                                     // removes the card for good
       document.getElementById('launch-success').classList.add('open');
@@ -2569,9 +2600,9 @@
       locationPin: document.getElementById('settings-pin-input').value.trim()
     };
     if (!handleLocked()) {
-      const chosen = document.getElementById('settings-handle-input').value.trim();
-      if (chosen) {
-        if (handleStatus.settings !== 'ok') { showToast(tr('toast.pickId')); return; }
+      const chosen = document.getElementById('settings-handle-input').value.trim().toLowerCase();
+      if (chosen && chosen !== restaurantProfile.handle) {          // blank or unchanged = keep the saved ID
+        if (!HANDLE_RE.test(chosen) || handleStatus.settings !== 'ok') { showToast(tr('toast.pickId')); return; }
         profile.handle = chosen;
       }
     }
@@ -2726,6 +2757,7 @@
     document.getElementById('cat-name-input').value = catDraft.name;
     document.getElementById('cat-new-size-input').value = '';
     document.getElementById('cat-add-size-btn').disabled = true;
+    catMoreOpen = false;                                       // always opens with just the name; extras auto-expand if the category has any
     renderCatSizeChips();
     renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
     renderCatBulkPriceInputs();
@@ -2763,7 +2795,26 @@
     syncBackButton();
   }
 
+  // "+ More Options": Sizes / Price per size / Options stay tucked away until asked for. As soon as the
+  // category has a size or an option group they are shown (and stay shown).
+  let catMoreOpen = false;
+  const catHasExtras = () => !!catDraft && (catDraft.sizeNames.length > 0 || catDraft.optionGroups.length > 0 || catDraft.defaultFlatPrice != null);
+  function updateCatMore() {
+    const extras = catHasExtras();
+    if (extras) catMoreOpen = true;
+    document.getElementById('cat-more').classList.toggle('open', catMoreOpen);
+    const t = document.getElementById('cat-more-toggle');
+    t.style.display = extras ? 'none' : '';                       // nothing left to reveal / nothing may be hidden again
+    t.classList.toggle('open', catMoreOpen);
+    t.setAttribute('aria-expanded', catMoreOpen ? 'true' : 'false');
+  }
+  function toggleCatMore() {
+    catMoreOpen = !catMoreOpen;
+    updateCatMore();
+    if (catMoreOpen) setTimeout(() => { const n = document.getElementById('cat-new-size-input'); if (n) n.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 60);
+  }
   function renderCatSizeChips() {
+    updateCatMore();
     const box = document.getElementById('cat-size-chips');
     if (catDraft.sizeNames.length === 0) {
       box.innerHTML = `<span class="sub-hint">${tr('size.noneCat')}</span>`;
@@ -3489,7 +3540,7 @@
 
     const scope = groupDraftCtx.scope;
     closeGroupDrawer();
-    if (scope === 'category') renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+    if (scope === 'category') { renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category'); updateCatMore(); }
     else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
   }
   function deleteGroupFromDrawer() {
@@ -3498,7 +3549,7 @@
     parentDraft.optionGroups = parentDraft.optionGroups.filter(g => g.id !== groupDraft.id);
     const scope = groupDraftCtx.scope;
     closeGroupDrawer();
-    if (scope === 'category') renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category');
+    if (scope === 'category') { renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category'); updateCatMore(); }
     else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
   }
 
@@ -3551,6 +3602,7 @@
   function onNotiSoundChange() {
     const v = document.getElementById('noti-sound-select').value;
     try { localStorage.setItem(NOTI_SOUND_KEY, v); } catch (e) {}
+    refreshStatusChips();
     if (alarmActive) { stopAlarmAudio(); startAlarmAudio(); }   // an alarm is ringing: carry on with the new sound
     else testNotiSound();                                        // otherwise audition it straight away
   }
@@ -3563,7 +3615,7 @@
       a._unlocking = false; a.muted = false; a.loop = false;
       a.currentTime = 0;
       const p = a.play();
-      return p && p.then ? p.then(() => true, () => false) : Promise.resolve(true);
+      return p && p.then ? p.then(() => { gestureSeen = true; refreshStatusChips(); return true; }, () => false) : Promise.resolve(true);
     } catch (e) { return Promise.resolve(false); }
   }
   function testNotiSound() {
@@ -3626,7 +3678,7 @@
   let alertsPrimed = false;
   function primeAlertAudio() {
     if (alertsPrimed) return;
-    alertsPrimed = true;
+    alertsPrimed = true; gestureSeen = true;
     ['click', 'touchend', 'keydown'].forEach(t => document.removeEventListener(t, primeAlertAudio, true));
     ['0', '1', '2'].forEach(i => {
       const a = alertAudio(i); if (!a) return;
@@ -3637,9 +3689,55 @@
                           .catch(() => { a.muted = false; a._unlocking = false; });
       } catch (e) { a.muted = false; a._unlocking = false; }
     });
+    setTimeout(refreshStatusChips, 300); setTimeout(refreshStatusChips, 1500);
   }
   ['click', 'touchend', 'keydown'].forEach(t => document.addEventListener(t, primeAlertAudio, true));
   document.getElementById('noti-sound-select').value = getNotiSound();
+
+  /* ================= SCREEN WAKE LOCK + AUDIO / SCREEN STATUS ================= */
+  // The restaurant phone keeps its screen on while this page is open. The browser drops the lock whenever the
+  // page is hidden (e.g. owner switches app), so it is requested again when Telegram comes back to the front.
+  const wakeSupported = !!(navigator.wakeLock && navigator.wakeLock.request);
+  let wakeLock = null, wakeRequesting = false, gestureSeen = false;
+  async function requestWakeLock() {
+    if (!wakeSupported || document.hidden || wakeLock || wakeRequesting) return;
+    wakeRequesting = true;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      wakeLock = lock;
+      lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; refreshStatusChips(); });
+    } catch (e) { wakeLock = null; }                  // refused (battery saver, unsupported WebView, ...)
+    wakeRequesting = false;
+    refreshStatusChips();
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) requestWakeLock(); else refreshStatusChips(); });
+  window.addEventListener('focus', requestWakeLock);
+  window.addEventListener('pageshow', requestWakeLock);
+  document.addEventListener('click', requestWakeLock);   // some WebViews only grant it after a tap
+
+  // Audio counts as ready once the page has had a tap (browser autoplay rule) AND the chosen MP3 has loaded.
+  function audioIsReady() {
+    const a = alertAudio(getNotiSound());
+    const active = gestureSeen || !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
+    return !!a && !a.error && a.readyState >= 2 && active;
+  }
+  function refreshStatusChips() {
+    const au = document.getElementById('chip-audio'), sc = document.getElementById('chip-screen');
+    if (!au || !sc) return;
+    const audioOk = audioIsReady(), awake = !!wakeLock;
+    setI18n(au, audioOk ? 'status.audioReady' : 'status.audioTap'); au.className = 'live-chip ' + (audioOk ? 'ok' : 'off');
+    setI18n(sc, awake ? 'status.screenAwake' : 'status.screenNormal'); sc.className = 'live-chip ' + (awake ? 'ok' : 'off');
+  }
+  // Tapping the red audio chip is the tap the browser wants: it unlocks the sounds and plays the chosen one once.
+  function enableAudioTap() {
+    gestureSeen = true; primeAlertAudio();
+    if (audioIsReady()) { refreshStatusChips(); return; }
+    if (alarmActive) { startAlarmAudio(); refreshStatusChips(); return; }
+    playAlert(getNotiSound()).then(ok => { if (!ok) showToast(tr('sound.testFail')); refreshStatusChips(); });
+  }
+  ['0', '1', '2'].forEach(i => { const a = alertAudio(i); if (a) ['canplay', 'loadeddata', 'error'].forEach(ev => a.addEventListener(ev, refreshStatusChips)); });
+  requestWakeLock();
+  refreshStatusChips();
 
   function beep() {
     try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
