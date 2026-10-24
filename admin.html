@@ -724,6 +724,32 @@
   #cat-more { display: none; }
   #cat-more.open { display: block; }
 
+  /* ---- Audio indicator inside the Open / Closed pill: •🔔 / •🔕 ---- */
+  .audio-ind { display: inline-flex; align-items: center; font-size: 12px; line-height: 1; background: rgba(255,255,255,.78);
+    border-radius: 999px; padding: 3px 6px 3px 3px; }
+  .audio-ind .adot { font-size: 18px; line-height: 0; font-weight: 700; margin-right: 1px; position: relative; top: -1px; }
+  .audio-ind.on .adot { color: var(--ok); }
+  .audio-ind.off .adot { color: var(--brick); }
+  /* ---- Empty state while the alert sound loads / is tested ---- */
+  .empty-state .swap { animation: emptyFade .35s ease; }
+  @keyframes emptyFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .boot-progress { height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; max-width: 220px; margin: 12px auto 4px; }
+  .boot-progress i { display: block; height: 100%; width: 0; background: var(--primary); transition: width .25s ease; }
+  .boot-progress.indet i { width: 40%; animation: bootSlide 1.1s ease-in-out infinite; }
+  @keyframes bootSlide { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+  .boot-pct { font-size: 12px; min-height: 16px; }
+  /* ---- "Ready" order cards fold down to their header row; tap to open ---- */
+  .o-card.collapsible { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .o-more { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows .24s ease, opacity .2s ease; }
+  .o-more-inner { overflow: hidden; min-height: 0; }
+  .o-card.collapsed .o-more { grid-template-rows: 0fr; opacity: 0; }
+  .o-card.collapsed .o-more-inner { visibility: hidden; transition: visibility 0s .24s; }
+  /* ---- Tap-to-message names (customer + rider) ---- */
+  .o-who a.tg-link { margin-left: 0; font-weight: 600; color: var(--ink); text-decoration: none; }
+  a.tg-link { color: inherit; text-decoration: none; }
+  .tg-link u, .rider-badge u { text-decoration: underline; text-underline-offset: 2px; }
+  a.pill.rider-badge { text-decoration: none; cursor: pointer; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -833,7 +859,7 @@
   <div class="status-bar">
     <div class="status-brand" id="brand-restaurant-name">My Restaurant</div>
     <button type="button" class="status-pill open" id="status-pill" onclick="toggleStatusMenu(event)" aria-haspopup="menu" aria-expanded="false" aria-label="Restaurant status">
-      <span class="dot"></span><span id="status-pill-text">Open</span>
+      <span class="dot"></span><span id="status-pill-text">Open</span><span class="audio-ind off" id="audio-badge" role="img"></span>
       <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
@@ -854,8 +880,7 @@
     </div>
     <!-- ITEMS VIEW -->
     <div class="view active" id="view-orders">
-      <div class="live-chips" id="live-chips">
-        <button type="button" class="live-chip off" id="chip-audio" onclick="enableAudioTap()"></button>
+      <div class="live-chips" id="live-chips" style="display:none">
         <span class="live-chip off" id="chip-screen"></span>
       </div>
       <div id="orders-list"></div>
@@ -1193,14 +1218,20 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "boot.loading": "⏳ Loading audio alert...",
+  "boot.ready": "🔔 Audio is Ready",
+  "boot.done": "Ready to receive orders",
+  "boot.blocked": "🔕 Tap anywhere to enable audio",
+  "boot.blockedSub": "Your phone needs one tap before it lets this page play sounds.",
+  "boot.error": "🔕 Audio not available",
+  "boot.errorSub": "Check that the MP3 files are in the same folder as admin.html.",
+  "badge.audioOn": "Audio enabled",
+  "badge.audioOff": "Audio not enabled yet",
   "tag.required": "Required",
   "tag.optional": "Optional",
   "handle.idle": "4–20 characters",
   "setup.nameRequired": "Enter your restaurant name.",
   "cat.more": "+ More Options",
-  "status.audioReady": "🔊 Audio Ready",
-  "status.audioTap": "🔇 Tap to Enable Audio",
-  "status.screenAwake": "💡 Screen Awake",
   "status.screenNormal": "🌙 Screen Normal",
   "toast.autoReady": "Order {id} marked ready automatically.",
   "sound.title": "Notification Sound",
@@ -1292,7 +1323,6 @@
   "act.accept": "Accept",
   "act.pickedUp": "Picked up",
   "act.markReady": "Mark ready",
-  "empty.noActive": "No active orders",
   "empty.noActiveBody": "New orders appear here with a sound alert.",
   "empty.noPeriod": "No orders in this period",
   "confirm.reject": "Are you sure to reject the order?",
@@ -1531,14 +1561,20 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "boot.loading": "⏳ အသံသတိပေးချက် ဖွင့်နေသည်...",
+  "boot.ready": "🔔 အသံ အဆင်သင့်ဖြစ်ပါပြီ",
+  "boot.done": "အော်ဒါများ လက်ခံရန် အဆင်သင့်",
+  "boot.blocked": "🔕 အသံဖွင့်ရန် မည်သည့်နေရာမဆို နှိပ်ပါ",
+  "boot.blockedSub": "ဤစာမျက်နှာမှ အသံဖွင့်ခွင့်ရရန် ဖုန်းသည် တစ်ချက်နှိပ်ရန် လိုအပ်သည်။",
+  "boot.error": "🔕 အသံ မရနိုင်ပါ",
+  "boot.errorSub": "MP3 ဖိုင်များသည် admin.html နှင့် folder တူညီမှု ရှိမရှိ စစ်ဆေးပါ။",
+  "badge.audioOn": "အသံ ဖွင့်ထားသည်",
+  "badge.audioOff": "အသံ မဖွင့်ရသေးပါ",
   "tag.required": "မဖြစ်မနေ လိုအပ်",
   "tag.optional": "မဖြည့်လည်းရ",
   "handle.idle": "စာလုံး 4 မှ 20",
   "setup.nameRequired": "ဆိုင်အမည် ထည့်ပါ။",
   "cat.more": "+ နောက်ထပ် ရွေးချယ်စရာများ",
-  "status.audioReady": "🔊 အသံ အဆင်သင့်",
-  "status.audioTap": "🔇 အသံဖွင့်ရန် နှိပ်ပါ",
-  "status.screenAwake": "💡 မျက်နှာပြင် ဖွင့်ထားသည်",
   "status.screenNormal": "🌙 မျက်နှာပြင် ပုံမှန်",
   "toast.autoReady": "အော်ဒါ {id} ကို အသင့်ဖြစ်ပြီဟု အလိုအလျောက် မှတ်ပြီးပါပြီ။",
   "sound.title": "အော်ဒါသတိပေးအသံ",
@@ -1630,7 +1666,6 @@
   "act.accept": "လက်ခံမည်",
   "act.pickedUp": "လာယူပြီး",
   "act.markReady": "အသင့်ဖြစ်ပြီဟု မှတ်မည်",
-  "empty.noActive": "လက်ရှိ အော်ဒါ မရှိပါ",
   "empty.noActiveBody": "အော်ဒါအသစ်များကို အသံသတိပေးချက်ဖြင့် ဤနေရာတွင် မြင်ရမည်။",
   "empty.noPeriod": "ဤကာလအတွင်း အော်ဒါ မရှိပါ",
   "confirm.reject": "ဤအော်ဒါကို ငြင်းပယ်မှာ သေချာပါသလား?",
@@ -1928,6 +1963,7 @@
     safely(renderRestaurantStatus);                                      // Open / Busy / Closed pill + order cards
     safely(renderItemsView);                                             // category chips, hints, item list
     safely(renderLaunchCard);
+    safely(refreshStatusChips);
     safely(() => { if (ordersScope === 'settlements' && settleData) renderSettlements(); });
     safely(() => { if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); });
   }
@@ -2441,6 +2477,7 @@
     document.getElementById('app').style.display = 'flex';
     switchView('items');
     renderLaunchCard();
+    startAudioBootOnce();
     showToast(tr('toast.profileSavedLaunch', { n: MIN_ITEMS_TO_PUBLISH }));
   }
 
@@ -3567,6 +3604,7 @@
     return h;
   }
   function startOrders() {
+    if (document.getElementById('setup-gate').style.display !== 'flex') startAudioBootOnce();   // not while the setup form is up
     loadOrders(); clearInterval(ordersTimer);
     ordersTimer = setInterval(() => { if (!document.hidden) loadOrders(); }, 10000);
   }
@@ -3690,6 +3728,7 @@
       } catch (e) { a.muted = false; a._unlocking = false; }
     });
     setTimeout(refreshStatusChips, 300); setTimeout(refreshStatusChips, 1500);
+    if (audioBoot.phase === 'blocked') runBootTestPlay(bootRun);     // the tap the browser wanted: play the one-time test now
   }
   ['click', 'touchend', 'keydown'].forEach(t => document.addEventListener(t, primeAlertAudio, true));
   document.getElementById('noti-sound-select').value = getNotiSound();
@@ -3722,11 +3761,18 @@
     return !!a && !a.error && a.readyState >= 2 && active;
   }
   function refreshStatusChips() {
-    const au = document.getElementById('chip-audio'), sc = document.getElementById('chip-screen');
-    if (!au || !sc) return;
+    const badge = document.getElementById('audio-badge'), sc = document.getElementById('chip-screen'), row = document.getElementById('live-chips');
     const audioOk = audioIsReady(), awake = !!wakeLock;
-    setI18n(au, audioOk ? 'status.audioReady' : 'status.audioTap'); au.className = 'live-chip ' + (audioOk ? 'ok' : 'off');
-    setI18n(sc, awake ? 'status.screenAwake' : 'status.screenNormal'); sc.className = 'live-chip ' + (awake ? 'ok' : 'off');
+    if (badge) {                                      // •🔔 audio enabled  /  •🔕 not available yet
+      badge.className = 'audio-ind ' + (audioOk ? 'on' : 'off');
+      badge.innerHTML = '<span class="adot">•</span>' + (audioOk ? '🔔' : '🔕');
+      const t = tr(audioOk ? 'badge.audioOn' : 'badge.audioOff');
+      badge.title = t; badge.setAttribute('aria-label', t);
+    }
+    if (sc && row) {                                  // "Screen Awake" is never shown; only the warning when the lock is not active
+      row.style.display = awake ? 'none' : 'flex';
+      setI18n(sc, 'status.screenNormal'); sc.className = 'live-chip off';
+    }
   }
   // Tapping the red audio chip is the tap the browser wants: it unlocks the sounds and plays the chosen one once.
   function enableAudioTap() {
@@ -3738,6 +3784,74 @@
   ['0', '1', '2'].forEach(i => { const a = alertAudio(i); if (a) ['canplay', 'loadeddata', 'error'].forEach(ev => a.addEventListener(ev, refreshStatusChips)); });
   requestWakeLock();
   refreshStatusChips();
+
+  /* ================= AUDIO START-UP: load the sound -> test play -> "Ready to receive orders" ================= */
+  // Shown in the empty Orders card:  loading -> ready (test sound plays) -> done.
+  // If the phone refuses sound before the first tap, it waits in "blocked" and plays the test on the first tap.
+  const audioBoot = { phase: 'loading', pct: 0 };     // loading | ready | done | blocked | error
+  let bootRun = 0, audioBootStarted = false;
+  function emptyOrdersHtml() {
+    const p = audioBoot.phase;
+    let title, sub = '';
+    if (p === 'loading') {
+      const pct = audioBoot.pct;
+      title = tr('boot.loading');
+      sub = `<div class="boot-progress${pct ? '' : ' indet'}"><i id="boot-bar" style="width:${pct}%"></i></div><div class="boot-pct" id="boot-pct">${pct ? pct + '%' : ''}</div>`;
+    } else if (p === 'ready') title = tr('boot.ready');
+    else if (p === 'blocked') { title = tr('boot.blocked'); sub = tr('boot.blockedSub'); }
+    else if (p === 'error') { title = tr('boot.error'); sub = tr('boot.errorSub'); }
+    else { title = tr('boot.done'); sub = tr('empty.noActiveBody'); }
+    return `<div class="empty-state" id="empty-orders" data-phase="${p}"><div class="swap"><div class="display">${title}</div>${sub}</div></div>`;
+  }
+  function paintEmptyState() {
+    const box = document.getElementById('empty-orders'); if (!box) return;
+    if (box.dataset.phase === 'loading' && audioBoot.phase === 'loading') {       // only the bar moves
+      const bar = document.getElementById('boot-bar'), pctEl = document.getElementById('boot-pct');
+      if (bar) { bar.style.width = audioBoot.pct + '%'; bar.parentNode.classList.toggle('indet', !audioBoot.pct); }
+      if (pctEl) pctEl.textContent = audioBoot.pct ? audioBoot.pct + '%' : '';
+      return;
+    }
+    box.outerHTML = emptyOrdersHtml();                                              // new message fades in
+  }
+  function setBoot(phase) { audioBoot.phase = phase; paintEmptyState(); refreshStatusChips(); }
+  function bootProgress() {
+    const a = alertAudio(getNotiSound()); if (!a) return;
+    let pct = 0;
+    try { if (a.duration > 0 && a.buffered.length) pct = Math.min(100, Math.round(a.buffered.end(a.buffered.length - 1) / a.duration * 100)); } catch (e) {}
+    if (a.readyState >= 4) pct = 100;
+    if (pct !== audioBoot.pct) { audioBoot.pct = pct; if (audioBoot.phase === 'loading') paintEmptyState(); }
+    refreshStatusChips();
+  }
+  async function startAudioBoot() {
+    const run = ++bootRun;
+    const a = alertAudio(getNotiSound());
+    if (!a) { setBoot('error'); return; }
+    audioBoot.pct = 0; setBoot('loading');
+    ['progress', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'].forEach(ev => a.addEventListener(ev, bootProgress));
+    try { if (a.readyState === 0 && a.networkState === 0) a.load(); } catch (e) {}
+    const loaded = await new Promise(resolve => {                                   // wait (max 20 s) until the MP3 can play through
+      const t0 = Date.now();
+      const tick = setInterval(() => {
+        bootProgress();
+        if (a.error) { clearInterval(tick); resolve(false); }
+        else if (a.readyState >= 3) { clearInterval(tick); resolve(true); }
+        else if (Date.now() - t0 > 20000) { clearInterval(tick); resolve(false); }
+      }, 150);
+    });
+    if (run !== bootRun) return;
+    if (!loaded) { setBoot('error'); return; }
+    audioBoot.pct = 100; paintEmptyState();
+    runBootTestPlay(run);
+  }
+  async function runBootTestPlay(run) {
+    if (alarmActive) { setBoot('done'); return; }                                   // a real alarm is already ringing
+    const ok = await playAlert(getNotiSound());                                     // sound.play(), once
+    if (run !== bootRun) return;
+    if (!ok) { setBoot('blocked'); return; }                                        // retried on the first tap (see primeAlertAudio)
+    setBoot('ready');                                                               // "🔔 Audio is Ready" ...
+    setTimeout(() => { if (!alarmActive) stopAlarmAudio(); setBoot('done'); }, 1800);   // ... then "Ready to receive orders"
+  }
+  function startAudioBootOnce() { if (audioBootStarted) return; audioBootStarted = true; startAudioBoot(); }
 
   function beep() {
     try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
@@ -3772,12 +3886,30 @@
     if (m < 1) return tr('time.justNow'); if (m < 60) return tr('time.minAgo', { n: m }); if (m < 1440) return tr('time.hAgo', { n: Math.floor(m / 60) });
     return new Date(ts * 1000).toLocaleDateString();
   }
+  // Direct Telegram chat links. The server has to send the person's Telegram username or numeric Telegram ID:
+  //   rider: riderUsername / riderTelegramId      customer: customerUsername / customerTelegramId
+  function tgLink(username, id) {
+    const u = String(username || '').replace(/^@/, '');
+    if (/^[A-Za-z0-9_]{4,32}$/.test(u)) return 'https://t.me/' + u;
+    if (/^\d{5,15}$/.test(String(id || ''))) return 'tg://user?id=' + id;
+    return '';
+  }
+  const riderLink = o => tgLink(o.riderUsername || o.riderTelegramUsername, o.riderTelegramId || o.riderTgId);
+  const customerLink = o => tgLink(o.customerUsername || o.customerTelegramUsername, o.customerTelegramId || o.customerTgId);
+  function nameLink(name, url) {                       // <u>Name</u> that opens the chat; plain text if we have no way to reach them
+    const n = escapeHtml(name || '');
+    return url ? `<a class="tg-link" href="${url}" onclick="openTgChat(event, '${url}')"><u>${n}</u></a>` : n;
+  }
+  function openTgChat(e, url) {
+    e.stopPropagation();                               // don't fold / unfold the card underneath
+    if (url.startsWith('https://t.me/') && tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(url); }   // opens the chat inside Telegram
+  }
   function orderBody(o) {
     const items = o.items.map(i => `<div class="o-item"><b>${i.quantity}×</b> ${escapeHtml(i.name)}${i.options && i.options !== 'Standard' ? `<div class="o-opt">${escapeHtml(i.options).replace(/ \| /g, ' · ')}</div>` : ''}</div>`).join('');
     const phone = o.customerPhone ? `<a href="tel:${escapeHtml(o.customerPhone)}">${icon('call')} ${escapeHtml(o.customerPhone)}</a>` : '';
-    return `<div class="o-who">${escapeHtml(o.customerName)}${phone}</div>
+    return `<div class="o-who">${nameLink(o.customerName, customerLink(o))}${phone}</div>
       <div class="o-addr">${o.address ? icon('pin') + ' ' + escapeHtml(o.address) : icon('package') + ' ' + tr('order.pickup')}</div>${o.note ? `<div class="o-note">${icon('clipboard')} ${escapeHtml(o.note)}</div>` : ''}${items}
-      <div class="o-foot"><span>${escapeHtml((o.paymentMethod || '').toUpperCase())}${o.riderName ? ' · ' + icon('bike') + ' ' + escapeHtml(o.riderName) : ''}</span><b>${money(o.total)} MMK</b></div>`;
+      <div class="o-foot"><span>${escapeHtml((o.paymentMethod || '').toUpperCase())}${o.riderName ? ' · ' + icon('bike') + ' ' + nameLink(o.riderName, riderLink(o)) : ''}</span><b>${money(o.total)} MMK</b></div>`;
   }
   // Left stripe: red = new, orange = preparing, green = ready for the rider
   function cardState(o) {
@@ -3789,26 +3921,49 @@
     let [label, cls] = STATUS[o.status] || [o.status, 'wait'];
     if (STATUS[o.status]) label = tr(label);
     if (isPickup(o) && o.status === 'awaiting_rider') label = tr('st.preparing');          // Self-pick up has no rider to find
+    const isReady = !!o.readyAt && CURRENT.includes(o.status);
+    let right = `<span class="pill ${isReady ? 'ok' : cls}">${isReady ? tr('st.ready') : label}</span>`;
+    if (o.status === 'rider_assigned' && !isReady && o.riderName) {                  // 🚴 Rider Name (tap = chat with the rider)
+      const link = riderLink(o), nm = escapeHtml(o.riderName);
+      right = link ? `<a class="pill wait rider-badge" href="${link}" onclick="openTgChat(event, '${link}')">🚴 <u>${nm}</u></a>`
+                   : `<span class="pill wait rider-badge">🚴 ${nm}</span>`;
+    }
     const method = isPickup(o) ? `<span class="mchip pickup">${tr('chip.pickup')}</span>` : `<span class="mchip">${tr('chip.delivery')}</span>`;
-    return `<div class="o-top"><span>${withDot ? settleDot(o) : ''}<span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span><span class="pill ${o.readyAt && CURRENT.includes(o.status) ? 'ok' : cls}">${o.readyAt && CURRENT.includes(o.status) ? tr('st.ready') : label}</span></div>`;
+    return `<div class="o-top"><span>${withDot ? settleDot(o) : ''}<span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span>${right}</div>`;
   }
   function renderOrders() {
     renderCurrentOrders();                            // the Orders tab always stays up to date, even while Settings is open
     if (ordersScope === 'history') renderHistoryOrders();   // Settlements draws itself (renderSettlements)
   }
+  // A card whose order is Ready folds down to its header row (ID, time, Delivery/Pickup, Ready). Tap it to open / close.
+  // What the owner opened is remembered, so the 10-second refresh doesn't fold it shut again.
+  const expandedReady = new Set();
+  const isReadyOrder = o => CURRENT.includes(o.status) && o.status !== 'restaurant_pending' && !!o.readyAt;
+  function toggleReadyCard(e, id) {
+    if (e.target.closest && e.target.closest('a, button, input, select, textarea')) return;
+    const card = e.currentTarget;
+    const nowCollapsed = card.classList.toggle('collapsed');
+    card.setAttribute('aria-expanded', nowCollapsed ? 'false' : 'true');
+    if (nowCollapsed) expandedReady.delete(id); else expandedReady.add(id);
+  }
+  function orderActions(o) {
+    if (o.status === 'restaurant_pending')
+      return `<div class="o-actions"><button class="btn btn-danger-ghost" onclick="orderAction('${o.orderId}','reject')">${tr('act.reject')}</button><button class="btn btn-primary" onclick="orderAction('${o.orderId}','accept')">${tr('act.accept')}</button></div>`;
+    if (o.readyAt)
+      return isPickup(o) ? `<div class="o-actions"><button class="btn btn-primary" onclick="orderAction('${o.orderId}','handover')">${icon('check')} ${tr('act.pickedUp')}</button></div>` : '';
+    return `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} ${tr('act.markReady')}</button></div>`;
+  }
+  function cardHtml(o) {
+    const ready = isReadyOrder(o), collapsed = ready && !expandedReady.has(o.orderId);
+    const cls = `o-card ${cardState(o)}${ready ? ' collapsible' : ''}${collapsed ? ' collapsed' : ''}`;
+    const attrs = ready ? ` role="button" tabindex="0" aria-expanded="${collapsed ? 'false' : 'true'}" onclick="toggleReadyCard(event, '${o.orderId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleReadyCard(event, '${o.orderId}')}"` : '';
+    return `<div class="${cls}"${attrs}>${orderHead(o)}<div class="o-more"><div class="o-more-inner">${prepTimerHtml(o)}${orderBody(o)}${orderActions(o)}</div></div></div>`;
+  }
   function renderCurrentOrders() {
     const box = document.getElementById('orders-list');
-    {
-      const list = ordersData.filter(o => CURRENT.includes(o.status)).sort((a, b) => (a.status === 'restaurant_pending' ? 0 : 1) - (b.status === 'restaurant_pending' ? 0 : 1));
-      box.innerHTML = list.length ? list.map(o => `<div class="o-card ${cardState(o)}">${orderHead(o)}${prepTimerHtml(o)}${orderBody(o)}${
-        o.status === 'restaurant_pending'
-          ? `<div class="o-actions"><button class="btn btn-danger-ghost" onclick="orderAction('${o.orderId}','reject')">${tr('act.reject')}</button><button class="btn btn-primary" onclick="orderAction('${o.orderId}','accept')">${tr('act.accept')}</button></div>`
-          : (o.readyAt
-              ? (isPickup(o) ? `<div class="o-actions"><button class="btn btn-primary" onclick="orderAction('${o.orderId}','handover')">${icon('check')} ${tr('act.pickedUp')}</button></div>` : '')
-              : `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} ${tr('act.markReady')}</button></div>`)}</div>`).join('')
-        : `<div class="empty-state"><div class="display">${tr('empty.noActive')}</div>${tr('empty.noActiveBody')}</div>`;
-      tickPrep();
-    }
+    const list = ordersData.filter(o => CURRENT.includes(o.status)).sort((a, b) => (a.status === 'restaurant_pending' ? 0 : 1) - (b.status === 'restaurant_pending' ? 0 : 1));
+    box.innerHTML = list.length ? list.map(cardHtml).join('') : emptyOrdersHtml();
+    tickPrep();
   }
   function renderHistoryOrders() {
     const box = document.getElementById('history-list');
