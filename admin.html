@@ -752,6 +752,12 @@
   .time-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border: 0; border-radius: 50%;
     background: var(--line); color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; touch-action: manipulation; }
 
+  /* ---- Test order sandbox ---- */
+  .test-order-btn { margin-top: 16px; }
+  .test-tag { font-size: 10px; font-weight: 700; letter-spacing: .5px; background: var(--mustard-tint); color: var(--mustard);
+    border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
+  .o-right { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -1230,6 +1236,13 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "test.send": "🧪 Send Test Order",
+  "test.tag": "TEST",
+  "test.sent": "Test order arrived — accept it to try the whole flow.",
+  "test.chat": "Test order — a real order would open a Telegram chat here.",
+  "test.riderAssigned": "Rider {name} claimed the test order.",
+  "test.done": "Test order completed successfully!",
+  "test.finish": "⏩ Finish test now",
   "empty.open": "Ready to receive orders",
   "empty.openSub": "New orders appear here with a sound alert.",
   "empty.busy": "Busy — still taking orders",
@@ -1575,6 +1588,13 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "test.send": "🧪 စမ်းသပ်အော်ဒါ ပို့မည်",
+  "test.tag": "စမ်းသပ်",
+  "test.sent": "စမ်းသပ်အော်ဒါ ရောက်လာပါပြီ — လက်ခံ၍ အဆင့်အားလုံးကို စမ်းကြည့်ပါ။",
+  "test.chat": "စမ်းသပ်အော်ဒါ — အမှန်တကယ်အော်ဒါတွင် ဤနေရာ၌ Telegram စကားပြောခန်း ပွင့်မည်။",
+  "test.riderAssigned": "ပို့ဆောင်သူ {name} က စမ်းသပ်အော်ဒါကို လက်ခံလိုက်ပါပြီ။",
+  "test.done": "စမ်းသပ်အော်ဒါ အောင်မြင်စွာ ပြီးစီးပါပြီ!",
+  "test.finish": "⏩ စမ်းသပ်မှု ယခုပြီးဆုံးစေမည်",
   "empty.open": "အော်ဒါများ လက်ခံရန် အဆင်သင့်",
   "empty.openSub": "အော်ဒါအသစ်များကို အသံသတိပေးချက်ဖြင့် ဤနေရာတွင် မြင်ရမည်။",
   "empty.busy": "အလုပ်များနေသည် — အော်ဒါ ဆက်လက်လက်ခံနေသည်",
@@ -3639,6 +3659,7 @@
       if (ordersScope === 'settlements') loadSettlements(true);
       if (d.serverNow) serverOffset = d.serverNow - Date.now() / 1000;
       ordersData = d.orders;
+      if (testOrder) ordersData.push(testOrder);        // the sandbox order lives only in this app, never on the server
       reapplyPendingPrep();
       const fresh = ordersData.filter(o => o.status === 'restaurant_pending' && !seenOrders.has(o.orderId));
       fresh.forEach(o => seenOrders.add(o.orderId));
@@ -3653,6 +3674,72 @@
       if (ordersFirst) document.getElementById('orders-list').innerHTML = `<div class="empty-state"><div class="display">${tr('empty.cantLoadOrders')}</div>${escapeHtml(String(e.message || e))}</div>`;
     }
   }
+  /* ================= TEST ORDER SANDBOX ================= */
+  // "🧪 Send Test Order" creates a pretend order that goes through the whole lifecycle:
+  //   pending (alarm rings) -> accepted (prep countdown) -> ready -> a rider claims it -> auto-completes.
+  // It exists only in this page (isTest: true): nothing is sent to the server, it is never added to History,
+  // revenue or settlements, and a refresh simply makes it disappear.
+  const TEST_TIMING = {
+    prepSec: 90,                      // prep countdown (unless the owner changed it with the −1 / +1 min buttons)
+    riderMs: 4000,                    // a rider "claims" the order this long after it becomes Ready
+    completeMs: 5 * 60 * 1000         // auto-complete this long after Ready (lower it to test faster)
+  };
+  let testOrder = null, testTimers = [];
+  function updateOrdersBadge() {
+    const n = ordersData.filter(o => o.status === 'restaurant_pending').length, b = document.getElementById('orders-badge');
+    b.textContent = n; b.style.display = n ? 'block' : 'none';
+  }
+  function sendTestOrder() {
+    if (testOrder) return;
+    testOrder = {
+      orderId: 'IW-TEST01', isTest: true, status: 'restaurant_pending', createdAt: nowSec(),
+      items: [{ name: 'Test Cheeseburger', quantity: 1, options: '' }, { name: 'Coca-Cola', quantity: 1, options: '' }],
+      customerName: 'Nandar', customerPhone: '09959000000', address: 'Thiri Myaing Ward, Taunggyi',
+      total: 8500, paymentMethod: 'cod', deliveryMethod: 'delivery', note: ''
+    };
+    ordersData.push(testOrder);
+    seenOrders.add(testOrder.orderId);
+    tg?.HapticFeedback?.notificationOccurred('success');
+    showToast(tr('test.sent'));
+    updateOrdersBadge(); syncOrderAlarm(); renderOrders();           // pending -> the alarm loop starts
+  }
+  function removeTestOrder() {
+    testTimers.forEach(clearTimeout); testTimers = [];
+    if (testOrder) { ackedOrders.delete(testOrder.orderId); ordersData = ordersData.filter(o => o !== testOrder); }
+    testOrder = null;
+    updateOrdersBadge(); syncOrderAlarm(); renderOrders();
+  }
+  function testAction(action) {
+    const o = testOrder; if (!o) return;
+    if (action === 'reject') { ackedOrders.add(o.orderId); removeTestOrder(); showToast(tr('toast.rejected')); return; }
+    if (action === 'accept') {
+      ackedOrders.add(o.orderId); syncOrderAlarm();                  // alarm stops
+      const chosen = pendingPrep[o.orderId];                         // minutes picked before accepting, if any
+      o.status = 'awaiting_rider'; o.prepStartedAt = nowSec(); o.prepEndsAt = nowSec() + (chosen ? chosen * 60 : TEST_TIMING.prepSec);
+      showToast(tr('toast.accepted'));
+    } else if (action === 'ready') markTestReady(false);
+    updateOrdersBadge(); renderOrders();
+  }
+  function markTestReady(auto) {
+    const o = testOrder; if (!o || o.readyAt) return;
+    o.readyAt = nowSec();
+    showToast(auto ? tr('toast.autoReady', { id: o.orderId }) : tr('toast.markedReady'));
+    testTimers.push(setTimeout(() => {                               // a rider claims it
+      if (testOrder !== o) return;
+      o.status = 'rider_assigned'; o.riderName = 'Mg Mg';
+      showToast(tr('test.riderAssigned', { name: o.riderName }));
+      renderOrders();
+    }, TEST_TIMING.riderMs));
+    testTimers.push(setTimeout(completeTestOrder, TEST_TIMING.completeMs));   // ...and later it is delivered
+    renderOrders();
+  }
+  function completeTestOrder() {
+    if (!testOrder) return;
+    removeTestOrder();
+    tg?.HapticFeedback?.notificationOccurred('success');
+    showToast(tr('test.done'));
+  }
+
   /* ================= ORDER ALERT SOUND (3 choices) ================= */
   const NOTI_SOUND_KEY = 'adminNotiSound';          // '0' | '1' | '2'  ->  orderAlertSound0 / 1 / 2
   function getNotiSound() {
@@ -3841,15 +3928,22 @@
     if (/^\d{5,15}$/.test(String(id || ''))) return 'tg://user?id=' + id;
     return '';
   }
-  const riderLink = o => tgLink(o.riderUsername || o.riderTelegramUsername, o.riderTelegramId || o.riderTgId);
-  const customerLink = o => tgLink(o.customerUsername || o.customerTelegramUsername, o.customerTelegramId || o.customerTgId);
+  const chatHref = url => url.startsWith('test:') ? '#' : url;
+  const riderLink = o => o.isTest ? 'test:rider' : tgLink(o.riderUsername || o.riderTelegramUsername, o.riderTelegramId || o.riderTgId);
+  const customerLink = o => o.isTest ? 'test:customer' : tgLink(o.customerUsername || o.customerTelegramUsername, o.customerTelegramId || o.customerTgId);
   function nameLink(name, url) {                       // <u>Name</u> that opens the chat; plain text if we have no way to reach them
     const n = escapeHtml(name || '');
-    return url ? `<a class="tg-link" href="${url}" onclick="openTgChat(event, '${url}')"><u>${n}</u></a>` : n;
+    return url ? `<a class="tg-link" href="${chatHref(url)}" onclick="openTgChat(event, '${url}')"><u>${n}</u></a>` : n;
   }
   function openTgChat(e, url) {
-    e.stopPropagation();                               // don't fold / unfold the card underneath
+    e.stopPropagation();
+    if (url.startsWith('test:')) { e.preventDefault(); showToast(tr('test.chat')); return; }   // sandbox order: no real chat                               // don't fold / unfold the card underneath
     if (url.startsWith('https://t.me/') && tg && tg.openTelegramLink) { e.preventDefault(); tg.openTelegramLink(url); }   // opens the chat inside Telegram
+  }
+  function riderBadgeHtml(o) {
+    const link = riderLink(o), nm = escapeHtml(o.riderName);
+    return link ? `<a class="pill wait rider-badge" href="${chatHref(link)}" onclick="openTgChat(event, '${link}')">🚴 <u>${nm}</u></a>`
+                : `<span class="pill wait rider-badge">🚴 ${nm}</span>`;
   }
   function orderBody(o) {
     const items = o.items.map(i => `<div class="o-item"><b>${i.quantity}×</b> ${escapeHtml(i.name)}${i.options && i.options !== 'Standard' ? `<div class="o-opt">${escapeHtml(i.options).replace(/ \| /g, ' · ')}</div>` : ''}</div>`).join('');
@@ -3870,13 +3964,12 @@
     if (isPickup(o) && o.status === 'awaiting_rider') label = tr('st.preparing');          // Self-pick up has no rider to find
     const isReady = !!o.readyAt && CURRENT.includes(o.status);
     let right = `<span class="pill ${isReady ? 'ok' : cls}">${isReady ? tr('st.ready') : label}</span>`;
-    if (o.status === 'rider_assigned' && !isReady && o.riderName) {                  // 🚴 Rider Name (tap = chat with the rider)
-      const link = riderLink(o), nm = escapeHtml(o.riderName);
-      right = link ? `<a class="pill wait rider-badge" href="${link}" onclick="openTgChat(event, '${link}')">🚴 <u>${nm}</u></a>`
-                   : `<span class="pill wait rider-badge">🚴 ${nm}</span>`;
+    if (o.status === 'rider_assigned' && o.riderName) {                              // 🚴 Rider Name (tap = chat with the rider)
+      const badge = riderBadgeHtml(o);
+      right = isReady ? `<span class="o-right">${right}${badge}</span>` : badge;      // ready: Ready pill + rider badge side by side
     }
     const method = isPickup(o) ? `<span class="mchip pickup">${tr('chip.pickup')}</span>` : `<span class="mchip">${tr('chip.delivery')}</span>`;
-    return `<div class="o-top"><span>${withDot ? settleDot(o) : ''}<span class="o-id">${escapeHtml(o.orderId)}</span><span class="o-time">${ago(o.createdAt)}</span>${method}</span>${right}</div>`;
+    return `<div class="o-top"><span>${withDot ? settleDot(o) : ''}<span class="o-id">${escapeHtml(o.orderId)}</span>${o.isTest ? `<span class="test-tag">${tr('test.tag')}</span>` : ''}<span class="o-time">${ago(o.createdAt)}</span>${method}</span>${right}</div>`;
   }
   function renderOrders() {
     renderCurrentOrders();                            // the Orders tab always stays up to date, even while Settings is open
@@ -3889,7 +3982,7 @@
   const emptyKey = () => restaurantStatus() + '|' + (restaurantProfile.busyMinutes || 0) + '|' + currentLang;
   function emptyOrdersHtml() {
     const st = restaurantStatus();
-    return `<div class="empty-state" id="empty-orders" data-key="${emptyKey()}"><div class="swap"><div class="display">${tr('empty.' + st)}</div>${tr('empty.' + st + 'Sub', { n: restaurantProfile.busyMinutes || 0 })}</div></div>`;
+    return `<div class="empty-state" id="empty-orders" data-key="${emptyKey()}"><div class="swap"><div class="display">${tr('empty.' + st)}</div>${tr('empty.' + st + 'Sub', { n: restaurantProfile.busyMinutes || 0 })}<div><button type="button" class="btn btn-outline btn-sm test-order-btn" onclick="sendTestOrder()">${tr('test.send')}</button></div></div></div>`;
   }
   const expandedReady = new Set();
   const isReadyOrder = o => CURRENT.includes(o.status) && o.status !== 'restaurant_pending' && !!o.readyAt;
@@ -3903,6 +3996,7 @@
   function orderActions(o) {
     if (o.status === 'restaurant_pending')
       return `<div class="o-actions"><button class="btn btn-danger-ghost" onclick="orderAction('${o.orderId}','reject')">${tr('act.reject')}</button><button class="btn btn-primary" onclick="orderAction('${o.orderId}','accept')">${tr('act.accept')}</button></div>`;
+    if (o.isTest && o.readyAt) return `<div class="o-actions"><button class="btn btn-outline" onclick="completeTestOrder()">${tr('test.finish')}</button></div>`;
     if (o.readyAt)
       return isPickup(o) ? `<div class="o-actions"><button class="btn btn-primary" onclick="orderAction('${o.orderId}','handover')">${icon('check')} ${tr('act.pickedUp')}</button></div>` : '';
     return `<div class="o-actions"><button class="btn btn-outline" onclick="orderAction('${o.orderId}','ready')">${icon('check')} ${tr('act.markReady')}</button></div>`;
@@ -3925,7 +4019,7 @@
     const box = document.getElementById('history-list');
     const d0 = new Date(); d0.setHours(0, 0, 0, 0);
     const since = historyRange === 1 ? d0.getTime() / 1000 : Date.now() / 1000 - historyRange * 86400;
-    const list = ordersData.filter(o => !CURRENT.includes(o.status) && o.createdAt >= since);
+    const list = ordersData.filter(o => !o.isTest && !CURRENT.includes(o.status) && o.createdAt >= since);   // test orders never count as sales
     const done = list.filter(o => o.status === 'delivered');
     document.getElementById('st-count').textContent = done.length;
     document.getElementById('st-rev').textContent = money(done.reduce((t, o) => t + (Number(o.total) || 0), 0));
@@ -4082,6 +4176,7 @@
 
   async function orderAction(id, action) {
     if (action === 'reject' && !confirm(tr('confirm.reject'))) return;
+    if (testOrder && id === testOrder.orderId) { testAction(action); return; }       // sandbox order: handled locally
     const answers = action === 'accept' || action === 'reject';
     if (answers) { ackedOrders.add(id); syncOrderAlarm(); }      // alarm stops right away (pause + currentTime = 0)
     try {
@@ -4321,6 +4416,7 @@
       if (!CURRENT.includes(o.status) || o.status === 'restaurant_pending' || o.readyAt || !o.prepEndsAt) return;
       if (o.prepEndsAt - nowSec() > 0) return;        // still counting down
       if (prepQueue[o.orderId]) return;               // owner is mid-tap on +1 min; wait for it to be sent
+      if (o.isTest) { markTestReady(true); return; }  // sandbox order: the timer ran out -> Ready, locally
       if (autoReadyTried[o.orderId] && now - autoReadyTried[o.orderId] < 15000) return;
       autoReadyTried[o.orderId] = now;
       autoMarkReady(o.orderId);
@@ -4372,6 +4468,7 @@
       o.prepEndsAt = nowSec() + defaultPrepMinutes(o) * 60;
     }
     o.prepEndsAt = applyPrepDelta(o.prepEndsAt, delta);      // instant feedback
+    if (o.isTest) { renderOrders(); return; }                // sandbox order: nothing to send
     const q = prepQueue[id] || (prepQueue[id] = { delta: 0, timer: null });
     q.delta += delta;
     clearTimeout(q.timer);
