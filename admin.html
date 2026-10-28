@@ -758,6 +758,32 @@
     border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px; }
   .o-right { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
 
+  /* ---- Not Launched: the status is locked to Closed ---- */
+  .status-pill.unlaunched { border-color: var(--muted); background: var(--paper); color: var(--muted); cursor: default; }
+  .status-pill.unlaunched svg { display: none; }
+  .unlaunched-banner { display: none; align-items: center; gap: 10px; background: var(--mustard-tint); color: #7A4B00; border: 1px solid var(--mustard);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: 12.5px; line-height: 1.4; }
+  .unlaunched-banner .ico { font-size: 18px; }
+  .unlaunched-banner span { flex: 1; }
+  .unlaunched-banner button { background: #fff; color: #7A4B00; border: 1px solid var(--mustard); border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  /* ---- Launch checklist ---- */
+  .launch-list { list-style: none; margin: 0 0 12px; padding: 0; font-size: 13px; }
+  .launch-list li { display: flex; align-items: center; gap: 8px; padding: 4px 0; color: var(--muted); }
+  .launch-list li.ok { color: var(--ink); }
+  .launch-list .lc { width: 18px; text-align: center; font-weight: 700; color: var(--muted); }
+  .launch-list li.ok .lc { color: var(--ok); }
+  /* ---- Share card under the orders ---- */
+  .share-card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px; margin-top: 18px; }
+  .share-card-head { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .share-card-head .ico { color: var(--primary); font-size: 18px; }
+  .share-link-row { display: flex; gap: 8px; }
+  .share-link-row input { flex: 1; min-width: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); }
+  .share-card .share-btn { margin-top: 10px; width: 100%; justify-content: center; }
+  .share-note { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+  /* ---- Fixed-centre map pin: the pin stays put, the map moves under it ---- */
+  .pin-center { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -34px 0 0 -14px; z-index: 800; pointer-events: none; transition: margin-top .12s ease; }
+  .map-box.moving .pin-center { margin-top: -42px; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -881,6 +907,12 @@
 
   <main>
     <!-- CLOSED BANNER (all tabs) -->
+    <!-- NOT LAUNCHED BANNER (all tabs) -->
+    <div class="unlaunched-banner" id="unlaunched-banner" role="alert">
+      <i class="ico" data-icon="send"></i>
+      <span><b data-i18n="banner.unTitle">Your restaurant is not launched yet.</b> <span data-i18n="banner.unBody">Customers can't find it, and it stays Closed until you launch.</span></span>
+      <button type="button" onclick="switchView('items')" data-i18n="banner.unBtn">Launch checklist</button>
+    </div>
     <div class="closed-banner" id="closed-banner" role="alert">
       <i class="ico" data-icon="ban"></i>
       <span><b data-i18n="banner.closedTitle">Your restaurant is closed.</b> <span data-i18n="banner.closedBody">Customers can't place new orders. Orders you already accepted carry on as normal.</span></span>
@@ -892,6 +924,16 @@
         <span class="live-chip off" id="chip-screen"></span>
       </div>
       <div id="orders-list"></div>
+      <!-- SHARE LINK: right under the orders -->
+      <div class="share-card" id="orders-share-card" style="display:none">
+        <div class="share-card-head"><i class="ico" data-icon="share"></i><b data-i18n="share.cardTitle">Share your restaurant</b><span class="share-tag" id="orders-share-tag" style="display:none" data-i18n="share.notLive">Not live yet</span></div>
+        <div class="share-link-row">
+          <input type="text" id="orders-share-url" readonly onclick="this.select()" aria-label="Restaurant link">
+          <button type="button" class="btn btn-primary btn-sm" id="orders-share-copy" onclick="copyShareLink()" data-i18n="share.copy">Copy</button>
+        </div>
+        <button type="button" class="share-btn" onclick="shareRestaurantLink()"><i class="ico" data-icon="link"></i> <span data-i18n="share.btn">Share Profile</span></button>
+        <div class="share-note" id="orders-share-note" style="display:none" data-i18n="share.notLiveNote">Customers can open this link once you launch.</div>
+      </div>
     </div>
 
     <!-- ITEMS VIEW -->
@@ -1236,6 +1278,23 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "status.unlaunched": "Not Launched",
+  "toast.launchFirst": "Launch your restaurant first — then you can open it for orders.",
+  "empty.unlaunched": "Not launched yet",
+  "empty.unlaunchedSub": "Customers can't see your restaurant yet. Finish the launch checklist in the Menu tab. You can still send a test order below.",
+  "banner.unTitle": "Your restaurant is not launched yet.",
+  "banner.unBody": "Customers can't find it, and it stays Closed until you launch.",
+  "banner.unBtn": "Launch checklist",
+  "share.cardTitle": "Share your restaurant",
+  "share.copy": "Copy",
+  "share.copiedShort": "Copied ✓",
+  "share.notLiveNote": "Customers can open this link once you launch.",
+  "launch.itemName": "Restaurant name",
+  "launch.itemLogo": "Logo",
+  "launch.itemAddress": "Address",
+  "launch.itemMenu": "At least {n} menu items ({c}/{n})",
+  "launch.completeProfile": "Complete profile",
+  "launch.needProfile": "Add your {list} first (Settings → Edit profile).",
   "test.send": "🧪 Send Test Order",
   "test.tag": "TEST",
   "test.sent": "Test order arrived — accept it to try the whole flow.",
@@ -1306,8 +1365,8 @@
   "handle.notAvailable": "Not available.",
   "handle.locked": "🔒 Fixed after launch",
   "map.fallback": "The map preview couldn't load. Check your connection — you can still skip this step.",
-  "map.dragChange": "Drag the pin or tap the map to change it.",
-  "map.pinSet": "Pin set — drag it or tap the map to fine-tune.",
+  "map.dragChange": "Move the map so the pin sits on your restaurant.",
+  "map.pinSet": "Pin set — move the map to fine-tune it.",
   "map.noGeo": "This device can't share its location — you can tap the map instead, or skip.",
   "map.getting": "Getting your location…",
   "map.geoFail": "Couldn't get your location. Allow location access, tap the map instead, or skip for now.",
@@ -1469,7 +1528,7 @@
   "ctx.right": "Move right",
   "ctx.delete": "Delete category",
   "launch.successTitle": "Congratulations!",
-  "launch.successBody": "Your restaurant is now live on the IWTEAT home screen. Customers can find you and start ordering.",
+  "launch.successBody": "Your restaurant is now live on the IWTEAT home screen. It starts Closed — tap the status at the top when you are ready to open for orders.",
   "common.done": "Done",
   "launch.readyTitle": "Congratulations! Your menu is ready",
   "launch.notPublished": "Your restaurant isn't published yet",
@@ -1588,6 +1647,23 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "status.unlaunched": "မထုတ်ပြန်ရသေးပါ",
+  "toast.launchFirst": "ဦးစွာ ဆိုင်ကို ထုတ်ပြန်ပါ — ထို့နောက် အော်ဒါလက်ခံရန် ဖွင့်နိုင်ပါမည်။",
+  "empty.unlaunched": "မထုတ်ပြန်ရသေးပါ",
+  "empty.unlaunchedSub": "ဖောက်သည်များ သင့်ဆိုင်ကို မမြင်နိုင်သေးပါ။ မီနူးတက်ဘ်ရှိ ထုတ်ပြန်ရန် စစ်ဆေးစာရင်းကို ပြီးအောင်လုပ်ပါ။ အောက်တွင် စမ်းသပ်အော်ဒါကို ပို့၍ စမ်းကြည့်နိုင်ပါသေးသည်။",
+  "banner.unTitle": "သင့်ဆိုင်ကို မထုတ်ပြန်ရသေးပါ။",
+  "banner.unBody": "ဖောက်သည်များ ရှာမတွေ့နိုင်ပါ၊ ထုတ်ပြန်သည်အထိ ပိတ်ထားသည့်အခြေအနေတွင် ရှိနေမည်။",
+  "banner.unBtn": "ထုတ်ပြန်ရန် စစ်ဆေးစာရင်း",
+  "share.cardTitle": "သင့်ဆိုင်ကို မျှဝေပါ",
+  "share.copy": "ကူးမည်",
+  "share.copiedShort": "ကူးပြီး ✓",
+  "share.notLiveNote": "ထုတ်ပြန်ပြီးမှ ဖောက်သည်များ ဤလင့်ခ်ကို ဖွင့်နိုင်ပါမည်။",
+  "launch.itemName": "ဆိုင်အမည်",
+  "launch.itemLogo": "လိုဂို",
+  "launch.itemAddress": "လိပ်စာ",
+  "launch.itemMenu": "မီနူးဟင်းလျာ အနည်းဆုံး {n} ခု ({c}/{n})",
+  "launch.completeProfile": "ပရိုဖိုင် ဖြည့်မည်",
+  "launch.needProfile": "ဦးစွာ သင့် {list} ကို ထည့်ပါ (ဆက်တင် → ပရိုဖိုင် ပြင်မည်)။",
   "test.send": "🧪 စမ်းသပ်အော်ဒါ ပို့မည်",
   "test.tag": "စမ်းသပ်",
   "test.sent": "စမ်းသပ်အော်ဒါ ရောက်လာပါပြီ — လက်ခံ၍ အဆင့်အားလုံးကို စမ်းကြည့်ပါ။",
@@ -1658,8 +1734,8 @@
   "handle.notAvailable": "မရနိုင်ပါ။",
   "handle.locked": "🔒 ထုတ်ပြန်ပြီးနောက် ပြောင်း၍မရပါ",
   "map.fallback": "မြေပုံကို ဖော်ပြ၍မရပါ။ အင်တာနက်ကို စစ်ဆေးပါ — ဤအဆင့်ကို ကျော်နိုင်ပါသေးသည်။",
-  "map.dragChange": "ပင်ကို ဆွဲပါ သို့မဟုတ် မြေပုံကို နှိပ်၍ ပြောင်းပါ။",
-  "map.pinSet": "ပင်ထိုးပြီးပါပြီ — ဆွဲ၍ သို့မဟုတ် မြေပုံကို နှိပ်၍ ချိန်ညှိနိုင်သည်။",
+  "map.dragChange": "မြေပုံကို ရွှေ့၍ ပင်ကို သင့်ဆိုင်ပေါ်တွင် ထားပါ။",
+  "map.pinSet": "ပင်ထိုးပြီးပါပြီ — မြေပုံကို ရွှေ့၍ ချိန်ညှိနိုင်သည်။",
   "map.noGeo": "ဤစက်မှ တည်နေရာကို မျှဝေ၍မရပါ — မြေပုံကို နှိပ်ပါ သို့မဟုတ် ကျော်ထားပါ။",
   "map.getting": "သင့်တည်နေရာကို ရယူနေသည်…",
   "map.geoFail": "သင့်တည်နေရာကို မရရှိပါ။ တည်နေရာအသုံးပြုခွင့် ပေးပါ၊ မြေပုံကို နှိပ်ပါ သို့မဟုတ် ယခု ကျော်ထားပါ။",
@@ -1821,7 +1897,7 @@
   "ctx.right": "ညာဘက်သို့ ရွှေ့မည်",
   "ctx.delete": "အမျိုးအစား ဖျက်မည်",
   "launch.successTitle": "ဂုဏ်ယူပါတယ်!",
-  "launch.successBody": "သင့်ဆိုင်သည် IWTEAT ပင်မစာမျက်နှာတွင် ယခု တင်ပြီးပါပြီ။ ဖောက်သည်များ သင့်ဆိုင်ကို ရှာတွေ့ပြီး မှာယူနိုင်ပါပြီ။",
+  "launch.successBody": "သင့်ဆိုင်သည် IWTEAT ပင်မစာမျက်နှာတွင် ယခု တင်ပြီးပါပြီ။ ပိတ်ထားသည့်အခြေအနေဖြင့် စတင်ပါမည် — အော်ဒါလက်ခံရန် အဆင်သင့်ဖြစ်သည့်အခါ အပေါ်ရှိ အခြေအနေကို နှိပ်၍ ဖွင့်ပါ။",
   "common.done": "ပြီးပါပြီ",
   "launch.readyTitle": "ဂုဏ်ယူပါတယ်! သင့်မီနူး အဆင်သင့်ဖြစ်ပါပြီ",
   "launch.notPublished": "သင့်ဆိုင်ကို မထုတ်ပြန်ရသေးပါ",
@@ -2342,7 +2418,9 @@
     return '';
   }
 
-  /* ---------- Map picker (Leaflet + Google Maps tiles) ---------- */
+  /* ---------- Map picker (Leaflet + OpenStreetMap, fixed-centre pin) ----------
+     The pin stays locked in the middle of the map; the owner pans the map underneath it, and when the map
+     stops moving ('moveend') the centre becomes the saved location. */
   const pickers = {};
   const DEFAULT_MAP_CENTER = [19.75, 96.1];   // central Myanmar until we know where the restaurant is
   function parsePin(v) {
@@ -2360,30 +2438,46 @@
     let p = pickers[key];
     if (!p) {
       const map = L.map(el, { zoomControl: true, attributionControl: true }).setView(DEFAULT_MAP_CENTER, 5);
-      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: 'Map data © Google' }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
       map.attributionControl.setPrefix(false);
-      p = pickers[key] = { map, marker: null };
-      map.on('click', e => setPickerPoint(key, e.latlng.lat, e.latlng.lng, false));
+      const centerPin = document.createElement('div');          // never moves; the map does
+      centerPin.className = 'pin-center';
+      centerPin.innerHTML = '<div class="map-pin"></div>';
+      map.getContainer().appendChild(centerPin);
+      p = pickers[key] = { map, ignoreUntil: 0 };
+      map.on('movestart', () => el.classList.add('moving'));
+      map.on('moveend', () => {
+        el.classList.remove('moving');
+        if (Date.now() < p.ignoreUntil) return;                // we moved it ourselves, not the owner
+        const c = map.getCenter();
+        writePickerPoint(key, c.lat, c.lng, false);
+      });
+      map.on('click', e => map.panTo(e.latlng));               // a tap slides that spot under the pin
     }
     // The container was hidden until now, so Leaflet needs to re-measure it before drawing.
     setTimeout(() => {
       p.map.invalidateSize();
       const pin = parsePin(document.getElementById(ids.input).value);
-      if (pin) setPickerPoint(key, pin[0], pin[1], true, true);
+      if (pin) viewPicker(key, pin[0], pin[1], 17);
+      else { document.getElementById(ids.status).classList.remove('error'); setI18n(document.getElementById(ids.status), 'map.dragChange'); }
     }, 60);
   }
-  function setPickerPoint(key, lat, lng, recenter, quiet) {
+  function viewPicker(key, lat, lng, zoom) {                    // programmatic move: not a drag by the owner
     const p = pickers[key]; if (!p) return;
+    p.ignoreUntil = Date.now() + 300;
+    p.map.setView([lat, lng], zoom, { animate: false });
+  }
+  function writePickerPoint(key, lat, lng, quiet) {
     const ids = pickerIds(key);
-    if (!p.marker) {
-      p.marker = L.marker([lat, lng], { draggable: true, icon: L.divIcon({ className: '', html: '<div class="map-pin"></div>', iconSize: [28, 28], iconAnchor: [14, 28] }) }).addTo(p.map);
-      p.marker.on('dragend', () => { const ll = p.marker.getLatLng(); setPickerPoint(key, ll.lat, ll.lng, false); });
-    } else p.marker.setLatLng([lat, lng]);
-    if (recenter) p.map.setView([lat, lng], 17);
     document.getElementById(ids.input).value = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
     document.getElementById(ids.status).classList.remove('error');
     setI18n(document.getElementById(ids.status), quiet ? 'map.dragChange' : 'map.pinSet');
     if (key === 'setup') updateSetupPinState();
+  }
+  function setPickerPoint(key, lat, lng, recenter, quiet) {
+    if (!pickers[key]) return;
+    if (recenter) viewPicker(key, lat, lng, 17);
+    writePickerPoint(key, lat, lng, quiet);
   }
   function useMyLocation(key) {
     const ids = pickerIds(key);
@@ -2562,6 +2656,18 @@
   }
   // Lives at the bottom of the Menu tab and is redrawn every time the menu changes
   // (see renderItemsView / renderItemGrid), so the count is always current.
+  // What the server needs before it will launch a restaurant: a name, a logo, an address and enough menu items.
+  function launchChecklist() {
+    const n = countMenuItems();
+    const items = [
+      { key: 'name', ok: !!(restaurantProfile.name || '').trim(), label: tr('launch.itemName') },
+      { key: 'logo', ok: !!(restaurantProfile.logoUrl || '').trim(), label: tr('launch.itemLogo') },
+      { key: 'address', ok: !!(restaurantProfile.address || '').trim(), label: tr('launch.itemAddress') },
+      { key: 'menu', ok: n >= MIN_ITEMS_TO_PUBLISH, label: tr('launch.itemMenu', { n: MIN_ITEMS_TO_PUBLISH, c: Math.min(n, MIN_ITEMS_TO_PUBLISH) }) }
+    ];
+    return { items, n, profileOk: items.slice(0, 3).every(i => i.ok), menuOk: items[3].ok, ready: items.every(i => i.ok) };
+  }
+  function goCompleteProfile() { switchView('settings'); toggleProfileEdit(true); }
   function renderLaunchCard() {
     const card = document.getElementById('launch-card');
     if (!card) return;
@@ -2570,22 +2676,26 @@
       card.innerHTML = '';
       return;
     }
-    const n = countMenuItems();
-    const ready = n >= MIN_ITEMS_TO_PUBLISH;
-    const pct = Math.min(100, Math.round(n / MIN_ITEMS_TO_PUBLISH * 100));
+    const c = launchChecklist();
+    const pct = Math.min(100, Math.round(c.n / MIN_ITEMS_TO_PUBLISH * 100));
     card.style.display = 'block';
-    card.classList.toggle('done', ready);
+    card.classList.toggle('done', c.ready);
     card.innerHTML = `
-      <h3>${icon(ready ? 'check' : 'send')} ${ready ? tr('launch.readyTitle') : tr('launch.notPublished')}</h3>
-      <p>${ready ? tr('launch.readyBody') : tr('launch.needMore', { n: MIN_ITEMS_TO_PUBLISH })}</p>
+      <h3>${icon(c.ready ? 'check' : 'send')} ${c.ready ? tr('launch.readyTitle') : tr('launch.notPublished')}</h3>
+      <p>${c.ready ? tr('launch.readyBody') : tr('launch.needMore', { n: MIN_ITEMS_TO_PUBLISH })}</p>
+      <ul class="launch-list">${c.items.map(i => `<li class="${i.ok ? 'ok' : ''}"><span class="lc">${i.ok ? '✓' : '○'}</span>${escapeHtml(i.label)}</li>`).join('')}</ul>
       <div class="launch-bar"><i style="width:${pct}%"></i></div>
-      <div class="launch-progress">${ready
-        ? `<span class="launch-done-badge">${icon('check')}</span><span>${tr('launch.allAdded', { n: MIN_ITEMS_TO_PUBLISH })}</span>`
-        : tr('launch.progress', { c: Math.min(n, MIN_ITEMS_TO_PUBLISH), n: MIN_ITEMS_TO_PUBLISH, r: MIN_ITEMS_TO_PUBLISH - n })}</div>
-      <button class="btn btn-primary btn-wide" id="launch-btn" onclick="startLaunching()" ${ready ? '' : 'disabled'}>${tr('launch.start')}</button>`;
+      ${c.profileOk ? '' : `<button class="btn btn-outline btn-wide" style="margin-bottom:10px" onclick="goCompleteProfile()">${tr('launch.completeProfile')}</button>`}
+      <button class="btn btn-primary btn-wide" id="launch-btn" onclick="startLaunching()" ${c.ready ? '' : 'disabled'}>${tr('launch.start')}</button>`;
   }
   async function startLaunching() {
-    if (countMenuItems() < MIN_ITEMS_TO_PUBLISH) { showToast(tr('toast.addAtLeast', { n: MIN_ITEMS_TO_PUBLISH })); return; }
+    const c = launchChecklist();
+    if (!c.profileOk) {
+      showToast(tr('launch.needProfile', { list: c.items.slice(0, 3).filter(i => !i.ok).map(i => i.label.toLowerCase()).join(', ') }));
+      goCompleteProfile();
+      return;
+    }
+    if (!c.menuOk) { showToast(tr('toast.addAtLeast', { n: MIN_ITEMS_TO_PUBLISH })); return; }
     const btn = document.getElementById('launch-btn');
     if (btn) { btn.disabled = true; btn.textContent = tr('launch.launching'); }
     try {
@@ -2598,6 +2708,8 @@
       const result = await res.json();
       if (!res.ok || !result.success) throw new Error(result.error || `Server returned ${res.status}`);
       restaurantProfile.isPublished = true;
+      restaurantProfile.isOpen = false; restaurantProfile.busyMinutes = 0;     // a launched restaurant starts Closed; the owner opens it
+      renderRestaurantStatus();
       renderSettingsProfileFields();                          // the Restaurant ID is fixed from now on
       renderShareLink();
       renderLaunchCard();                                     // removes the card for good
@@ -2618,6 +2730,24 @@
     if (!box) return;
     box.style.display = restaurantProfile.handle ? 'flex' : 'none';   // the link needs the owner-chosen Restaurant ID
     document.getElementById('share-tag').style.display = restaurantProfile.isPublished !== false ? 'none' : 'inline-block';
+    // The same link, copy-ready, right under the orders
+    const card = document.getElementById('orders-share-card');
+    if (card) {
+      const has = !!restaurantProfile.handle, live = restaurantProfile.isPublished !== false;
+      card.style.display = has ? 'block' : 'none';
+      if (has) document.getElementById('orders-share-url').value = shareLinkFor(restaurantProfile.handle);
+      document.getElementById('orders-share-tag').style.display = live ? 'none' : 'inline-block';
+      document.getElementById('orders-share-note').style.display = live ? 'none' : 'block';
+    }
+  }
+  async function copyShareLink() {
+    const input = document.getElementById('orders-share-url'), btn = document.getElementById('orders-share-copy');
+    if (!input || !input.value) return;
+    const ok = await copyTextToClipboard(input.value);
+    if (!ok) { input.focus(); input.select(); showToast(tr('share.copyFail', { url: input.value })); return; }   // select it so a long-press copies
+    tg?.HapticFeedback?.notificationOccurred('success');
+    btn.textContent = tr('share.copiedShort');
+    setTimeout(() => { btn.textContent = tr('share.copy'); }, 1600);
   }
   // Opens the phone's own share sheet (Telegram, WhatsApp, Facebook, TikTok ...). Where that isn't available
   // (some desktop/WebView apps) the link is copied instead.
@@ -2691,7 +2821,7 @@
       toggleProfileEdit(false);
       applyBrandHeader();
       showToast(tr('toast.profileUpdated'));
-      checkAutoClose();                                   // a closing time that has already passed closes the restaurant now
+      loadRestaurantStatus();                             // the server closes right away if the closing time has already passed
     }
   }
   function clearTimeField(id) { document.getElementById(id).value = ''; }
@@ -3658,6 +3788,7 @@
       if (!res.ok || !d.success) throw new Error(d.error || res.status);
       if (ordersScope === 'settlements') loadSettlements(true);
       if (d.serverNow) serverOffset = d.serverNow - Date.now() / 1000;
+      if (d.restaurant) syncServerStatus(d.restaurant);
       ordersData = d.orders;
       if (testOrder) ordersData.push(testOrder);        // the sandbox order lives only in this app, never on the server
       reapplyPendingPrep();
@@ -3979,7 +4110,7 @@
   // What the owner opened is remembered, so the 10-second refresh doesn't fold it shut again.
   // The empty Orders card only reports the restaurant's status (Open / Busy / Closed). It is rebuilt only when that
   // message actually changes, so the 10-second order refresh never makes it blink or move.
-  const emptyKey = () => restaurantStatus() + '|' + (restaurantProfile.busyMinutes || 0) + '|' + currentLang;
+  const emptyKey = () => restaurantStatus() + '|' + (restaurantProfile.busyMinutes || 0) + '|' + currentLang;   // also covers 'unlaunched'
   function emptyOrdersHtml() {
     const st = restaurantStatus();
     return `<div class="empty-state" id="empty-orders" data-key="${emptyKey()}"><div class="swap"><div class="display">${tr('empty.' + st)}</div>${tr('empty.' + st + 'Sub', { n: restaurantProfile.busyMinutes || 0 })}<div><button type="button" class="btn btn-outline btn-sm test-order-btn" onclick="sendTestOrder()">${tr('test.send')}</button></div></div></div>`;
@@ -4195,6 +4326,7 @@
   /* ================= RESTAURANT STATUS: open / busy / closed ================= */
   const BUSY_EXTRA_MIN = 15;
     function restaurantStatus() {
+    if (!restaurantProfile.isPublished) return 'unlaunched';            // hard-locked: a restaurant that hasn't launched is never open
     if (restaurantProfile.isOpen === false) return 'closed';
     return (restaurantProfile.busyMinutes || 0) > 0 ? 'busy' : 'open';
   }
@@ -4202,26 +4334,48 @@
     try {
       const res = await fetch(`${API_BASE}/api/restaurant-info?restaurant=${encodeURIComponent(currentRestaurantId)}`);
       const d = await res.json();
+      restaurantProfile.isPublished = d.isPublished !== false;
       restaurantProfile.isOpen = d.isOpen !== false;
       restaurantProfile.busyMinutes = +d.busyMinutes || 0;
     } catch (e) { /* keep the last known state */ }
     renderRestaurantStatus();
-    checkAutoClose();
+  }
+  // The order refresh also brings the restaurant's live status, so an automatic close (or a change made on
+  // another phone) shows up here without a reload.
+  let statusSaving = false;
+  function syncServerStatus(r) {
+    if (statusSaving || !r) return;
+    const before = restaurantStatus();
+    restaurantProfile.isPublished = r.isPublished !== false;
+    restaurantProfile.isOpen = r.isOpen !== false;
+    restaurantProfile.busyMinutes = +r.busyMinutes || 0;
+    if (r.closingTime !== undefined) restaurantProfile.closingTime = r.closingTime || '';
+    const after = restaurantStatus();
+    if (before === after) return;
+    renderRestaurantStatus();
+    if (before === 'unlaunched' || after === 'unlaunched') { renderLaunchCard(); renderShareLink(); }
+    if ((before === 'open' || before === 'busy') && after === 'closed' && restaurantProfile.closingTime) {
+      tg?.HapticFeedback?.notificationOccurred('warning');
+      showToast(tr('toast.autoClosed', { time: fmtClock(restaurantProfile.closingTime) }));
+    }
   }
   function renderRestaurantStatus() {
     const st = restaurantStatus();
     const pill = document.getElementById('status-pill');
     pill.className = 'status-pill ' + st;
+    pill.setAttribute('aria-disabled', st === 'unlaunched' ? 'true' : 'false');
     document.getElementById('status-pill-text').textContent = tr('status.' + st);
+    document.getElementById('unlaunched-banner').style.display = st === 'unlaunched' ? 'flex' : 'none';
     document.querySelectorAll('#status-overlay button[data-s]').forEach(b => b.classList.toggle('active', b.dataset.s === st));
     document.getElementById('closed-banner').style.display = st === 'closed' ? 'flex' : 'none';
-    // Open / Busy: Telegram asks "Are you sure?" before the Mini App is closed. Closed: it just closes.
-    try { if (tg) { if (st === 'closed') tg.disableClosingConfirmation(); else tg.enableClosingConfirmation(); } } catch (e) {}
+    // Open / Busy: Telegram asks "Are you sure?" before the Mini App is closed. Closed / Not Launched: it just closes.
+    try { if (tg) { if (st === 'closed' || st === 'unlaunched') tg.disableClosingConfirmation(); else tg.enableClosingConfirmation(); } } catch (e) {}
     try { renderOrders(); } catch (e) {}     // estimates on new orders include the busy minutes
   }
   function toggleStatusMenu(ev) {
     primeAlertAudio();                                  // a tap on the status pill unlocks audio too
     ev && ev.stopPropagation();
+    if (restaurantStatus() === 'unlaunched') { showToast(tr('toast.launchFirst')); return; }   // locked until the restaurant is launched
     const ov = document.getElementById('status-overlay');
     const open = !ov.classList.contains('open');
     ov.classList.toggle('open', open);
@@ -4235,6 +4389,7 @@
 
   async function chooseStatus(next) {
     closeStatusMenu();
+    if (restaurantStatus() === 'unlaunched') { showToast(tr('toast.launchFirst')); return; }
     if (next === restaurantStatus()) return;
     if (next === 'closed' && !confirm(tr('confirm.close'))) return;
     if (await setStatus(next)) {
@@ -4246,6 +4401,8 @@
   }
   // Changes the status on the server (no questions asked). Returns true when it worked; rolls back when it didn't.
   async function setStatus(next) {
+    if (!restaurantProfile.isPublished) return false;            // never open a restaurant that hasn't launched
+    statusSaving = true;
     const prev = { isOpen: restaurantProfile.isOpen, busyMinutes: restaurantProfile.busyMinutes || 0 };
     const patch = { isOpen: next !== 'closed', busyMinutes: next === 'busy' ? BUSY_EXTRA_MIN : 0 };
     Object.assign(restaurantProfile, patch);
@@ -4258,45 +4415,20 @@
       logoUrl: restaurantProfile.logoUrl, address: restaurantProfile.address, ...patch
     });
     pill.disabled = false;
+    statusSaving = false;
     if (!ok) { Object.assign(restaurantProfile, prev); renderRestaurantStatus(); return false; }   // roll back
     return true;
   }
 
-  /* ================= AUTO-CLOSE at the closing time (never auto-open) ================= */
-  // From the closing time on, an Open / Busy restaurant is switched to Closed. Opening stays a manual tap.
-  // Once it has auto-closed for the day, a manual re-open is respected (so staying late is possible).
-  const AUTO_CLOSE_KEY = 'adminAutoClosedOn';
+  /* ================= AUTO-CLOSE at the closing time ================= */
+  // The server closes the restaurant at its closing time (even when nobody has this page open) and never
+  // opens it by itself; the order refresh then brings the new status here (see syncServerStatus).
   const toMinutes = t => { const m = /^(\d{2}):(\d{2})$/.exec(t || ''); return m ? (+m[1]) * 60 + (+m[2]) : null; };
   function fmtClock(t) {                                // '21:00' -> '9:00 PM'
     const m = toMinutes(t); if (m === null) return t || '';
     const h = Math.floor(m / 60), mi = String(m % 60).padStart(2, '0');
     return ((h % 12) || 12) + ':' + mi + ' ' + (h < 12 ? 'AM' : 'PM');
   }
-  function closingDue(now) {
-    const close = toMinutes(restaurantProfile.closingTime); if (close === null) return false;
-    const open = toMinutes(restaurantProfile.openingTime);
-    const m = now.getHours() * 60 + now.getMinutes();
-    if (open === null || open < close) return m >= close;      // same-day hours, e.g. 08:00 – 21:00
-    return m >= close && m < open;                             // overnight hours, e.g. 18:00 – 02:00: closed from 02:00 until 18:00
-  }
-  let autoClosing = false;
-  async function checkAutoClose() {
-    if (autoClosing || !restaurantProfile.closingTime || restaurantStatus() === 'closed') return;
-    const now = new Date();
-    if (!closingDue(now)) return;
-    const day = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    const mark = day + '|' + restaurantProfile.closingTime;
-    try { if (localStorage.getItem(AUTO_CLOSE_KEY) === mark) return; } catch (e) {}
-    autoClosing = true;
-    const ok = await setStatus('closed');
-    autoClosing = false;
-    if (!ok) return;                                            // couldn't reach the server: try again at the next check
-    try { localStorage.setItem(AUTO_CLOSE_KEY, mark); } catch (e) {}
-    tg?.HapticFeedback?.notificationOccurred('warning');
-    showToast(tr('toast.autoClosed', { time: fmtClock(restaurantProfile.closingTime) }));
-  }
-  setInterval(checkAutoClose, 30000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkAutoClose(); });
   function reopenRestaurant() { chooseStatus('open'); }
 
   /* ================= PREP COUNTDOWN TIMER ================= */
