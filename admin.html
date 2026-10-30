@@ -784,6 +784,59 @@
   .pin-center { position: absolute; left: 50%; top: 50%; width: 28px; height: 28px; margin: -34px 0 0 -14px; z-index: 800; pointer-events: none; transition: margin-top .12s ease; }
   .map-box.moving .pin-center { margin-top: -42px; }
 
+  /* ---- Item drawer: compact "options from category" summary ---- */
+  .inh-toggle { display: flex; align-items: center; gap: 8px; width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 11px 14px; font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; text-align: left; touch-action: manipulation; }
+  .inh-toggle .inh-title { flex: 1; }
+  .inh-toggle .chev { color: var(--muted); transition: transform .15s; }
+  .inh-toggle.open .chev { transform: rotate(180deg); }
+  .inh-body { margin-top: 8px; }
+  .inh-hint { font-size: 11.5px; color: var(--muted); margin: 0 0 8px; line-height: 1.45; }
+  .group-card.gone { opacity: .65; }
+  .group-card.gone .group-card-title { text-decoration: line-through; }
+  .inh-actions { display: flex; gap: 8px; margin: 8px 0 0 23px; flex-wrap: wrap; }
+  .inh-note { font-size: 11.5px; color: var(--muted); margin: 4px 0 0 23px; }
+  .group-card-tag { font-size: 10.5px; color: var(--primary-dark); margin: 3px 0 0 23px; font-weight: 600; }
+  /* ---- Option group drawer: "How this looks to your customers" ---- */
+  .prev-card { border: 1px solid var(--line); border-radius: 14px; background: var(--paper); overflow: hidden; }
+  .prev-toggle { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 12px 14px; font: inherit; font-size: 13.5px; font-weight: 700;
+    color: var(--ink); cursor: pointer; text-align: left; touch-action: manipulation; }
+  .prev-toggle .prev-t { flex: 1; }
+  .prev-toggle .chev { color: var(--muted); transition: transform .15s; }
+  .prev-toggle.open .chev { transform: rotate(180deg); }
+  .prev-body { padding: 0 14px 14px; }
+  .mock-phone { max-width: 300px; margin: 0 auto 14px; background: #fff; border: 2px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 12px; }
+  .mock-dish { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .mock-dish-img { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #F6C28B, #F28C4B); flex-shrink: 0; }
+  .mock-dish b { display: block; font-size: 13.5px; }
+  .mock-dish small { color: var(--muted); font-size: 11px; }
+  .mock-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .mock-head h4 { margin: 0; font-size: 14px; display: flex; align-items: center; min-width: 0; }
+  .mock-req { font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; white-space: nowrap; }
+  .mock-req.req { color: #E5484D; }
+  .mock-req.opt { color: var(--primary); }
+  .mock-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .mock-row .lbl { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .mock-row .nm { overflow: hidden; text-overflow: ellipsis; }
+  .mock-row .pr { display: inline-flex; align-items: center; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .mock-row.sample { opacity: .55; }
+  .mock-input { width: 16px; height: 16px; border: 2px solid #9AA0A6; flex-shrink: 0; display: inline-block; box-sizing: border-box; }
+  .mock-input.radio { border-radius: 50%; }
+  .mock-input.check { border-radius: 4px; }
+  .mock-input.on.radio { border-color: var(--primary); background: radial-gradient(circle, var(--primary) 42%, transparent 48%); }
+  .mock-input.on.check { border-color: var(--primary); background: var(--primary); }
+  .mk { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--brick); color: #fff;
+    font-size: 10px; font-weight: 700; margin-right: 5px; flex-shrink: 0; }
+  .mock-cta { margin-top: 10px; background: var(--primary); color: #fff; text-align: center; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 700; }
+  .prev-legend { list-style: none; margin: 0 0 10px; padding: 0; font-size: 12.5px; line-height: 1.5; }
+  .prev-legend li { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .prev-legend .mk { margin: 2px 0 0; }
+  .prev-legend b { display: block; }
+  .prev-legend span.d { color: var(--muted); }
+  .prev-kind { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; margin-bottom: 8px; }
+  .prev-kind .mock-input { margin-top: 2px; }
+  .prev-note { font-size: 11.5px; color: var(--muted); margin: 2px 0 0; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -1188,8 +1241,8 @@
       </div>
 
       <div class="field" id="item-inherited-groups-field" style="display:none;">
-        <label data-i18n="item.inherited">Options from this category</label>
-        <div id="item-inherited-groups-list"></div>
+        <button type="button" class="inh-toggle" id="inh-toggle" onclick="toggleInheritedGroups()" aria-expanded="false"><span class="inh-title" id="inh-title"></span><i class="ico chev" data-icon="chevronDown"></i></button>
+        <div class="inh-body" id="item-inherited-groups-list" style="display:none"></div>
       </div>
 
       <div class="field">
@@ -1233,6 +1286,10 @@
         <label data-i18n="f.options">Options</label>
         <div id="group-options-list"></div>
         <button class="btn btn-outline btn-sm add-option-btn" onclick="addGroupOption()"><i class="ico " data-icon="plus"></i> <span data-i18n="group.addOption">Add option</span></button>
+      </div>
+      <div class="field prev-card" id="group-preview-card">
+        <button type="button" class="prev-toggle" id="prev-toggle" onclick="toggleGroupPreview()" aria-expanded="false"><span aria-hidden="true">💡</span><span class="prev-t" data-i18n="prev.title">How this looks to your customers</span><i class="ico chev" data-icon="chevronDown"></i></button>
+        <div class="prev-body" id="group-preview-body" style="display:none"></div>
       </div>
     </div>
     <div class="drawer-foot modal-bottom-actions">
@@ -1278,6 +1335,33 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "item.inh_1": "{n} option from category",
+  "item.inh_n": "{n} options from category",
+  "item.inhRemoved": " · {k} removed",
+  "inh.hint": "Changes here apply to this item only — the category and your other items stay the same.",
+  "inh.remove": "Remove",
+  "inh.override": "Override",
+  "inh.restore": "Restore",
+  "inh.restoreCat": "Restore category's version",
+  "inh.removedNote": "Removed for this item",
+  "inh.overriddenNote": "Replaced by this item's own version below",
+  "confirm.restoreCat": "Delete this item's own version and use the category's option group again?",
+  "group.overrideTitle": "Override \"{name}\" for this item",
+  "group.overridesTag": "Overrides the category group",
+  "toast.groupRemoved": "Removed for this item.",
+  "toast.groupRestored": "Restored.",
+  "prev.title": "How this looks to your customers",
+  "prev.l1": "Group Title",
+  "prev.l1d": "The heading above the choices. Example: \"Choose your size\".",
+  "prev.l2": "Required / Optional",
+  "prev.l2d": "Required: the customer must choose before adding to the cart. Optional: they can skip it.",
+  "prev.l3": "Option Name",
+  "prev.l3d": "One line per choice. The customer taps a line to select it.",
+  "prev.l4": "Option Price",
+  "prev.l4d": "Shown on the right as \"+500 MMK\" (or \"Free\" when the price is 0 in a single-choice group).",
+  "prev.single": "Single-choice = round buttons. The customer picks ONE. Good for size, spice level, bread type.",
+  "prev.multi": "Add-on = square boxes. The customer can pick MANY. Good for extra cheese, toppings, sauces.",
+  "prev.sizeNote": "Prices shown are for the first size. Each size can have its own price.",
   "status.unlaunched": "Not Launched",
   "toast.launchFirst": "Launch your restaurant first — then you can open it for orders.",
   "empty.unlaunched": "Not launched yet",
@@ -1647,6 +1731,33 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "item.inh_1": "အမျိုးအစားမှ ရွေးချယ်စရာ {n} ခု",
+  "item.inh_n": "အမျိုးအစားမှ ရွေးချယ်စရာ {n} ခု",
+  "item.inhRemoved": " · {k} ခု ဖယ်ရှားထားသည်",
+  "inh.hint": "ဤနေရာရှိ ပြောင်းလဲမှုများသည် ဤဟင်းလျာတစ်ခုတည်းအတွက်သာ ဖြစ်သည် — အမျိုးအစားနှင့် အခြားဟင်းလျာများ မပြောင်းပါ။",
+  "inh.remove": "ဖယ်ရှားမည်",
+  "inh.override": "ပြင်ရေးမည်",
+  "inh.restore": "ပြန်ထားမည်",
+  "inh.restoreCat": "အမျိုးအစား၏ မူရင်းကို ပြန်ထားမည်",
+  "inh.removedNote": "ဤဟင်းလျာအတွက် ဖယ်ရှားထားသည်",
+  "inh.overriddenNote": "အောက်ရှိ ဤဟင်းလျာ၏ ကိုယ်ပိုင်ဗားရှင်းဖြင့် အစားထိုးထားသည်",
+  "confirm.restoreCat": "ဤဟင်းလျာ၏ ကိုယ်ပိုင်ဗားရှင်းကို ဖျက်ပြီး အမျိုးအစား၏ ရွေးချယ်စရာအုပ်စုကို ပြန်သုံးမလား?",
+  "group.overrideTitle": "ဤဟင်းလျာအတွက် \"{name}\" ကို ပြင်ရေးမည်",
+  "group.overridesTag": "အမျိုးအစားအုပ်စုကို အစားထိုးထားသည်",
+  "toast.groupRemoved": "ဤဟင်းလျာအတွက် ဖယ်ရှားပြီးပါပြီ။",
+  "toast.groupRestored": "ပြန်ထားပြီးပါပြီ။",
+  "prev.title": "ဖောက်သည်များ မြင်ရမည့်ပုံစံ",
+  "prev.l1": "အုပ်စုခေါင်းစဉ်",
+  "prev.l1d": "ရွေးချယ်စရာများ၏ အပေါ်ရှိ ခေါင်းစဉ်။ ဥပမာ - \"အရွယ်အစား ရွေးပါ\"။",
+  "prev.l2": "မဖြစ်မနေ / ရွေးချယ်နိုင်သည်",
+  "prev.l2d": "Required: ခြင်းတောင်းထဲမထည့်မီ ဖောက်သည် မဖြစ်မနေ ရွေးရမည်။ Optional: မရွေးဘဲ ကျော်နိုင်သည်။",
+  "prev.l3": "ရွေးချယ်စရာအမည်",
+  "prev.l3d": "ရွေးချယ်စရာတစ်ခုလျှင် တစ်ကြောင်း။ ဖောက်သည်က ထိုစာကြောင်းကို နှိပ်၍ ရွေးသည်။",
+  "prev.l4": "ရွေးချယ်စရာဈေးနှုန်း",
+  "prev.l4d": "ညာဘက်တွင် \"+500 MMK\" အဖြစ် ပြသည် (ဈေး 0 ဖြစ်ပါက တစ်ခုရွေးအုပ်စုတွင် \"Free\" ဟု ပြသည်)။",
+  "prev.single": "တစ်ခုရွေး = စက်ဝိုင်းခလုတ်များ။ ဖောက်သည်က တစ်ခုသာ ရွေးနိုင်သည်။ အရွယ်အစား၊ အစပ်အဆင့်၊ ပေါင်မုန့်အမျိုးအစားများနှင့် သင့်တော်သည်။",
+  "prev.multi": "Add-on = လေးထောင့်အကွက်များ။ ဖောက်သည်က အများကြီး ရွေးနိုင်သည်။ ချိစ်ထပ်ထည့်၊ အပေါ်မှ ထည့်စရာ၊ ဆော့စ်များနှင့် သင့်တော်သည်။",
+  "prev.sizeNote": "ပြထားသောဈေးများသည် ပထမအရွယ်အစားအတွက်ဖြစ်သည်။ အရွယ်အစားတစ်ခုချင်းစီတွင် ကိုယ်ပိုင်ဈေး ရှိနိုင်သည်။",
   "status.unlaunched": "မထုတ်ပြန်ရသေးပါ",
   "toast.launchFirst": "ဦးစွာ ဆိုင်ကို ထုတ်ပြန်ပါ — ထို့နောက် အော်ဒါလက်ခံရန် ဖွင့်နိုင်ပါမည်။",
   "empty.unlaunched": "မထုတ်ပြန်ရသေးပါ",
@@ -3095,6 +3206,7 @@
           <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? tr('group.required') : tr('group.optional')}</span>
         </div>
         <div class="group-card-sub">${trn('opt.count', g.options.length)}</div>
+        ${g.overrides ? `<div class="group-card-tag">${tr('group.overridesTag')}</div>` : ''}
       </div>
     `).join('');
   }
@@ -3321,7 +3433,7 @@
         name: '', description: '', image: '', time: '15 mins',
         price: cat.defaultFlatPrice != null ? cat.defaultFlatPrice : 0,
         sizes: catSizeNames.map((n, i) => ({ name: n, price: catDefaults[i] != null ? catDefaults[i] : 0 })),
-        optionGroups: []
+        optionGroups: [], hiddenGroupIds: []
       };
       document.getElementById('item-drawer-title').textContent = tr('item.new');
     } else {
@@ -3337,7 +3449,9 @@
           const existing = (item.sizes || []).find(s => s.name === n);
           return { name: n, price: existing ? existing.price : 0 };
         }),
-        optionGroups: JSON.parse(JSON.stringify(item.optionGroups || []))
+        optionGroups: JSON.parse(JSON.stringify(item.optionGroups || [])),
+        // category groups this item has removed / replaced — ids that no longer exist in the category are dropped
+        hiddenGroupIds: (item.hiddenCategoryGroups || []).filter(id => (cat.optionGroups || []).some(g => g.id === id))
       };
       document.getElementById('item-drawer-title').textContent = tr('edit.title', { name: item.name });
     }
@@ -3354,6 +3468,7 @@
     updateItemImagePreview();
     renderItemSizeChips();
     renderItemPriceInputs();
+    inheritedOpen = false;                                   // the category's options start folded away
     renderInheritedGroups();
     renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
     // A previous item's drawer may have been left scrolled halfway down — reset so New Item always opens fresh.
@@ -3407,23 +3522,65 @@
   // this category without having to leave and check the Category drawer.
   // Editing them happens only in the Category drawer — one source of truth
   // for anything shared across every item.
+  // "N options from category": folded by default; opens to show each inherited group with Override / Remove.
+  // Everything here changes THIS item only (itemDraft.hiddenGroupIds + its own copy of an overridden group).
+  let inheritedOpen = false;
+  const categoryGroupsOfItem = () => { const cat = menuCategories.find(c => c.id === itemDraft.catId); return (cat && cat.optionGroups) || []; };
   function renderInheritedGroups() {
-    const cat = menuCategories.find(c => c.id === itemDraft.catId);
-    const groups = (cat && cat.optionGroups) || [];
+    const groups = categoryGroupsOfItem();
     const field = document.getElementById('item-inherited-groups-field');
     const box = document.getElementById('item-inherited-groups-list');
     if (!groups.length) { field.style.display = 'none'; return; }
     field.style.display = '';
-    box.innerHTML = groups.map(g => `
-      <div class="group-card group-card-readonly">
+    const hidden = new Set(itemDraft.hiddenGroupIds || []);
+    const removed = groups.filter(g => hidden.has(g.id)).length;
+    document.getElementById('inh-title').textContent = trn('item.inh', groups.length) + (removed ? tr('item.inhRemoved', { k: removed }) : '');
+    const toggle = document.getElementById('inh-toggle');
+    toggle.classList.toggle('open', inheritedOpen);
+    toggle.setAttribute('aria-expanded', inheritedOpen ? 'true' : 'false');
+    box.style.display = inheritedOpen ? '' : 'none';
+    if (!inheritedOpen) return;
+    box.innerHTML = `<p class="inh-hint">${tr('inh.hint')}</p>` + groups.map(g => {
+      const gone = hidden.has(g.id);
+      const ownCopy = itemDraft.optionGroups.find(o => o.overrides === g.id);
+      const actions = !gone
+        ? `<div class="inh-actions"><button type="button" class="btn btn-outline btn-sm" onclick="overrideInheritedGroup('${g.id}')">${tr('inh.override')}</button><button type="button" class="btn btn-danger-ghost btn-sm" onclick="removeInheritedGroup('${g.id}')">${tr('inh.remove')}</button></div>`
+        : `<div class="inh-note">${ownCopy ? tr('inh.overriddenNote') : tr('inh.removedNote')}</div><div class="inh-actions"><button type="button" class="btn btn-outline btn-sm" onclick="restoreInheritedGroup('${g.id}')">${ownCopy ? tr('inh.restoreCat') : tr('inh.restore')}</button></div>`;
+      return `
+      <div class="group-card group-card-readonly${gone ? ' gone' : ''}">
         <div class="group-card-top">
           <span class="group-card-icon">${icon(g.kind === 'single' ? 'circleDot' : 'checkSquare')}</span>
           <span class="group-card-title">${escapeHtml(g.title || tr('group.untitled'))}</span>
           <span class="group-card-badge ${g.required ? 'badge-required' : 'badge-optional'}">${g.required ? tr('group.required') : tr('group.optional')}</span>
         </div>
-        <div class="group-card-sub">${trn('opt.count', g.options.length)} · ${tr('group.editInCat')}</div>
-      </div>
-    `).join('');
+        <div class="group-card-sub">${trn('opt.count', (g.options || []).length)}</div>
+        ${actions}
+      </div>`;
+    }).join('');
+  }
+  function toggleInheritedGroups() { inheritedOpen = !inheritedOpen; renderInheritedGroups(); }
+  function removeInheritedGroup(id) {
+    if (!itemDraft.hiddenGroupIds.includes(id)) itemDraft.hiddenGroupIds.push(id);
+    renderInheritedGroups();
+    showToast(tr('toast.groupRemoved'));
+  }
+  function restoreInheritedGroup(id) {
+    const ownCopy = itemDraft.optionGroups.find(o => o.overrides === id);
+    if (ownCopy && !confirm(tr('confirm.restoreCat'))) return;
+    itemDraft.optionGroups = itemDraft.optionGroups.filter(o => o.overrides !== id);     // drop the item's own version, if any
+    itemDraft.hiddenGroupIds = itemDraft.hiddenGroupIds.filter(x => x !== id);
+    renderInheritedGroups();
+    renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+    showToast(tr('toast.groupRestored'));
+  }
+  // Override = start from a copy of the category's group, edit it for this item. The category's version is hidden
+  // for this item only once the copy is SAVED (cancelling the drawer changes nothing).
+  function overrideInheritedGroup(id) {
+    const g = categoryGroupsOfItem().find(x => x.id === id);
+    if (!g) return;
+    const seed = JSON.parse(JSON.stringify(g));
+    seed.id = newGroupId(); seed.overrides = g.id;
+    openGroupDrawer('item', null, g.kind, seed);
   }
 
   /* ---- Item-level size override (overwrites the category's sizes for just this item) ---- */
@@ -3624,6 +3781,9 @@
       time: document.getElementById('item-time-input').value || '15 mins',
       optionGroups: itemDraft.optionGroups
     };
+    const catGroupIds = new Set((cat.optionGroups || []).map(g => g.id));
+    const hiddenIds = (itemDraft.hiddenGroupIds || []).filter(id => catGroupIds.has(id));
+    if (hiddenIds.length) item.hiddenCategoryGroups = hiddenIds;      // only stored when something was removed / overridden
 
     // Only stamp customSizeNames when this item actually overrides the
     // category's sizes — its absence is what lets the item keep inheriting
@@ -3660,12 +3820,13 @@
   function groupDraftSizeNames() {
     return groupDraftCtx.scope === 'category' ? catDraft.sizeNames : itemDraft.sizeNames;
   }
-  function openGroupDrawer(scope, groupId, kindIfNew) {
+  function openGroupDrawer(scope, groupId, kindIfNew, seed) {
     const parentDraft = scope === 'category' ? catDraft : itemDraft;
-    groupDraftCtx = { scope };
+    groupDraftCtx = { scope, overrideOf: seed ? seed.overrides : null };
     if (groupId === null) {
-      groupDraft = { id: newGroupId(), kind: kindIfNew, title: '', required: false, options: [] };
-      document.getElementById('group-drawer-title').textContent = kindIfNew === 'single' ? tr('group.newSingle') : tr('group.newMulti');
+      groupDraft = seed || { id: newGroupId(), kind: kindIfNew, title: '', required: false, options: [] };
+      document.getElementById('group-drawer-title').textContent = seed ? tr('group.overrideTitle', { name: seed.title || tr('group.optionGroup') })
+        : kindIfNew === 'single' ? tr('group.newSingle') : tr('group.newMulti');
       document.getElementById('group-delete-btn').style.display = 'none';
     } else {
       const existing = parentDraft.optionGroups.find(g => g.id === groupId);
@@ -3679,6 +3840,7 @@
     document.getElementById('group-required-hint').textContent =
       groupDraft.kind === 'single' ? tr('group.hintSingle') : tr('group.hintMulti');
     renderGroupOptionsList();
+    renderGroupPreview();
     document.getElementById('group-drawer-overlay').classList.add('open');
     afterDrawerOpen('group-drawer-overlay');
   }
@@ -3688,8 +3850,68 @@
     groupDraftCtx = null;
     syncBackButton();
   }
+  /* ---- "How this looks to your customers": a mock customer screen + numbered callouts ----
+     The mock uses the same words and layout as the customer's ordering screen (index.html), live from the form. */
+  let groupPreviewOpen = false;
+  function toggleGroupPreview() {
+    groupPreviewOpen = !groupPreviewOpen;
+    renderGroupPreview();
+    if (groupPreviewOpen) setTimeout(() => { const b = document.getElementById('group-preview-body'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
+  }
+  function previewPrice(opt) {                                  // price of the FIRST size (flat price when the category has no sizes)
+    if (Array.isArray(opt.prices)) { const p = opt.prices.find(v => v != null); return p == null ? 0 : p; }
+    return opt.price || 0;
+  }
+  function renderGroupPreview() {
+    const toggle = document.getElementById('prev-toggle'), body = document.getElementById('group-preview-body');
+    if (!toggle || !body) return;
+    toggle.classList.toggle('open', groupPreviewOpen);
+    toggle.setAttribute('aria-expanded', groupPreviewOpen ? 'true' : 'false');
+    body.style.display = groupPreviewOpen ? '' : 'none';
+    if (!groupPreviewOpen || !groupDraft) return;
+    try {
+      const single = groupDraft.kind === 'single';
+      const title = (document.getElementById('group-title-input').value || '').trim();
+      const required = document.getElementById('group-required-input').checked;
+      const real = (groupDraft.options || []).filter(o => (o.name || '').trim());
+      const sample = !real.length;                              // nothing typed yet: show greyed example rows
+      const opts = sample ? [{ name: 'Option 1', price: 0 }, { name: 'Option 2', price: 500 }] : real;
+      const inputCls = single ? 'radio' : 'check';
+      const reqLabel = single ? (required ? 'Required' : 'Optional') : (required ? 'Pick at least one' : '');
+      const rows = opts.slice(0, 4).map((o, i) => {
+        const p = Math.round(previewPrice(o));
+        const price = single ? (p > 0 ? '+' + p + ' MMK' : 'Free') : '+' + p + ' MMK';   // exactly what the customer screen prints
+        return `<div class="mock-row${sample ? ' sample' : ''}">
+          <span class="lbl"><span class="mock-input ${inputCls}${i === 0 ? ' on' : ''}"></span>${i === 0 ? '<span class="mk">3</span>' : ''}<span class="nm">${escapeHtml(o.name)}</span></span>
+          <span class="pr">${i === 0 ? '<span class="mk">4</span>' : ''}${price}</span></div>`;
+      }).join('');
+      const hasSizes = groupDraftSizeNames().length > 0;
+      body.innerHTML = `
+        <div class="mock-phone" aria-hidden="true">
+          <div class="mock-dish"><div class="mock-dish-img"></div><div><b>Cheeseburger</b><small>Sample dish</small></div></div>
+          <div class="mock-head">
+            <h4><span class="mk">1</span><span>${escapeHtml(title || (single ? 'Select Option' : 'Add Extras'))}</span></h4>
+            ${reqLabel ? `<span class="mock-req ${required ? 'req' : 'opt'}"><span class="mk">2</span>${reqLabel}</span>` : ''}
+          </div>
+          ${rows}
+          <div class="mock-cta">Add to cart</div>
+        </div>
+        <ul class="prev-legend">
+          <li><span class="mk">1</span><div><b>${tr('prev.l1')}</b><span class="d">${tr('prev.l1d')}</span></div></li>
+          <li><span class="mk">2</span><div><b>${tr('prev.l2')}</b><span class="d">${tr('prev.l2d')}</span></div></li>
+          <li><span class="mk">3</span><div><b>${tr('prev.l3')}</b><span class="d">${tr('prev.l3d')}</span></div></li>
+          <li><span class="mk">4</span><div><b>${tr('prev.l4')}</b><span class="d">${tr('prev.l4d')}</span></div></li>
+        </ul>
+        <div class="prev-kind"><span class="mock-input radio on"></span><span>${tr('prev.single')}</span></div>
+        <div class="prev-kind"><span class="mock-input check on"></span><span>${tr('prev.multi')}</span></div>
+        ${hasSizes ? `<p class="prev-note">${tr('prev.sizeNote')}</p>` : ''}`;
+    } catch (e) { body.innerHTML = ''; }                        // a preview problem must never get in the way of saving the group
+  }
+  document.getElementById('group-drawer-overlay').addEventListener('input', () => { if (groupPreviewOpen) renderGroupPreview(); });
+  document.getElementById('group-drawer-overlay').addEventListener('change', () => { if (groupPreviewOpen) renderGroupPreview(); });
   function renderGroupOptionsList() {
     const box = document.getElementById('group-options-list');
+    setTimeout(renderGroupPreview, 0);                       // keep the customer preview in step with the option list
     const sizeNames = groupDraftSizeNames();
     if (!groupDraft.options.length) { box.innerHTML = `<p class="sub-hint">${tr('common.noneYet')}</p>`; return; }
     const hasSizes = sizeNames.length > 0;
@@ -3748,20 +3970,24 @@
     const idx = parentDraft.optionGroups.findIndex(g => g.id === groupDraft.id);
     if (idx >= 0) parentDraft.optionGroups[idx] = groupDraft;
     else parentDraft.optionGroups.push(groupDraft);
+    // An override replaces the category's group for this item: hide the original now that the copy is saved.
+    if (groupDraftCtx.overrideOf && !itemDraft.hiddenGroupIds.includes(groupDraftCtx.overrideOf)) itemDraft.hiddenGroupIds.push(groupDraftCtx.overrideOf);
 
     const scope = groupDraftCtx.scope;
     closeGroupDrawer();
     if (scope === 'category') { renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category'); updateCatMore(); }
-    else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+    else { renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item'); renderInheritedGroups(); }
   }
   function deleteGroupFromDrawer() {
     if (!confirm(tr('confirm.delGroup'))) return;
     const parentDraft = groupDraftCtx.scope === 'category' ? catDraft : itemDraft;
     parentDraft.optionGroups = parentDraft.optionGroups.filter(g => g.id !== groupDraft.id);
+    // Deleting an item's own override brings the category's version back (otherwise the item would have neither).
+    if (groupDraft.overrides && groupDraftCtx.scope === 'item') itemDraft.hiddenGroupIds = itemDraft.hiddenGroupIds.filter(x => x !== groupDraft.overrides);
     const scope = groupDraftCtx.scope;
     closeGroupDrawer();
     if (scope === 'category') { renderOptionGroupsList('cat-option-groups-list', catDraft.optionGroups, 'category'); updateCatMore(); }
-    else renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item');
+    else { renderOptionGroupsList('item-option-groups-list', itemDraft.optionGroups, 'item'); renderInheritedGroups(); }
   }
 
   /* ================= SETTINGS ================= */
