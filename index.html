@@ -3407,7 +3407,9 @@ async function submitFinalOrder() {
         const cat = getCategoryForDish(dish);
         const catGroups = (cat && cat.optionGroups) || legacyGroupsFromCategory(cat);
         const itemGroups = dish.optionGroups || legacyGroupsFromItem(dish);
-        return [...catGroups, ...itemGroups];
+        // Category groups this item has removed or replaced with its own version (admin.html: Item > options from category)
+        const hidden = Array.isArray(dish.hiddenCategoryGroups) ? dish.hiddenCategoryGroups : [];
+        return [...catGroups.filter(g => !hidden.includes(g.id)), ...itemGroups];
     }
     function legacyGroupsFromCategory(cat) {
         if (!cat) return [];
