@@ -517,10 +517,6 @@
   .o-actions .btn{flex:1;justify-content:center;padding:12px}
 
   /* ============ RESTAURANT STATUS (open / closed) ============ */
-  .closed-banner{display:none;align-items:center;gap:10px;background:var(--brick);color:#fff;border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;line-height:1.4}
-  .closed-banner .ico{font-size:18px}
-  .closed-banner span{flex:1}
-  .closed-banner button{background:#fff;color:var(--brick);border:0;border-radius:10px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
 
 
   /* ============ TOP STATUS PILL + DROPDOWN ============ */
@@ -799,11 +795,6 @@
   .group-card-tag { font-size: 10.5px; color: var(--primary-dark); margin: 3px 0 0 23px; font-weight: 600; }
   /* ---- Option group drawer: "How this looks to your customers" ---- */
   .prev-card { border: 1px solid var(--line); border-radius: 14px; background: var(--paper); overflow: hidden; }
-  .prev-toggle { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 12px 14px; font: inherit; font-size: 13.5px; font-weight: 700;
-    color: var(--ink); cursor: pointer; text-align: left; touch-action: manipulation; }
-  .prev-toggle .prev-t { flex: 1; }
-  .prev-toggle .chev { color: var(--muted); transition: transform .15s; }
-  .prev-toggle.open .chev { transform: rotate(180deg); }
   .prev-body { padding: 0 14px 14px; }
   .mock-phone { max-width: 300px; margin: 0 auto 14px; background: #fff; border: 2px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 12px; }
   .mock-dish { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
@@ -825,17 +816,52 @@
   .mock-input.check { border-radius: 4px; }
   .mock-input.on.radio { border-color: var(--primary); background: radial-gradient(circle, var(--primary) 42%, transparent 48%); }
   .mock-input.on.check { border-color: var(--primary); background: var(--primary); }
-  .mk { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--brick); color: #fff;
-    font-size: 10px; font-weight: 700; margin-right: 5px; flex-shrink: 0; }
   .mock-cta { margin-top: 10px; background: var(--primary); color: #fff; text-align: center; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 700; }
-  .prev-legend { list-style: none; margin: 0 0 10px; padding: 0; font-size: 12.5px; line-height: 1.5; }
-  .prev-legend li { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
-  .prev-legend .mk { margin: 2px 0 0; }
-  .prev-legend b { display: block; }
-  .prev-legend span.d { color: var(--muted); }
   .prev-kind { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; margin-bottom: 8px; }
   .prev-kind .mock-input { margin-top: 2px; }
   .prev-note { font-size: 11.5px; color: var(--muted); margin: 2px 0 0; }
+
+  /* ---- Application gate (a Telegram account that isn't approved yet) ---- */
+  #not-approved-gate { position: fixed; inset: 0; z-index: 40; display: none; flex-direction: column; background: var(--card); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #not-approved-gate .setup-card { justify-content: flex-start; }
+  .apply-state { flex-direction: column; flex: 1; }
+  .apply-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 18px 0 12px; }
+  .apply-note { background: var(--mustard-tint); color: #7A4B00; border: 1px solid var(--mustard); border-radius: 10px; padding: 9px 12px; font-size: 12.5px; margin: 6px 0 12px; }
+  #apply-error { color: var(--brick); font-size: 12.5px; margin: 4px 0 10px; min-height: 16px; }
+  .apply-wait-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin: 10px 0 16px; font-size: 13px; line-height: 1.55; }
+  .apply-wait-card small { display: block; color: var(--muted); font-size: 11px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .4px; }
+  /* ---- Pages inside Settings: slide in like a real page; Telegram's own back arrow leaves them ---- */
+  @keyframes pageSlideIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+  #settings-sub.page-enter { animation: pageSlideIn .24s ease; }
+  .has-native-back .sub-back { display: none; }
+  .nav-row .nav-val { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-right: 2px; }
+  /* ---- Commercial tax page ---- */
+  .tax-explain { background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; margin-top: 14px; }
+  .tax-explain h3 { margin: 0 0 8px; font-size: 15px; }
+  .tax-explain p { margin: 0 0 12px; font-size: 13px; line-height: 1.6; color: var(--ink); }
+  .tax-kind { border-left: 3px solid var(--primary); padding: 2px 0 2px 12px; margin: 0 0 12px; }
+  .tax-kind b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .tax-kind p { margin: 0; color: var(--muted); }
+  .tax-foot { color: var(--muted) !important; font-size: 12px !important; }
+  .tax-ex { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 4px 0 12px; }
+  .tax-ex-title { font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
+  .tax-ex-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 6px 8px; font-size: 12.5px; align-items: baseline; }
+  .tax-ex-grid .h { font-weight: 700; color: var(--muted); text-align: right; }
+  .tax-ex-grid .h.on { color: var(--primary-dark); }
+  .tax-ex-grid > div:not(:nth-child(3n+1)) { text-align: right; }
+  .tax-ex-grid small { color: var(--muted); font-size: 10.5px; }
+  .tax-ex-grid .t { font-weight: 700; border-top: 1px solid var(--line); padding-top: 6px; }
+  .tax-ex-grid.off { opacity: .55; }
+  /* ---- Edit profile: a centred modal instead of a card that grows the page ---- */
+  .drawer-overlay.modal-center { align-items: center; padding: 14px; }
+  .drawer-overlay.modal-center .drawer { border-radius: 20px; max-height: 90vh; }
+  .drawer-overlay.modal-center .drawer-head { border-radius: 20px 20px 0 0; }
+  /* ---- Option group: Required / Optional selector ---- */
+  .seg-req { display: flex; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
+  .seg-req button { flex: 1; border: 0; background: none; padding: 10px 6px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; touch-action: manipulation; }
+  .seg-req button.active { background: var(--primary); color: #fff; }
+  .prev-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; font-size: 13.5px; }
+  .prev-card { margin-bottom: 16px; }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -853,15 +879,49 @@
   </div>
 </div>
 
-<!-- ============ NOT APPROVED (shown when Telegram auto-login finds no restaurant for this ID) ============ -->
-<div id="not-approved-gate" style="display:none;">
-  <div class="pin-card">
-    <div class="ticket-icon"><i class="ico " data-icon="ban"></i></div>
-    <h1 data-i18n="gate.notApprovedTitle">Not approved yet</h1>
-    <p id="not-approved-message" data-i18n="gate.notApprovedMsg">This Telegram account isn't linked to a restaurant yet. If you'd like to list your restaurant, open the bot and tap "List My Restaurant".</p>
-    <a href="https://t.me/assichit_bot" target="_blank" rel="noopener" style="text-decoration:none; display:block;">
-      <button class="btn btn-primary" style="width:100%; justify-content:center;" data-i18n="gate.openBot">Open Bot</button>
-    </a>
+<!-- ============ NOT APPROVED YET: application form, or "waiting for approval" ============ -->
+<div id="not-approved-gate">
+  <div class="lang-switch lang-switch-top" role="group" aria-label="Language">
+    <button type="button" data-lang="my" onclick="switchLanguage('my')">🇲🇲 မြန်မာ</button>
+    <button type="button" data-lang="en" onclick="switchLanguage('en')">🇬🇧 EN</button>
+  </div>
+  <div class="setup-card">
+    <!-- the form -->
+    <div class="apply-state" id="apply-form-state" style="display:none;">
+      <div class="apply-icon"><i class="ico" data-icon="store"></i></div>
+      <h1 data-i18n="apply.title">List your restaurant</h1>
+      <div class="apply-note" id="apply-note" style="display:none;" data-i18n="apply.rejectedNote">Your last application was not approved. Check your details and send it again.</div>
+      <div class="field" style="margin-top:14px;">
+        <label><span data-i18n="f.name">Restaurant name</span><span class="field-tag" data-i18n="tag.required">Required</span></label>
+        <input type="text" id="apply-name" maxlength="80" placeholder="e.g. Restaurant name" data-i18n-placeholder="ph.name" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label><span data-i18n="f.phone">Phone number</span><span class="field-tag" data-i18n="tag.required">Required</span></label>
+        <input type="text" id="apply-phone" inputmode="tel" maxlength="20" placeholder="e.g. 09 123 456 789" data-i18n-placeholder="ph.phone" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label><span data-i18n="f.address">Restaurant address</span><span class="field-tag" data-i18n="tag.required">Required</span></label>
+        <textarea id="apply-address" maxlength="200" placeholder="Street, township, city" data-i18n-placeholder="ph.addrSettings"></textarea>
+      </div>
+      <div class="setup-spacer"></div>
+      <div id="apply-error"></div>
+      <button class="btn btn-primary btn-wide" id="apply-submit" onclick="submitApplication()" data-i18n="apply.submit">Submit Application</button>
+    </div>
+    <!-- waiting for approval -->
+    <div class="apply-state" id="apply-wait-state" style="display:none;">
+      <div class="apply-icon"><i class="ico" data-icon="clock"></i></div>
+      <h1 data-i18n="apply.waitTitle">Application received</h1>
+      <p class="intro" data-i18n="apply.waitBody">We're reviewing your application. You'll get a message in Telegram as soon as you're approved — then open this dashboard again.</p>
+      <div class="apply-wait-card" id="apply-wait-card"></div>
+      <div class="setup-spacer"></div>
+      <button class="btn btn-primary btn-wide" onclick="checkApplicationStatus()" data-i18n="apply.checkStatus">Check status</button>
+    </div>
+    <!-- something went wrong (no connection / could not verify the Telegram account) -->
+    <div class="apply-state" id="apply-error-state" style="display:none;">
+      <div class="apply-icon"><i class="ico" data-icon="ban"></i></div>
+      <p class="intro" id="apply-error-text" data-i18n="gate.serverError">Could not reach the server. Check your connection and try again.</p>
+      <button class="btn btn-primary btn-wide" onclick="autoLogin()" data-i18n="common.tryAgain">Try again</button>
+    </div>
   </div>
 </div>
 
@@ -960,19 +1020,13 @@
 
   <main>
     <!-- CLOSED BANNER (all tabs) -->
-    <!-- NOT LAUNCHED BANNER (all tabs) -->
-    <div class="unlaunched-banner" id="unlaunched-banner" role="alert">
-      <i class="ico" data-icon="send"></i>
-      <span><b data-i18n="banner.unTitle">Your restaurant is not launched yet.</b> <span data-i18n="banner.unBody">Customers can't find it, and it stays Closed until you launch.</span></span>
-      <button type="button" onclick="switchView('items')" data-i18n="banner.unBtn">Launch checklist</button>
-    </div>
-    <div class="closed-banner" id="closed-banner" role="alert">
-      <i class="ico" data-icon="ban"></i>
-      <span><b data-i18n="banner.closedTitle">Your restaurant is closed.</b> <span data-i18n="banner.closedBody">Customers can't place new orders. Orders you already accepted carry on as normal.</span></span>
-      <button type="button" onclick="reopenRestaurant()" data-i18n="banner.reopen">Reopen</button>
-    </div>
     <!-- ITEMS VIEW -->
     <div class="view active" id="view-orders">
+      <div class="unlaunched-banner" id="unlaunched-banner" role="alert">
+        <i class="ico" data-icon="send"></i>
+        <span><b data-i18n="banner.unTitle">Your restaurant is not launched yet.</b> <span data-i18n="banner.unBody">Customers can't find it, and it stays Closed until you launch.</span></span>
+        <button type="button" onclick="switchView('items')" data-i18n="banner.unBtn">Launch checklist</button>
+      </div>
       <div class="live-chips" id="live-chips" style="display:none">
         <span class="live-chip off" id="chip-screen"></span>
       </div>
@@ -1013,9 +1067,91 @@
         <div class="share-label"><i class="ico " data-icon="share"></i><span data-i18n="share.label">Shareable Link</span><span class="share-tag" id="share-tag" style="display:none" data-i18n="share.notLive">Not live yet</span></div>
         <button type="button" class="share-btn" onclick="shareRestaurantLink()"><i class="ico " data-icon="link"></i> <span data-i18n="share.btn">Share Profile</span></button>
       </div>
-      <div class="settings-card" id="profile-edit-card" style="display:none;">
-        <h3 data-i18n="settings.editProfile">Edit profile</h3>
-        <p data-i18n="profile.shown">Shown to customers in the app.</p>
+      <!-- ORDER HISTORY + SETTLEMENTS (moved here from the Orders tab) -->
+      <div class="settings-card nav-card" id="orders-nav-card">
+        <button type="button" class="nav-row" onclick="openSettingsPanel('history')"><i class="ico ico-accent" data-icon="clock"></i><span class="nav-label" data-i18n="seg.history">History</span><i class="ico chev" data-icon="chevronRight"></i></button>
+        <button type="button" class="nav-row" onclick="openSettingsPanel('settlements')"><i class="ico ico-accent" data-icon="wallet"></i><span class="nav-label" data-i18n="seg.settlements">Settlements</span><i class="ico chev" data-icon="chevronRight"></i></button>
+        <button type="button" class="nav-row" onclick="openSettingsPanel('tax')"><i class="ico ico-accent" data-icon="receipt"></i><span class="nav-label" data-i18n="tax.pageTitle">Commercial Tax</span><span class="nav-val" id="tax-nav-val"></span><i class="ico chev" data-icon="chevronRight"></i></button>
+      </div>
+
+      <!-- LANGUAGE -->
+      <div class="settings-card" id="lang-card">
+        <div class="lang-row">
+          <span class="tax-title"><i class="ico ico-accent" data-icon="globe"></i> <span data-i18n="lang.title">Language</span></span>
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" data-lang="my" onclick="switchLanguage('my')">🇲🇲 မြန်မာ</button>
+            <button type="button" data-lang="en" onclick="switchLanguage('en')">🇬🇧 EN</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATION SOUND -->
+      <div class="settings-card" id="sound-card">
+        <h3><i class="ico ico-accent" data-icon="bell"></i> <span data-i18n="sound.title">Notification Sound</span></h3>
+        <p data-i18n="sound.desc">Plays (and vibrates on phones) when a new order arrives.</p>
+        <div class="settings-row sound-row">
+          <select id="noti-sound-select" onchange="onNotiSoundChange()" aria-label="Notification Sound" data-i18n-aria="sound.title">
+            <option value="0" data-i18n="sound.opt0">Sound 1 (sound.mp3)</option>
+            <option value="1" data-i18n="sound.opt1">Sound 2 (sound1.mp3)</option>
+            <option value="2" data-i18n="sound.opt2">Sound 3 (sound2.mp3)</option>
+          </select>
+          <button type="button" class="btn btn-outline btn-sm" onclick="testNotiSound()" data-i18n="sound.test">🔊 Test</button>
+        </div>
+      </div>
+
+      </div><!-- /settings-main -->
+
+      <!-- History / Settlements sub-screen -->
+      <div id="settings-sub" style="display:none">
+        <div class="sub-head">
+          <button type="button" class="sub-back" onclick="closeSettingsPanel()" aria-label="Back" data-i18n-aria="aria.back"><i class="ico" data-icon="arrowLeft"></i></button>
+          <h2 id="settings-sub-title" data-i18n="seg.history">History</h2>
+        </div>
+        <div id="history-summary" style="display:none">
+          <div class="cat-chip-bar">
+            <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)" data-i18n="range.today">Today</button>
+            <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)" data-i18n="range.7">7 days</button>
+            <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)" data-i18n="range.30">30 days</button>
+          </div>
+          <div class="stats"><div><b id="st-count">0</b><span data-i18n="stat.delivered">Delivered</span></div><div><b id="st-rev">0</b><span data-i18n="stat.revenue">Revenue (MMK)</span></div></div>
+        </div>
+        <div id="history-list"></div>
+        <div id="settle-view" style="display:none"></div>
+        <div id="tax-page" style="display:none">
+        <div class="settings-card" id="tax-card">
+          <div class="tax-head">
+            <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> <span data-i18n="tax.title">5% Commercial Tax</span></span>
+            <span class="switch"><input type="checkbox" id="tax-enable-input" onchange="onTaxToggle()" aria-label="5% Commercial Tax"><i></i></span>
+          </div>
+          <div class="tax-seg" id="tax-mode-wrap" role="group" aria-label="Tax mode">
+            <button type="button" id="tax-opt-inclusive" onclick="setTaxMode('inclusive')" data-i18n="tax.incl">Tax Inclusive</button>
+            <button type="button" id="tax-opt-exclusive" onclick="setTaxMode('exclusive')" data-i18n="tax.excl">Tax Exclusive</button>
+          </div>
+        </div>
+
+          <div class="tax-explain">
+            <h3 data-i18n="tax.howTitle">How the 5% commercial tax works</h3>
+            <p data-i18n="tax.p1">Commercial tax is a 5% government tax on sales. When you switch it on, IWTEAT works out the tax on every order automatically. It is calculated on the food total only — delivery fees are not taxed.</p>
+            <div class="tax-kind"><b data-i18n="tax.incl">Tax Inclusive</b><p data-i18n="tax.p2">Your menu prices already contain the tax, so customers pay exactly the price they see. The tax is simply noted as included.</p></div>
+            <div class="tax-kind"><b data-i18n="tax.excl">Tax Exclusive</b><p data-i18n="tax.p3">Your menu prices stay as they are and the tax is added on top at checkout, shown as its own "Gov Tax (5%)" line.</p></div>
+            <div class="tax-ex" id="tax-example"></div>
+            <p class="tax-foot" data-i18n="tax.p4">Not sure which to choose? Ask the Internal Revenue Department or your accountant whether your restaurant must charge commercial tax. You can change this at any time — it only affects new orders.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ CATEGORY DRAWER ============ -->
+<!-- EDIT PROFILE (modal) -->
+<div class="drawer-overlay modal-center" id="profile-drawer-overlay" onclick="if (event.target === this) toggleProfileEdit(false)">
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="profile-drawer-title">
+    <div class="drawer-head">
+      <h3 id="profile-drawer-title" data-i18n="settings.editProfile">Edit profile</h3>
+      <button class="drawer-close" onclick="toggleProfileEdit(false)" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body">
         <div class="field">
           <label data-i18n="f.name">Restaurant name</label>
           <input type="text" id="settings-name-input" placeholder="e.g. Restaurant name" data-i18n-placeholder="ph.name">
@@ -1063,78 +1199,14 @@
           <div class="pin-hint" id="settings-pin-status"></div>
           <button type="button" class="btn btn-outline-accent btn-sm" style="margin-top:8px;" onclick="useMyLocation('settings')"><i class="ico " data-icon="locate"></i> <span data-i18n="loc.use">Use my current location</span></button>
         </div>
-        <div class="settings-row">
-          <button class="btn btn-primary btn-sm" onclick="saveSettingsProfile()" data-i18n="common.save">Save</button>
-          <button class="btn btn-outline btn-sm" onclick="renderSettingsProfileFields();toggleProfileEdit(false)" data-i18n="common.cancel">Cancel</button>
-        </div>
-      </div>
-
-      <!-- ORDER HISTORY + SETTLEMENTS (moved here from the Orders tab) -->
-      <div class="settings-card nav-card" id="orders-nav-card">
-        <button type="button" class="nav-row" onclick="openSettingsPanel('history')"><i class="ico ico-accent" data-icon="clock"></i><span class="nav-label" data-i18n="seg.history">History</span><i class="ico chev" data-icon="chevronRight"></i></button>
-        <button type="button" class="nav-row" onclick="openSettingsPanel('settlements')"><i class="ico ico-accent" data-icon="wallet"></i><span class="nav-label" data-i18n="seg.settlements">Settlements</span><i class="ico chev" data-icon="chevronRight"></i></button>
-      </div>
-
-      <!-- LANGUAGE -->
-      <div class="settings-card" id="lang-card">
-        <div class="lang-row">
-          <span class="tax-title"><i class="ico ico-accent" data-icon="globe"></i> <span data-i18n="lang.title">Language</span></span>
-          <div class="lang-switch" role="group" aria-label="Language">
-            <button type="button" data-lang="my" onclick="switchLanguage('my')">🇲🇲 မြန်မာ</button>
-            <button type="button" data-lang="en" onclick="switchLanguage('en')">🇬🇧 EN</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- NOTIFICATION SOUND -->
-      <div class="settings-card" id="sound-card">
-        <h3><i class="ico ico-accent" data-icon="bell"></i> <span data-i18n="sound.title">Notification Sound</span></h3>
-        <p data-i18n="sound.desc">Plays (and vibrates on phones) when a new order arrives.</p>
-        <div class="settings-row sound-row">
-          <select id="noti-sound-select" onchange="onNotiSoundChange()" aria-label="Notification Sound" data-i18n-aria="sound.title">
-            <option value="0" data-i18n="sound.opt0">Sound 1 (sound.mp3)</option>
-            <option value="1" data-i18n="sound.opt1">Sound 2 (sound1.mp3)</option>
-            <option value="2" data-i18n="sound.opt2">Sound 3 (sound2.mp3)</option>
-          </select>
-          <button type="button" class="btn btn-outline btn-sm" onclick="testNotiSound()" data-i18n="sound.test">🔊 Test</button>
-        </div>
-      </div>
-
-      <div class="settings-card" id="tax-card">
-        <div class="tax-head">
-          <span class="tax-title"><i class="ico ico-accent" data-icon="receipt"></i> <span data-i18n="tax.title">5% Commercial Tax</span></span>
-          <span class="switch"><input type="checkbox" id="tax-enable-input" onchange="onTaxToggle()" aria-label="5% Commercial Tax"><i></i></span>
-        </div>
-        <div class="tax-seg" id="tax-mode-wrap" role="group" aria-label="Tax mode">
-          <button type="button" id="tax-opt-inclusive" onclick="setTaxMode('inclusive')" data-i18n="tax.incl">Tax Inclusive</button>
-          <button type="button" id="tax-opt-exclusive" onclick="setTaxMode('exclusive')" data-i18n="tax.excl">Tax Exclusive</button>
-        </div>
-      </div>
-
-      </div><!-- /settings-main -->
-
-      <!-- History / Settlements sub-screen -->
-      <div id="settings-sub" style="display:none">
-        <div class="sub-head">
-          <button type="button" class="sub-back" onclick="closeSettingsPanel()" aria-label="Back" data-i18n-aria="aria.back"><i class="ico" data-icon="arrowLeft"></i></button>
-          <h2 id="settings-sub-title" data-i18n="seg.history">History</h2>
-        </div>
-        <div id="history-summary" style="display:none">
-          <div class="cat-chip-bar">
-            <button class="cat-chip-tab active" data-r="1" onclick="setHistoryRange(1)" data-i18n="range.today">Today</button>
-            <button class="cat-chip-tab" data-r="7" onclick="setHistoryRange(7)" data-i18n="range.7">7 days</button>
-            <button class="cat-chip-tab" data-r="30" onclick="setHistoryRange(30)" data-i18n="range.30">30 days</button>
-          </div>
-          <div class="stats"><div><b id="st-count">0</b><span data-i18n="stat.delivered">Delivered</span></div><div><b id="st-rev">0</b><span data-i18n="stat.revenue">Revenue (MMK)</span></div></div>
-        </div>
-        <div id="history-list"></div>
-        <div id="settle-view" style="display:none"></div>
-      </div>
     </div>
-  </main>
+    <div class="drawer-foot modal-bottom-actions">
+      <button class="btn btn-outline" onclick="renderSettingsProfileFields();toggleProfileEdit(false)" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettingsProfile()" data-i18n="common.save">Save</button>
+    </div>
+  </div>
 </div>
 
-<!-- ============ CATEGORY DRAWER ============ -->
 <div class="drawer-overlay" id="cat-drawer-overlay">
   <div class="drawer">
     <div class="drawer-head">
@@ -1273,23 +1345,28 @@
       <button class="drawer-close" onclick="closeGroupDrawer()">×</button>
     </div>
     <div class="drawer-body">
+      <!-- live preview of what the customer will see -->
+      <div class="prev-card" id="group-preview-card">
+        <div class="prev-head"><span aria-hidden="true">💡</span><b data-i18n="prev.title">How this looks to your customers</b></div>
+        <div class="prev-body" id="group-preview-body"></div>
+      </div>
       <div class="field">
         <label data-i18n="f.groupTitle">Group title (shown to customers)</label>
         <input type="text" id="group-title-input" placeholder="e.g. Group name" data-i18n-placeholder="ph.group">
       </div>
       <div class="field">
-        <label class="chk-label" style="font-weight:700; font-size:13.5px;">
-          <input type="checkbox" id="group-required-input"> <span data-i18n="group.mustChoose">Customer must choose</span> <span id="group-required-hint" class="sub-hint" style="font-weight:400;"></span>
-        </label>
+        <label data-i18n="group.reqLabel">Required or optional?</label>
+        <input type="checkbox" id="group-required-input" style="display:none">
+        <div class="seg-req" role="group" aria-label="Required or optional">
+          <button type="button" id="req-opt" onclick="setGroupRequired(false)" data-i18n="group.optional">Optional</button>
+          <button type="button" id="req-req" onclick="setGroupRequired(true)" data-i18n="group.required">Required</button>
+        </div>
+        <div id="group-required-hint" class="sub-hint" style="margin-top:6px;"></div>
       </div>
       <div class="field">
         <label data-i18n="f.options">Options</label>
         <div id="group-options-list"></div>
         <button class="btn btn-outline btn-sm add-option-btn" onclick="addGroupOption()"><i class="ico " data-icon="plus"></i> <span data-i18n="group.addOption">Add option</span></button>
-      </div>
-      <div class="field prev-card" id="group-preview-card">
-        <button type="button" class="prev-toggle" id="prev-toggle" onclick="toggleGroupPreview()" aria-expanded="false"><span aria-hidden="true">💡</span><span class="prev-t" data-i18n="prev.title">How this looks to your customers</span><i class="ico chev" data-icon="chevronDown"></i></button>
-        <div class="prev-body" id="group-preview-body" style="display:none"></div>
       </div>
     </div>
     <div class="drawer-foot modal-bottom-actions">
@@ -1335,6 +1412,37 @@
   const I18N = {
  "en": {
   "lang.title": "Language",
+  "apply.title": "List your restaurant",
+  "f.phone": "Phone number",
+  "ph.phone": "e.g. 09 123 456 789",
+  "apply.submit": "Submit Application",
+  "apply.sending": "Sending…",
+  "apply.waitTitle": "Application received",
+  "apply.waitBody": "We're reviewing your application. You'll get a message in Telegram as soon as you're approved — then open this dashboard again.",
+  "apply.sent": "Submitted details",
+  "apply.checkStatus": "Check status",
+  "apply.stillWaiting": "Still waiting for approval.",
+  "apply.rejectedNote": "Your last application was not approved. Check your details and send it again.",
+  "apply.errName": "Enter your restaurant name.",
+  "apply.errPhone": "Enter a valid phone number.",
+  "apply.errAddress": "Enter your restaurant address.",
+  "gate.verifyError": "Could not verify your Telegram account. Close and reopen the app from Telegram.",
+  "group.reqLabel": "Required or optional?",
+  "tax.pageTitle": "Commercial Tax",
+  "tax.valOff": "Off",
+  "tax.valIncl": "Inclusive",
+  "tax.valExcl": "Exclusive",
+  "tax.howTitle": "How the 5% commercial tax works",
+  "tax.p1": "Commercial tax is a 5% government tax on sales. When you switch it on, IWTEAT works out the tax on every order automatically. It is calculated on the food total only — delivery fees are not taxed.",
+  "tax.p2": "Your menu prices already contain the tax, so customers pay exactly the price they see. The tax is simply noted as included.",
+  "tax.p3": "Your menu prices stay as they are and the tax is added on top at checkout, shown as its own \"Gov Tax (5%)\" line.",
+  "tax.p4": "Not sure which to choose? Ask the Internal Revenue Department or your accountant whether your restaurant must charge commercial tax. You can change this at any time — it only affects new orders.",
+  "tax.exTitle": "Example: a 10,000 MMK dish",
+  "tax.exMenu": "Menu price",
+  "tax.exTax": "Tax (5%)",
+  "tax.exInside": "included",
+  "tax.exPay": "Customer pays",
+  "tax.exOff": "Tax is off — no tax is added or shown on orders.",
   "item.inh_1": "{n} option from category",
   "item.inh_n": "{n} options from category",
   "item.inhRemoved": " · {k} removed",
@@ -1351,14 +1459,6 @@
   "toast.groupRemoved": "Removed for this item.",
   "toast.groupRestored": "Restored.",
   "prev.title": "How this looks to your customers",
-  "prev.l1": "Group Title",
-  "prev.l1d": "The heading above the choices. Example: \"Choose your size\".",
-  "prev.l2": "Required / Optional",
-  "prev.l2d": "Required: the customer must choose before adding to the cart. Optional: they can skip it.",
-  "prev.l3": "Option Name",
-  "prev.l3d": "One line per choice. The customer taps a line to select it.",
-  "prev.l4": "Option Price",
-  "prev.l4d": "Shown on the right as \"+500 MMK\" (or \"Free\" when the price is 0 in a single-choice group).",
   "prev.single": "Single-choice = round buttons. The customer picks ONE. Good for size, spice level, bread type.",
   "prev.multi": "Add-on = square boxes. The customer can pick MANY. Good for extra cheese, toppings, sauces.",
   "prev.sizeNote": "Prices shown are for the first size. Each size can have its own price.",
@@ -1417,10 +1517,7 @@
   "tab.settings": "Settings",
   "brand.default": "My Restaurant",
   "gate.outside": "Please open this app through the official Telegram bot.",
-  "gate.notApprovedTitle": "Not approved yet",
-  "gate.notApprovedMsg": "This Telegram account isn't linked to a restaurant yet. If you'd like to list your restaurant, open the bot and tap \"List My Restaurant\".",
   "gate.serverError": "Could not reach the server. Check your connection and try again.",
-  "gate.openBot": "Open Bot",
   "setup.step1": "STEP 1 OF 2",
   "setup.step2": "STEP 2 OF 2",
   "setup.welcome": "Set up your restaurant",
@@ -1463,9 +1560,6 @@
   "sm.busyS": "Still open — adds 15 min to prep estimates",
   "sm.closedT": "Closed / Paused",
   "sm.closedS": "No new orders until you reopen",
-  "banner.closedTitle": "Your restaurant is closed.",
-  "banner.closedBody": "Customers can't place new orders. Orders you already accepted carry on as normal.",
-  "banner.reopen": "Reopen",
   "seg.current": "Current",
   "seg.history": "History",
   "seg.settlements": "Settlements",
@@ -1713,7 +1807,6 @@
   "group.optionGroup": "Option Group",
   "f.groupTitle": "Group title (shown to customers)",
   "ph.group": "e.g. Group name",
-  "group.mustChoose": "Customer must choose",
   "group.hintSingle": "(customer must pick exactly one)",
   "group.hintMulti": "(customer must pick at least one)",
   "group.addOption": "Add option",
@@ -1731,6 +1824,37 @@
  },
  "my": {
   "lang.title": "ဘာသာစကား",
+  "apply.title": "သင့်ဆိုင်ကို စာရင်းသွင်းပါ",
+  "f.phone": "ဖုန်းနံပါတ်",
+  "ph.phone": "ဥပမာ - 09 123 456 789",
+  "apply.submit": "လျှောက်လွှာ တင်မည်",
+  "apply.sending": "ပို့နေသည်…",
+  "apply.waitTitle": "လျှောက်လွှာ လက်ခံရရှိပါပြီ",
+  "apply.waitBody": "သင့်လျှောက်လွှာကို စစ်ဆေးနေပါသည်။ အတည်ပြုပြီးသည်နှင့် Telegram တွင် စာပို့ပေးပါမည် — ထို့နောက် ဤဒက်ရှ်ဘုတ်ကို ပြန်ဖွင့်ပါ။",
+  "apply.sent": "တင်သွင်းထားသော အချက်အလက်များ",
+  "apply.checkStatus": "အခြေအနေ စစ်ကြည့်မည်",
+  "apply.stillWaiting": "အတည်ပြုချက်ကို စောင့်ဆိုင်းနေဆဲဖြစ်သည်။",
+  "apply.rejectedNote": "သင့်ယခင်လျှောက်လွှာကို အတည်မပြုနိုင်ခဲ့ပါ။ အချက်အလက်များကို စစ်ဆေးပြီး ထပ်မံပို့ပါ။",
+  "apply.errName": "ဆိုင်အမည် ထည့်ပါ။",
+  "apply.errPhone": "မှန်ကန်သော ဖုန်းနံပါတ် ထည့်ပါ။",
+  "apply.errAddress": "ဆိုင်လိပ်စာ ထည့်ပါ။",
+  "gate.verifyError": "သင့် Telegram အကောင့်ကို အတည်ပြု၍မရပါ။ အက်ပ်ကို ပိတ်ပြီး Telegram မှ ပြန်ဖွင့်ပါ။",
+  "group.reqLabel": "မဖြစ်မနေလား၊ ရွေးချယ်နိုင်သလား?",
+  "tax.pageTitle": "ကုန်သွယ်ခွန်",
+  "tax.valOff": "ပိတ်ထားသည်",
+  "tax.valIncl": "ပါဝင်ပြီး",
+  "tax.valExcl": "ထပ်ပေါင်း",
+  "tax.howTitle": "5% ကုန်သွယ်ခွန် အလုပ်လုပ်ပုံ",
+  "tax.p1": "ကုန်သွယ်ခွန်သည် ရောင်းချမှုအပေါ် အစိုးရက ကောက်ခံသော 5% ခွန်ဖြစ်သည်။ ဖွင့်ထားပါက IWTEAT က အော်ဒါတိုင်းအတွက် ခွန်ကို အလိုအလျောက် တွက်ပေးသည်။ အစားအစာစုစုပေါင်းအပေါ်သာ တွက်ချက်ပြီး ပို့ဆောင်ခကို ခွန်မကောက်ပါ။",
+  "tax.p2": "သင့်မီနူးဈေးများတွင် ခွန်ပါဝင်ပြီးဖြစ်သောကြောင့် ဖောက်သည်များသည် မြင်ရသည့်ဈေးအတိုင်း ပေးရသည်။ ခွန်ပါဝင်ပြီးဖြစ်ကြောင်းကိုသာ မှတ်ချက်ပြုသည်။",
+  "tax.p3": "သင့်မီနူးဈေးများ မပြောင်းလဲဘဲ ငွေရှင်းချိန်တွင် ခွန်ကို ထပ်ပေါင်း၍ \"Gov Tax (5%)\" ဟူသော သီးသန့်စာကြောင်းဖြင့် ပြသည်။",
+  "tax.p4": "မည်သည်ကို ရွေးရမည် မသေချာဘူးလား? သင့်ဆိုင်သည် ကုန်သွယ်ခွန် ကောက်ခံရန် လိုမလိုကို ပြည်တွင်းအခွန်ဦးစီးဌာန သို့မဟုတ် စာရင်းကိုင်ထံ မေးမြန်းပါ။ ဤအချက်ကို အချိန်မရွေး ပြောင်းနိုင်ပြီး အော်ဒါအသစ်များကိုသာ သက်ရောက်သည်။",
+  "tax.exTitle": "ဥပမာ - 10,000 MMK တန်ဟင်းလျာ",
+  "tax.exMenu": "မီနူးဈေး",
+  "tax.exTax": "ခွန် (5%)",
+  "tax.exInside": "ပါဝင်ပြီး",
+  "tax.exPay": "ဖောက်သည် ပေးရမည့်ပမာဏ",
+  "tax.exOff": "ခွန်ပိတ်ထားသည် — အော်ဒါများတွင် ခွန်ကို မပေါင်းထည့်ပါ၊ မပြပါ။",
   "item.inh_1": "အမျိုးအစားမှ ရွေးချယ်စရာ {n} ခု",
   "item.inh_n": "အမျိုးအစားမှ ရွေးချယ်စရာ {n} ခု",
   "item.inhRemoved": " · {k} ခု ဖယ်ရှားထားသည်",
@@ -1747,14 +1871,6 @@
   "toast.groupRemoved": "ဤဟင်းလျာအတွက် ဖယ်ရှားပြီးပါပြီ။",
   "toast.groupRestored": "ပြန်ထားပြီးပါပြီ။",
   "prev.title": "ဖောက်သည်များ မြင်ရမည့်ပုံစံ",
-  "prev.l1": "အုပ်စုခေါင်းစဉ်",
-  "prev.l1d": "ရွေးချယ်စရာများ၏ အပေါ်ရှိ ခေါင်းစဉ်။ ဥပမာ - \"အရွယ်အစား ရွေးပါ\"။",
-  "prev.l2": "မဖြစ်မနေ / ရွေးချယ်နိုင်သည်",
-  "prev.l2d": "Required: ခြင်းတောင်းထဲမထည့်မီ ဖောက်သည် မဖြစ်မနေ ရွေးရမည်။ Optional: မရွေးဘဲ ကျော်နိုင်သည်။",
-  "prev.l3": "ရွေးချယ်စရာအမည်",
-  "prev.l3d": "ရွေးချယ်စရာတစ်ခုလျှင် တစ်ကြောင်း။ ဖောက်သည်က ထိုစာကြောင်းကို နှိပ်၍ ရွေးသည်။",
-  "prev.l4": "ရွေးချယ်စရာဈေးနှုန်း",
-  "prev.l4d": "ညာဘက်တွင် \"+500 MMK\" အဖြစ် ပြသည် (ဈေး 0 ဖြစ်ပါက တစ်ခုရွေးအုပ်စုတွင် \"Free\" ဟု ပြသည်)။",
   "prev.single": "တစ်ခုရွေး = စက်ဝိုင်းခလုတ်များ။ ဖောက်သည်က တစ်ခုသာ ရွေးနိုင်သည်။ အရွယ်အစား၊ အစပ်အဆင့်၊ ပေါင်မုန့်အမျိုးအစားများနှင့် သင့်တော်သည်။",
   "prev.multi": "Add-on = လေးထောင့်အကွက်များ။ ဖောက်သည်က အများကြီး ရွေးနိုင်သည်။ ချိစ်ထပ်ထည့်၊ အပေါ်မှ ထည့်စရာ၊ ဆော့စ်များနှင့် သင့်တော်သည်။",
   "prev.sizeNote": "ပြထားသောဈေးများသည် ပထမအရွယ်အစားအတွက်ဖြစ်သည်။ အရွယ်အစားတစ်ခုချင်းစီတွင် ကိုယ်ပိုင်ဈေး ရှိနိုင်သည်။",
@@ -1813,10 +1929,7 @@
   "tab.settings": "ဆိုင်ဆက်တင်များ",
   "brand.default": "ကျွန်ုပ်၏ဆိုင်",
   "gate.outside": "ကျေးဇူးပြု၍ ဤအက်ပ်ကို တရားဝင် Telegram bot မှတစ်ဆင့် ဖွင့်ပါ။",
-  "gate.notApprovedTitle": "ခွင့်ပြုချက် မရသေးပါ",
-  "gate.notApprovedMsg": "ဤ Telegram အကောင့်ကို ဆိုင်တစ်ခုနှင့် မချိတ်ဆက်ရသေးပါ။ သင့်ဆိုင်ကို စာရင်းသွင်းလိုပါက bot ကိုဖွင့်ပြီး \"List My Restaurant\" ကို နှိပ်ပါ။",
   "gate.serverError": "ဆာဗာနှင့် ချိတ်ဆက်၍ မရပါ။ အင်တာနက်ကို စစ်ဆေးပြီး ထပ်မံကြိုးစားပါ။",
-  "gate.openBot": "Bot ကို ဖွင့်မည်",
   "setup.step1": "အဆင့် 1 / 2",
   "setup.step2": "အဆင့် 2 / 2",
   "setup.welcome": "သင့်ဆိုင်ကို စတင်ပြင်ဆင်ပါ",
@@ -1859,9 +1972,6 @@
   "sm.busyS": "ဆက်ဖွင့်ထားသည် — ပြင်ဆင်ချိန်ခန့်မှန်းချက်တွင် 15 မိနစ် ထပ်တိုးမည်",
   "sm.closedT": "ပိတ်ထားသည် / ခဏရပ်ထားသည်",
   "sm.closedS": "ပြန်မဖွင့်မချင်း အော်ဒါအသစ် မလက်ခံပါ",
-  "banner.closedTitle": "သင့်ဆိုင် ပိတ်ထားပါသည်။",
-  "banner.closedBody": "ဖောက်သည်များ အော်ဒါအသစ် မမှာနိုင်ပါ။ လက်ခံပြီးသား အော်ဒါများကို ပုံမှန်ဆက်လုပ်နိုင်ပါသည်။",
-  "banner.reopen": "ပြန်ဖွင့်မည်",
   "seg.current": "လက်ရှိ",
   "seg.history": "မှတ်တမ်း",
   "seg.settlements": "ငွေရှင်းတမ်းများ",
@@ -2109,7 +2219,6 @@
   "group.optionGroup": "ရွေးချယ်စရာအုပ်စု",
   "f.groupTitle": "အုပ်စုခေါင်းစဉ် (ဖောက်သည်များ မြင်ရမည်)",
   "ph.group": "ဥပမာ - အုပ်စုအမည်",
-  "group.mustChoose": "ဖောက်သည် မဖြစ်မနေ ရွေးရမည်",
   "group.hintSingle": "(တစ်ခုတည်း ရွေးရမည်)",
   "group.hintMulti": "(အနည်းဆုံး တစ်ခု ရွေးရမည်)",
   "group.addOption": "ရွေးချယ်စရာ ထည့်မည်",
@@ -2187,6 +2296,7 @@
     safely(renderItemsView);                                             // category chips, hints, item list
     safely(renderLaunchCard);
     safely(refreshStatusChips);
+    safely(() => { if (taxDraft) paintTax(); });
     safely(() => { if (ordersScope === 'settlements' && settleData) renderSettlements(); });
     safely(() => { if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); });
   }
@@ -2363,25 +2473,81 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initData: tg.initData })
       });
-      const result = await res.json();
-      if (!res.ok || !result.success) {
-        showNotApproved();
-        return;
-      }
-      currentRestaurantId = result.restaurant.id;
-      applyLoginResult(result.restaurant);
-      showApp();
+      const result = await res.json().catch(() => ({}));
+      if (res.ok && result.success) {
+        currentRestaurantId = result.restaurant.id;
+        applyLoginResult(result.restaurant);
+        showApp();
+      } else if (result.error === 'not_registered') showApplyGate(result.application);     // no restaurant yet: form, or "waiting"
+      else if (res.status === 401) showApplyGate(null, 'gate.verifyError');
+      else showApplyGate(null, 'gate.serverError');
     } catch (err) {
-      showNotApproved('gate.serverError');
+      showApplyGate(null, 'gate.serverError');
     }
   }
 
-  function showNotApproved(customMessage) {
+  /* ================= RESTAURANT APPLICATION (a Telegram account that isn't approved yet) ================= */
+  // Shows ONE of: the application form, "waiting for approval" (already submitted), or an error with Try again.
+  function showApplyGate(application, errorKey) {
     document.getElementById('app').style.display = 'none';
     document.getElementById('setup-gate').style.display = 'none';
     document.getElementById('outside-gate').style.display = 'none';
-    if (customMessage) setI18n(document.getElementById('not-approved-message'), customMessage);
+    const form = document.getElementById('apply-form-state'), wait = document.getElementById('apply-wait-state'), err = document.getElementById('apply-error-state');
+    form.style.display = wait.style.display = err.style.display = 'none';
+    if (errorKey) {
+      setI18n(document.getElementById('apply-error-text'), errorKey);
+      err.style.display = 'flex';
+    } else if (application && application.status === 'pending') {
+      const card = document.getElementById('apply-wait-card');
+      card.innerHTML = `<small>${tr('apply.sent')}</small><b>${escapeHtml(application.restaurantName)}</b><br>${escapeHtml(application.phone)}<br>${escapeHtml(application.address)}`;
+      wait.style.display = 'flex';
+    } else {
+      const declined = !!(application && application.status === 'rejected');     // a declined applicant can fix the details and try again
+      if (application) {
+        document.getElementById('apply-name').value = application.restaurantName || '';
+        document.getElementById('apply-phone').value = application.phone || '';
+        document.getElementById('apply-address').value = application.address || '';
+      }
+      document.getElementById('apply-note').style.display = declined ? 'block' : 'none';
+      document.getElementById('apply-error').textContent = '';
+      form.style.display = 'flex';
+    }
     document.getElementById('not-approved-gate').style.display = 'flex';
+    document.getElementById('not-approved-gate').scrollTop = 0;
+  }
+  let applyBusy = false;
+  async function submitApplication() {
+    if (applyBusy) return;
+    const name = document.getElementById('apply-name').value.trim();
+    const phone = document.getElementById('apply-phone').value.trim();
+    const address = document.getElementById('apply-address').value.trim();
+    const errEl = document.getElementById('apply-error');
+    if (name.length < 2) { errEl.textContent = tr('apply.errName'); return; }
+    if (!/^\+?[0-9][0-9 \-()]{5,19}$/.test(phone)) { errEl.textContent = tr('apply.errPhone'); return; }
+    if (address.length < 5) { errEl.textContent = tr('apply.errAddress'); return; }
+    errEl.textContent = '';
+    applyBusy = true;
+    const btn = document.getElementById('apply-submit');
+    btn.disabled = true; btn.textContent = tr('apply.sending');
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: tg.initData, restaurantName: name, phone, address })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) { tg?.HapticFeedback?.notificationOccurred('success'); showApplyGate(data.application); }
+      else if (data.code === 'already_approved') autoLogin();                      // approved in the meantime: go straight in
+      else errEl.textContent = data.error || tr('gate.serverError');
+    } catch (e) {
+      errEl.textContent = tr('gate.serverError');
+    }
+    applyBusy = false;
+    btn.disabled = false; btn.textContent = tr('apply.submit');
+  }
+  async function checkApplicationStatus() {
+    await autoLogin();                                                              // approved -> opens the dashboard; otherwise stays on "waiting"
+    if (document.getElementById('apply-wait-state').style.display !== 'none') showToast(tr('apply.stillWaiting'));
   }
 
   async function showApp() {
@@ -2411,7 +2577,9 @@
     // A missing address is a better proxy: it's the detail the owner has to
     // fill in themselves, so its absence means they haven't been through
     // setup yet.
-    return !restaurantProfile.address && !restaurantProfile.handle;
+    // A newly approved restaurant has no ID yet and isn't launched (the application already filled in its name and address).
+    // Older, already-launched restaurants that never had an ID skip setup, as before.
+    return !restaurantProfile.handle && !restaurantProfile.isPublished;
   }
 
   function applyBrandHeader() {
@@ -2739,6 +2907,21 @@
     document.getElementById('tax-opt-inclusive').classList.toggle('active', taxDraft.taxMode === 'inclusive');
     document.getElementById('tax-opt-exclusive').classList.toggle('active', taxDraft.taxMode === 'exclusive');
     document.getElementById('tax-card').classList.toggle('saving', taxSaving);
+    document.getElementById('tax-nav-val').textContent = !taxDraft.enableTax ? tr('tax.valOff') : taxDraft.taxMode === 'exclusive' ? tr('tax.valExcl') : tr('tax.valIncl');
+    renderTaxExample();
+  }
+  // The worked example uses the same rounding as the server, so it always matches what customers are charged.
+  function renderTaxExample() {
+    const box = document.getElementById('tax-example'); if (!box) return;
+    const price = 10000, incl = Math.floor((2 * price + 21) / 42), excl = Math.floor((price + 10) / 20);
+    const on = !!taxDraft.enableTax, ex = taxDraft.taxMode === 'exclusive', n = v => v.toLocaleString('en-US');
+    box.innerHTML = `<div class="tax-ex-title">${tr('tax.exTitle')}</div>
+      <div class="tax-ex-grid${on ? '' : ' off'}">
+        <div></div><div class="h${on && !ex ? ' on' : ''}">${tr('tax.valIncl')}</div><div class="h${on && ex ? ' on' : ''}">${tr('tax.valExcl')}</div>
+        <div>${tr('tax.exMenu')}</div><div>${n(price)}</div><div>${n(price)}</div>
+        <div>${tr('tax.exTax')}</div><div>${n(incl)} <small>${tr('tax.exInside')}</small></div><div>+${n(excl)}</div>
+        <div class="t">${tr('tax.exPay')}</div><div class="t">${n(price)}</div><div class="t">${n(price + excl)}</div>
+      </div>${on ? '' : `<p class="tax-foot" style="margin:8px 0 0">${tr('tax.exOff')}</p>`}`;
   }
   function onTaxToggle() { taxDraft.enableTax = document.getElementById('tax-enable-input').checked; paintTax(); saveTaxSettings(); }
   function setTaxMode(mode) { if (taxDraft.taxMode === mode) return; taxDraft.taxMode = mode; paintTax(); saveTaxSettings(); }
@@ -2984,6 +3167,9 @@
   }
 
   /* ================= NAV ================= */
+  // The Open / Closed pill sits in the header of the three main tabs (Orders, Menu, Settings). Sub-pages inside Settings
+  // (History, Settlements, Commercial Tax) hide it, so they read as separate pages with Telegram's own back arrow.
+  function updateTopBar() { document.getElementById('app').classList.toggle('no-top-bar', !!settingsPanel); }
   function switchView(view) {
     if (view !== 'settings' || currentView === 'settings') closeSettingsPanel();   // Settings tab always opens on its main screen
     currentView = view;
@@ -2991,7 +3177,7 @@
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`view-${view}`).classList.add('active');
     document.getElementById(`tab-btn-${view}`).classList.add('active');
-    document.getElementById('app').classList.toggle('no-top-bar', view !== 'orders');   // name + Open/Busy pill: Orders tab only
+    updateTopBar();
     if (typeof closeStatusMenu === 'function') closeStatusMenu();
     if (view === 'items') renderItemsView();
     if (view === 'orders') loadOrders();
@@ -3026,7 +3212,7 @@
 
   /* ---- Category drawer ---- */
   /* ================= SLIDE-OVER FORMS: scroll reset + Telegram Back button ================= */
-  const DRAWER_IDS = ['group-drawer-overlay', 'item-drawer-overlay', 'cat-drawer-overlay'];   // top-most first
+  const DRAWER_IDS = ['group-drawer-overlay', 'item-drawer-overlay', 'cat-drawer-overlay', 'profile-drawer-overlay'];   // top-most first
   const openDrawerIds = () => DRAWER_IDS.filter(id => document.getElementById(id).classList.contains('open'));
 
   // The form must always open at the top. This runs AFTER the drawer is shown — a hidden element has no
@@ -3045,7 +3231,7 @@
   // Telegram's own Back arrow is visible exactly while a form is open.
   function syncBackButton() {
     if (!tg || !tg.BackButton) return;
-    if (openDrawerIds().length) tg.BackButton.show(); else tg.BackButton.hide();
+    if (openDrawerIds().length || settingsPanel) tg.BackButton.show(); else tg.BackButton.hide();   // forms AND Settings sub-pages
   }
   function afterDrawerOpen(id) { resetDrawerScroll(id); syncBackButton(); }
   // Back closes the top-most form only (an option group opens on top of an item/category). The category form
@@ -3055,9 +3241,13 @@
     if (top === 'group-drawer-overlay') closeGroupDrawer();
     else if (top === 'item-drawer-overlay') closeItemDrawer();
     else if (top === 'cat-drawer-overlay') closeCategoryDrawer();
+    else if (top === 'profile-drawer-overlay') toggleProfileEdit(false);
+    else if (settingsPanel) closeSettingsPanel();                 // no form open: back leaves the History / Settlements / Tax page
     syncBackButton();
   }
   if (tg && tg.BackButton) tg.BackButton.onClick(handleTelegramBack);
+  // With Telegram's native back arrow available, the in-page arrow isn't needed (it stays as the fallback in a plain browser).
+  document.body.classList.toggle('has-native-back', !!(tg && tg.BackButton && tg.isVersionAtLeast && tg.isVersionAtLeast('6.1')));
 
   function openCategoryDrawer(index = null) {
     if (index === null) {
@@ -3837,6 +4027,7 @@
     }
     document.getElementById('group-title-input').value = groupDraft.title;
     document.getElementById('group-required-input').checked = !!groupDraft.required;
+    paintRequiredSeg();
     document.getElementById('group-required-hint').textContent =
       groupDraft.kind === 'single' ? tr('group.hintSingle') : tr('group.hintMulti');
     renderGroupOptionsList();
@@ -3850,31 +4041,21 @@
     groupDraftCtx = null;
     syncBackButton();
   }
-  /* ---- "How this looks to your customers": a mock customer screen + numbered callouts ----
-     The mock uses the same words and layout as the customer's ordering screen (index.html), live from the form. */
-  let groupPreviewOpen = false;
-  function toggleGroupPreview() {
-    groupPreviewOpen = !groupPreviewOpen;
-    renderGroupPreview();
-    if (groupPreviewOpen) setTimeout(() => { const b = document.getElementById('group-preview-body'); if (b && b.scrollIntoView) b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 60);
-  }
+  /* ---- "How this looks to your customers": a mock of the customer's ordering screen ----
+     It uses the same words and layout as index.html and follows the form live. */
   function previewPrice(opt) {                                  // price of the FIRST size (flat price when the category has no sizes)
     if (Array.isArray(opt.prices)) { const p = opt.prices.find(v => v != null); return p == null ? 0 : p; }
     return opt.price || 0;
   }
   function renderGroupPreview() {
-    const toggle = document.getElementById('prev-toggle'), body = document.getElementById('group-preview-body');
-    if (!toggle || !body) return;
-    toggle.classList.toggle('open', groupPreviewOpen);
-    toggle.setAttribute('aria-expanded', groupPreviewOpen ? 'true' : 'false');
-    body.style.display = groupPreviewOpen ? '' : 'none';
-    if (!groupPreviewOpen || !groupDraft) return;
+    const body = document.getElementById('group-preview-body');
+    if (!body || !groupDraft) return;
     try {
       const single = groupDraft.kind === 'single';
       const title = (document.getElementById('group-title-input').value || '').trim();
       const required = document.getElementById('group-required-input').checked;
       const real = (groupDraft.options || []).filter(o => (o.name || '').trim());
-      const sample = !real.length;                              // nothing typed yet: show greyed example rows
+      const sample = !real.length;                              // nothing typed yet: greyed example rows
       const opts = sample ? [{ name: 'Option 1', price: 0 }, { name: 'Option 2', price: 500 }] : real;
       const inputCls = single ? 'radio' : 'check';
       const reqLabel = single ? (required ? 'Required' : 'Optional') : (required ? 'Pick at least one' : '');
@@ -3882,33 +4063,33 @@
         const p = Math.round(previewPrice(o));
         const price = single ? (p > 0 ? '+' + p + ' MMK' : 'Free') : '+' + p + ' MMK';   // exactly what the customer screen prints
         return `<div class="mock-row${sample ? ' sample' : ''}">
-          <span class="lbl"><span class="mock-input ${inputCls}${i === 0 ? ' on' : ''}"></span>${i === 0 ? '<span class="mk">3</span>' : ''}<span class="nm">${escapeHtml(o.name)}</span></span>
-          <span class="pr">${i === 0 ? '<span class="mk">4</span>' : ''}${price}</span></div>`;
+          <span class="lbl"><span class="mock-input ${inputCls}${i === 0 ? ' on' : ''}"></span><span class="nm">${escapeHtml(o.name)}</span></span>
+          <span class="pr">${price}</span></div>`;
       }).join('');
-      const hasSizes = groupDraftSizeNames().length > 0;
       body.innerHTML = `
         <div class="mock-phone" aria-hidden="true">
           <div class="mock-dish"><div class="mock-dish-img"></div><div><b>Cheeseburger</b><small>Sample dish</small></div></div>
           <div class="mock-head">
-            <h4><span class="mk">1</span><span>${escapeHtml(title || (single ? 'Select Option' : 'Add Extras'))}</span></h4>
-            ${reqLabel ? `<span class="mock-req ${required ? 'req' : 'opt'}"><span class="mk">2</span>${reqLabel}</span>` : ''}
+            <h4>${escapeHtml(title || (single ? 'Select Option' : 'Add Extras'))}</h4>
+            ${reqLabel ? `<span class="mock-req ${required ? 'req' : 'opt'}">${reqLabel}</span>` : ''}
           </div>
           ${rows}
           <div class="mock-cta">Add to cart</div>
         </div>
-        <ul class="prev-legend">
-          <li><span class="mk">1</span><div><b>${tr('prev.l1')}</b><span class="d">${tr('prev.l1d')}</span></div></li>
-          <li><span class="mk">2</span><div><b>${tr('prev.l2')}</b><span class="d">${tr('prev.l2d')}</span></div></li>
-          <li><span class="mk">3</span><div><b>${tr('prev.l3')}</b><span class="d">${tr('prev.l3d')}</span></div></li>
-          <li><span class="mk">4</span><div><b>${tr('prev.l4')}</b><span class="d">${tr('prev.l4d')}</span></div></li>
-        </ul>
-        <div class="prev-kind"><span class="mock-input radio on"></span><span>${tr('prev.single')}</span></div>
-        <div class="prev-kind"><span class="mock-input check on"></span><span>${tr('prev.multi')}</span></div>
-        ${hasSizes ? `<p class="prev-note">${tr('prev.sizeNote')}</p>` : ''}`;
+        <p class="prev-note" style="text-align:center">${tr(single ? 'prev.single' : 'prev.multi')}${groupDraftSizeNames().length ? ' ' + tr('prev.sizeNote') : ''}</p>`;
     } catch (e) { body.innerHTML = ''; }                        // a preview problem must never get in the way of saving the group
   }
-  document.getElementById('group-drawer-overlay').addEventListener('input', () => { if (groupPreviewOpen) renderGroupPreview(); });
-  document.getElementById('group-drawer-overlay').addEventListener('change', () => { if (groupPreviewOpen) renderGroupPreview(); });
+  function paintRequiredSeg() {
+    const on = document.getElementById('group-required-input').checked;
+    document.getElementById('req-opt').classList.toggle('active', !on);
+    document.getElementById('req-req').classList.toggle('active', on);
+  }
+  function setGroupRequired(on) {
+    document.getElementById('group-required-input').checked = !!on;
+    paintRequiredSeg();
+    renderGroupPreview();
+  }
+  document.getElementById('group-drawer-overlay').addEventListener('input', () => renderGroupPreview());
   function renderGroupOptionsList() {
     const box = document.getElementById('group-options-list');
     setTimeout(renderGroupPreview, 0);                       // keep the customer preview in step with the option list
@@ -4248,23 +4429,34 @@
     try { const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
       o.connect(g); g.connect(c.destination); o.frequency.value = 880; g.gain.value = 0.15; o.start(); o.stop(c.currentTime + 0.25); } catch (e) {}
   }
-  // History and Settlements are screens inside the Settings tab; "current" is the Orders tab itself.
-  function openSettingsPanel(p) {                       // p = 'history' | 'settlements'
-    ordersScope = p;
+  // History, Settlements and Commercial Tax are pages inside the Settings tab. Each slides in as its own page; Telegram's
+  // native back arrow (←) takes the place of the Close button while one is open (see syncBackButton / handleTelegramBack).
+  let settingsPanel = null;                              // 'history' | 'settlements' | 'tax' | null (= the Settings main screen)
+  function openSettingsPanel(p) {
+    settingsPanel = p;
+    ordersScope = (p === 'history' || p === 'settlements') ? p : 'current';
     document.getElementById('settings-main').style.display = 'none';
-    document.getElementById('settings-sub').style.display = 'block';
-    setI18n(document.getElementById('settings-sub-title'), p === 'history' ? 'seg.history' : 'seg.settlements');
+    const sub = document.getElementById('settings-sub');
+    sub.style.display = 'block';
+    sub.classList.remove('page-enter'); void sub.offsetWidth; sub.classList.add('page-enter');   // restart the slide-in
+    setI18n(document.getElementById('settings-sub-title'), p === 'history' ? 'seg.history' : p === 'settlements' ? 'seg.settlements' : 'tax.pageTitle');
     document.getElementById('history-summary').style.display = p === 'history' ? 'block' : 'none';
     document.getElementById('history-list').style.display = p === 'history' ? '' : 'none';
     document.getElementById('settle-view').style.display = p === 'settlements' ? 'block' : 'none';
+    document.getElementById('tax-page').style.display = p === 'tax' ? 'block' : 'none';
+    updateTopBar(); syncBackButton();
     window.scrollTo(0, 0);
-    if (p === 'settlements') loadSettlements(); else renderOrders();
+    if (p === 'settlements') loadSettlements();
+    else if (p === 'history') renderOrders();
+    else paintTax();
   }
   function closeSettingsPanel() {
+    settingsPanel = null;
     ordersScope = 'current';
     const m = document.getElementById('settings-main'), sub = document.getElementById('settings-sub');
     if (m) m.style.display = '';
     if (sub) sub.style.display = 'none';
+    updateTopBar(); syncBackButton();
     window.scrollTo(0, 0);
   }
   function setHistoryRange(r) {
@@ -4593,7 +4785,6 @@
     document.getElementById('status-pill-text').textContent = tr('status.' + st);
     document.getElementById('unlaunched-banner').style.display = st === 'unlaunched' ? 'flex' : 'none';
     document.querySelectorAll('#status-overlay button[data-s]').forEach(b => b.classList.toggle('active', b.dataset.s === st));
-    document.getElementById('closed-banner').style.display = st === 'closed' ? 'flex' : 'none';
     // Open / Busy: Telegram asks "Are you sure?" before the Mini App is closed. Closed / Not Launched: it just closes.
     try { if (tg) { if (st === 'closed' || st === 'unlaunched') tg.disableClosingConfirmation(); else tg.enableClosingConfirmation(); } } catch (e) {}
     try { renderOrders(); } catch (e) {}     // estimates on new orders include the busy minutes
@@ -4655,7 +4846,6 @@
     const h = Math.floor(m / 60), mi = String(m % 60).padStart(2, '0');
     return ((h % 12) || 12) + ':' + mi + ' ' + (h < 12 ? 'AM' : 'PM');
   }
-  function reopenRestaurant() { chooseStatus('open'); }
 
   /* ================= PREP COUNTDOWN TIMER ================= */
   const RING_R = 22, RING_C = 2 * Math.PI * RING_R;
@@ -4863,10 +5053,11 @@
       img.onerror = () => { img.style.display = 'none'; fb.style.display = 'block'; };
     } else { img.style.display = 'none'; fb.style.display = 'block'; }
   }
+  // Edit profile opens as a modal on top of Settings (nothing in the page grows or jumps).
   function toggleProfileEdit(on) {
-    document.getElementById('profile-edit-card').style.display = on ? 'block' : 'none';
-    document.querySelector('#profile-hero .btn-ghost').style.display = on ? 'none' : '';
-    if (on) { document.getElementById('profile-edit-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); initPicker('settings'); }
+    document.getElementById('profile-drawer-overlay').classList.toggle('open', !!on);
+    if (on) { afterDrawerOpen('profile-drawer-overlay'); initPicker('settings'); }
+    else syncBackButton();
   }
 
   /* ---- long-press category menu (Telegram-style) ---- */
