@@ -662,65 +662,44 @@
             gap: 10px;
         }
 
-        /* Bottom tab bar — Home / Saved / Cart / Profile, flat icons + labels, orange when active */
+        /* Floating bottom navigation: black pill, icon-only, the active tab sits in an orange circle */
         .bottom-nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            left: 50%;
+            bottom: calc(14px + var(--app-bottom-inset));
+            transform: translateX(-50%);
             z-index: 1000;
-            height: calc(72px + var(--app-bottom-inset));
-            padding: 0 6px var(--app-bottom-inset);
-            background: var(--bg-card);
-            border-radius: 28px 28px 0 0;
+            width: min(calc(100% - 40px), 360px);
+            height: 66px;
+            padding: 0 8px;
+            background: #141414;
+            border-radius: 33px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 -6px 24px rgba(0,0,0,0.07);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.20);
             transition: transform 0.3s ease;
         }
         /* Hidden on restaurant menu / cart-summary / checkout screens (switchNavTab toggles this class). */
         .bottom-nav.hidden-nav { display: none !important; }
         /* On a desktop browser the app is a centred 450px "phone" — keep the bar inside that frame. */
         @media (min-width: 600px) { .bottom-nav { position: absolute; } }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #7D7D7D;
-            font-size: 11.5px;
-            font-weight: 500;
-            cursor: pointer;
-            gap: 5px;
-            text-align: center;
-            flex: 1;
-            height: 100%;
-            transition: color 0.2s;
-        }
-        .nav-item.active { color: var(--accent); font-weight: 600; }
-        .nav-icon { position: relative; display: flex; width: 28px; height: 28px; }
-        .nav-icon .ico { width: 28px; height: 28px; }
-        .nav-icon svg { width: 28px; height: 28px; fill: currentColor; }
+        .nav-item { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .nav-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; color: #A9ADB5; transition: background .2s, color .2s, transform .15s; }
+        .nav-item:active .nav-icon { transform: scale(.92); }
+        .nav-icon .ico { width: 26px; height: 26px; }
+        .nav-icon svg { width: 26px; height: 26px; fill: currentColor; }
+        .nav-item.active .nav-icon { background: var(--accent); color: #FFFFFF; box-shadow: 0 4px 12px rgba(244,119,33,0.45); }
         .nav-item.active .ic-fill { fill: currentColor; }
         .cart-badge {
-            position: absolute;
-            top: -5px;
-            right: -9px;
-            background: var(--accent);
-            color: #FFFFFF;
-            font-size: 10.5px;
-            font-weight: 700;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 4px;
-            border-radius: 9px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid var(--bg-card);
-            line-height: 1;
+            position: absolute; top: 2px; right: 0;
+            background: var(--accent); color: #FFFFFF;
+            font-size: 10.5px; font-weight: 700;
+            min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px;
+            display: flex; justify-content: center; align-items: center;
+            border: 2px solid #141414; line-height: 1;
         }
+        .nav-item.active .cart-badge { background: #141414; border-color: var(--accent); }
 
         /* Line icons (inline SVG) that replace the old emojis */
         .ico { display: inline-block; width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; }
@@ -999,22 +978,36 @@
         }
 
         /* ================= PROFILE PAGE (redesign) ================= */
-        .pf-card { position: relative; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 24px; padding: 0 16px 20px; text-align: center; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.05); }
-        .pf-card::before { content: ''; display: block; height: 76px; margin: 0 -16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); }
-        .pf-avatar { position: relative; width: 88px; height: 88px; border-radius: 50%; margin: -44px auto 0; border: 4px solid var(--bg-card); background: var(--primary-tint); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 38px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+        /* Profile: slim header (photo + name + level), iOS-style menu list, order widget */
+        .pf-top { flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 16px 20px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-light); z-index: 10; }
+        .pf-avatar { position: relative; width: 68px; height: 68px; border-radius: 50%; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--primary-tint); color: var(--primary); font-size: 32px; border: 3px solid #FFFFFF; box-shadow: 0 0 0 2px var(--primary); }
         .pf-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .pf-name { margin-top: 12px; font-size: 19px; font-weight: 800; color: var(--text-main); letter-spacing: -0.2px; }
-        .pf-handle { margin-top: 2px; font-size: 13.5px; font-weight: 600; color: var(--primary); }
-        .pf-id { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 6px 14px; border-radius: 999px; background: var(--bg-main); border: 1px solid var(--border-light); font-size: 12px; font-weight: 600; color: var(--text-muted); }
-        .pf-id b { color: var(--text-main); font-weight: 700; letter-spacing: 0.2px; }
+        .pf-who { min-width: 0; flex: 1; }
+        .pf-name { font-size: 20px; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pf-level { margin-top: 6px; }
+        .pf-level[hidden] { display: none; }
+        .lv-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.3; }
+        .lv-badge .ico { font-size: 13px; margin: 0; }
+        .lv-badge .ic-fill, .lv-badge svg.ic-fill { fill: currentColor; }
+        .lv-badge.lv0 { background: #F1F2F4; color: #6B7280; }
+        .lv-badge.lv1 { background: #E8F7EF; color: #0E8A55; }
+        .lv-badge.lv2 { background: #FFEFE0; color: #C2540A; }
+        .lv-badge.lv3 { background: linear-gradient(135deg, #F47721, #FF9A52); color: #FFFFFF; }
+        .lv-badge.lv4 { background: #1B1B1B; color: #F7C948; }
+        .lv-badge.lv5 { background: linear-gradient(135deg, #1B1B1B, #4A3410); color: #FFD76A; box-shadow: 0 0 0 1.5px #F7C948 inset; }
+        .lv-next { margin-top: 7px; font-size: 11.5px; color: var(--text-muted); }
+        .lv-bar { margin-top: 5px; width: 150px; max-width: 100%; height: 5px; border-radius: 3px; background: #ECEEF1; overflow: hidden; }
+        .lv-bar i { display: block; height: 100%; border-radius: 3px; background: var(--primary); }
 
-        .pf-stats { display: flex; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; margin-top: 14px; padding: 14px 4px; }
-        .pf-stat { flex: 1; text-align: center; min-width: 0; }
-        .pf-stat + .pf-stat { border-left: 1px solid var(--border-light); }
-        .pf-stat-value { font-size: 22px; font-weight: 800; line-height: 1.1; color: var(--text-main); }
-        .pf-stat.active .pf-stat-value { color: var(--primary); }
-        .pf-stat.delivered .pf-stat-value { color: var(--success-green); }
-        .pf-stat-label { margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); }
+        .pf-menu { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 20px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .pf-menu-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; background: none; border: none; border-top: 1px solid #F1F2F4; font-family: inherit; text-align: left; cursor: pointer; color: var(--text-main); }
+        .pf-menu-row:first-child { border-top: none; }
+        .pf-menu-row:active { background: var(--primary-tint); }
+        .pf-menu-ico { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--primary-tint); color: var(--primary); font-size: 20px; }
+        .pf-menu-ico .ico { margin: 0; }
+        .pf-menu-label { flex: 1; font-size: 14.5px; font-weight: 600; }
+        .pf-menu-val { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .pf-menu-row > .ico { font-size: 16px; color: #B8BCC4; margin: 0; }
 
         .pf-section-head { display: flex; align-items: center; justify-content: space-between; margin: 24px 2px 12px; }
         .pf-section-head h2 { font-size: 17px; font-weight: 700; color: var(--text-main); }
@@ -1053,6 +1046,37 @@
         .hz-time { margin-top: 2px; font-size: 10px; font-weight: 700; color: var(--hz-on); }
         @keyframes hzPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(244,119,33,.45); } 50% { box-shadow: 0 0 0 6px rgba(244,119,33,0); } }
         @media (prefers-reduced-motion: reduce) { .hz-step.cur .hz-dot { animation: none; } }
+
+        /* order widget: stopped / cancelled state, last-order card, addresses sheet */
+        .hz-cross { width: 14px; height: 14px; }
+        .hz-step.stop::after { content: ''; position: absolute; z-index: 0; left: 1px; right: 1px; top: -5px; bottom: -5px; border-radius: 12px; background: #FDECEC; }
+        .hz-step.stop::before { background: #F2A5A8; }
+        .hz-step.stop .hz-dot { background: #E5484D; border-color: #E5484D; }
+        .hz-step.stop .hz-label { position: relative; z-index: 1; color: #B42318; font-weight: 700; }
+        .hz-step.stop .hz-time { position: relative; z-index: 1; color: #B42318; }
+        .hz-step.stop .hz-dot { z-index: 1; }
+        .ao-card.stopped { border-color: #F7C9C9; }
+        .ao-stop-note { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: #FDECEC; color: #B42318; font-size: 13px; font-weight: 600; }
+        .ao-stop-note .ico { font-size: 18px; flex-shrink: 0; }
+        .ao-actions { display: flex; gap: 10px; margin: 6px 0 4px; }
+        .ao-btn { flex: 1; height: 40px; border-radius: 999px; border: none; background: var(--primary); color: #fff; font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+        .ao-btn.ghost { background: #fff; color: var(--text-muted); border: 1.5px solid var(--border-light); }
+        .lo-top { display: flex; align-items: center; gap: 12px; }
+        .lo-logo { position: relative; width: 56px; height: 56px; border-radius: 16px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--primary-tint); color: var(--primary); font-size: 24px; }
+        .lo-logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .lo-info { flex: 1; min-width: 0; }
+        .lo-items { margin-top: 2px; font-size: 12.5px; color: var(--text-main); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .lo-reorder { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 46px; margin: 12px 0 4px; border: none; border-radius: 999px; background: var(--primary); color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px rgba(244,119,33,0.30); }
+        .lo-reorder:active { transform: scale(.98); }
+        .lo-reorder .ico { font-size: 18px; margin: 0; }
+        .addr-row { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+        .addr-row-head { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--text-main); }
+        .addr-row-head .ico { color: var(--primary); font-size: 18px; margin: 0; }
+        .addr-row-sub { margin-top: 6px; font-size: 12.5px; line-height: 1.5; color: var(--text-muted); }
+        .addr-row-actions { display: flex; gap: 16px; margin-top: 10px; }
+        .addr-row-actions button { background: none; border: none; padding: 0; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--primary); cursor: pointer; }
+        .addr-row-actions button.del { color: #E5484D; }
+        .addr-sheet-foot { flex-shrink: 0; padding: 12px 16px calc(14px + var(--app-bottom-inset)); background: var(--bg-card); border-top: 1px solid var(--border-light); }
 
         /* Full-screen order history */
         .hist-modal { position: absolute; inset: 0; z-index: 1100; display: flex; flex-direction: column; background: var(--bg-main); padding-top: var(--app-top-inset); transform: translateX(100%); visibility: hidden; transition: transform .3s cubic-bezier(.22,.9,.3,1), visibility 0s linear .3s; }
@@ -1402,7 +1426,7 @@
         <!-- The header lives INSIDE the scroller, so it scrolls away with the page. -->
         <div class="scrollable-view-content home-scroll">
             <div class="home-header">
-                <img class="home-logo" src="data:image/jpeg;base64,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" alt="IWTEAT">
+                <img class="home-logo" src="assets/images/logo.png" alt="IWTEAT" onerror="this.onerror=null;this.src='data:image/jpeg;base64,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'">
                 <div class="home-header-actions">
                     <button class="home-icon-btn accent" aria-label="Search" onclick="toggleHomeSearch()"><i class="ico" data-icon="search"></i></button>
                     <button class="home-icon-btn" aria-label="Notifications" onclick="showToast('No new notifications')"><i class="ico" data-icon="bell"></i><span class="hm-badge" id="home-bell-badge" hidden></span></button>
@@ -1513,41 +1537,45 @@
 
     <!-- PROFILE VIEW -->
     <div id="profile-view" class="page-view">
-        <header>
-            <h1>My Profile <i class="ico" data-icon="user"></i></h1>
-        </header>
-        <div class="scrollable-view-content" style="padding: 16px;">
-            <div class="pf-card">
-                <div class="pf-avatar">
-                    <img id="profile-avatar-img" src="" alt="Profile photo" style="display:none;">
-                    <span id="profile-avatar-fallback" style="display:flex;"><i class="ico" data-icon="user"></i></span>
-                </div>
-                <div class="pf-name" id="profile-display-name">Guest Customer</div>
-                <div class="pf-handle" id="telegram-username-info" style="display:none;"></div>
-                <div class="pf-id" id="pf-id-pill" style="display:none;">Telegram ID <b id="telegram-user-info"></b></div>
+        <div class="pf-top">
+            <div class="pf-avatar">
+                <img id="profile-avatar-img" src="" alt="Profile photo" style="display:none;">
+                <span id="profile-avatar-fallback" style="display:flex;"><i class="ico" data-icon="user"></i></span>
             </div>
-
-            <div class="pf-stats">
-                <div class="pf-stat active">
-                    <div class="pf-stat-value" id="stat-active-orders">0</div>
-                    <div class="pf-stat-label">Active Orders</div>
-                </div>
-                <div class="pf-stat delivered">
-                    <div class="pf-stat-value" id="stat-delivered-orders">0</div>
-                    <div class="pf-stat-label">Delivered Orders</div>
-                </div>
-                <div class="pf-stat">
-                    <div class="pf-stat-value" id="stat-saved-addresses">0</div>
-                    <div class="pf-stat-label">Saved Addresses</div>
-                </div>
+            <div class="pf-who">
+                <div class="pf-name" id="profile-display-name">Guest Customer</div>
+                <div class="pf-level" id="pf-level" hidden></div>
+            </div>
+        </div>
+        <div class="scrollable-view-content" style="padding: 16px;">
+            <div class="pf-menu">
+                <button type="button" class="pf-menu-row" onclick="openOrderHistory()">
+                    <span class="pf-menu-ico"><i class="ico" data-icon="package"></i></span><span class="pf-menu-label">My Orders</span><span class="pf-menu-val" id="pf-count-orders"></span><i class="ico" data-icon="chevronRight"></i>
+                </button>
+                <button type="button" class="pf-menu-row" onclick="openAddressSheet()">
+                    <span class="pf-menu-ico"><i class="ico" data-icon="pin"></i></span><span class="pf-menu-label">Addresses</span><span class="pf-menu-val" id="pf-count-addr"></span><i class="ico" data-icon="chevronRight"></i>
+                </button>
+                <button type="button" class="pf-menu-row" onclick="openSupport()">
+                    <span class="pf-menu-ico"><i class="ico" data-icon="help"></i></span><span class="pf-menu-label">Help &amp; Support</span><i class="ico" data-icon="chevronRight"></i>
+                </button>
             </div>
 
             <div class="pf-section-head">
-                <h2>Active Orders</h2>
+                <h2 id="pf-order-title">Active Order</h2>
                 <button class="pf-viewall" onclick="openOrderHistory()">View All <i class="ico" data-icon="chevronRight"></i></button>
             </div>
             <div id="profile-active-orders"></div>
         </div>
+    </div>
+
+    <!-- FULL-SCREEN ADDRESSES (opened from the Profile menu) -->
+    <div class="hist-modal" id="address-sheet" aria-hidden="true">
+        <div class="hist-head">
+            <button class="hist-back" onclick="closeAddressSheet()" aria-label="Back"><i class="ico" data-icon="chevronRight"></i></button>
+            <div class="hist-title">My Addresses</div>
+        </div>
+        <div class="hist-list" id="addr-sheet-list"></div>
+        <div class="addr-sheet-foot"><button class="btn-place-order" onclick="openAddressModal()">Add New Address</button></div>
     </div>
 
     <!-- FULL-SCREEN ORDER HISTORY (opened by "View All >" on the Profile page) -->
@@ -1561,19 +1589,19 @@
     </div>
 
 
-    <!-- Curved Bottom Navigation Bar -->
-    <nav class="bottom-nav" id="main-bottom-nav">
-        <div class="nav-item active" onclick="switchNavTab('home')">
-            <span class="nav-icon"><i class="ico" data-icon="home" data-fill="1"></i></span>Home
+    <!-- Floating bottom navigation (black pill) -->
+    <nav class="bottom-nav" id="main-bottom-nav" aria-label="Main">
+        <div class="nav-item active" role="button" aria-label="Home" onclick="switchNavTab('home')">
+            <span class="nav-icon"><i class="ico" data-icon="home" data-fill="1"></i></span>
         </div>
-        <div class="nav-item" onclick="switchNavTab('saved')">
-            <span class="nav-icon"><i class="ico" data-icon="heart" data-fill="1"></i></span>Saved
+        <div class="nav-item" role="button" aria-label="Saved" onclick="switchNavTab('saved')">
+            <span class="nav-icon"><i class="ico" data-icon="heart" data-fill="1"></i></span>
         </div>
-        <div class="nav-item" onclick="switchNavTab('cart')">
-            <span class="nav-icon"><i class="ico" data-icon="cart"></i><span class="cart-badge" id="cart-badge-count">0</span></span>Cart
+        <div class="nav-item" role="button" aria-label="Cart" onclick="switchNavTab('cart')">
+            <span class="nav-icon"><i class="ico" data-icon="cart"></i><span class="cart-badge" id="cart-badge-count">0</span></span>
         </div>
-        <div class="nav-item" onclick="switchNavTab('profile')">
-            <span class="nav-icon"><i class="ico" data-icon="user" data-fill="1"></i></span>Profile
+        <div class="nav-item" role="button" aria-label="Profile" onclick="switchNavTab('profile')">
+            <span class="nav-icon"><i class="ico" data-icon="user" data-fill="1"></i></span>
         </div>
     </nav>
 
@@ -1697,6 +1725,7 @@
         call: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
         search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
         bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+        help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
         chevronDown: '<path d="m6 9 6 6 6-6"/>',
         filter: '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
         flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
@@ -1768,33 +1797,12 @@ if (tg) {
 const telegramUser = tg?.initDataUnsafe?.user || null;
     function displayTelegramUser() {
         const nameEl = document.getElementById('profile-display-name');
-        const idEl = document.getElementById('telegram-user-info');
-        const idPill = document.getElementById('pf-id-pill');
-        const handleEl = document.getElementById('telegram-username-info');
         const avatarImg = document.getElementById('profile-avatar-img');
         const avatarFallback = document.getElementById('profile-avatar-fallback');
-        if (!nameEl || !idEl) return;
+        if (!nameEl) return;
 
-        if (!telegramUser) {
-            nameEl.innerText = 'Guest Customer';
-            if (idPill) idPill.style.display = 'none';
-            if (handleEl) handleEl.style.display = 'none';
-            return;
-        }
-
+        if (!telegramUser) { nameEl.innerText = 'Guest Customer'; return; }
         nameEl.innerText = getTelegramFullName() || telegramUser.first_name || 'Telegram User';
-        idEl.innerText = telegramUser.id;
-        if (idPill) idPill.style.display = 'inline-flex';
-
-        // @handle under the name (only when the user has set a Telegram username).
-        if (handleEl) {
-            if (telegramUser.username) {
-                handleEl.innerText = `@${telegramUser.username}`;
-                handleEl.style.display = 'block';
-            } else {
-                handleEl.style.display = 'none';
-            }
-        }
 
         // Telegram only sends a photo_url in limited cases — otherwise the icon avatar stays.
         if (avatarImg && avatarFallback) {
@@ -1848,6 +1856,7 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
         { key: 'rider_assigned',     label: 'Out for delivery' },
     ];
     const ORDER_STAGE_OF = { payment_pending: 0, pending: 0, restaurant_pending: 1, awaiting_rider: 2, rider_assigned: 3, delivered: 4, confirmed: 4 };
+    const HZ_CROSS = '<svg class="hz-cross" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M17 7L7 17"/></svg>';
     const HZ_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
     function fmtClock(ts) {
@@ -1877,25 +1886,49 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
         if (isPickupOrder(order) && status === 'awaiting_rider') return Object.assign({}, meta, { label: order.readyAt ? 'Ready for Pickup' : 'Preparing' });
         return meta;
     }
+    // Where a cancelled / rejected order stopped: the step that was "in progress" when it ended (-1 = still running or delivered).
+    // e.g. confirmed but never accepted -> index 2 ("Restaurant accepted"), shown with a red cross.
+    function orderStopIndex(order) {
+        if (!ORDER_CANCELLED.has(order.status)) return -1;
+        let reached = 0;
+        for (let i = 1; i < TRACKER_STAGES.length; i++) {
+            const t = (order.statusTimes || {})[TRACKER_STAGES[i].key];
+            if (i === 3 && isPickupOrder(order) ? order.readyAt : t) reached = i;
+        }
+        return Math.min(reached + 1, TRACKER_STAGES.length - 1);
+    }
+    function orderStopNote(order) {
+        const stop = orderStopIndex(order);
+        if (stop < 0) return '';
+        if (order.status === 'payment_failed') return 'We could not verify your payment for this order.';
+        if (order.status === 'user_canceled') return 'You cancelled this order.';
+        if (order.status === 'order_rejected') return stop >= 2 ? 'The restaurant could not accept this order.' : 'This order was not approved.';
+        return 'This order was cancelled.';
+    }
     function buildOrderTracker(order) {
-        const stage = orderStage(order);                     // 0–3 = the current stage, 4 = delivered
-        const done = stage >= 4;
+        const stopAt = orderStopIndex(order);                // -1 unless the order was cancelled / rejected
+        const stage = stopAt >= 0 ? stopAt - 1 : orderStage(order);   // last step actually reached
+        const done = stopAt < 0 && stage >= 4;
+        const lastIdx = TRACKER_STAGES.length;               // index of the "Succeed" step
         // Cash-on-delivery style methods have no payment check, so that step is worded differently.
         const steps = TRACKER_STAGES.map((s, i) => ({
             label: (i === 1 && order.paymentVerify === false) ? 'Order confirmed' : (i === 3 && isPickupOrder(order) ? 'Ready for pickup' : s.label),
             time: i <= stage ? fmtClock(i === 3 && isPickupOrder(order) ? (order.readyAt || 0) : trkStageTime(order, i)) : '',
         }));
+        if (stopAt >= 0) steps[stopAt].time = fmtClock((order.statusTimes || {})[order.status] || 0);   // when it stopped, if known
         steps.push({ label: 'Succeed', time: done ? fmtClock((order.statusTimes || {}).delivered) : '', goal: true });
 
         const html = steps.map((st, i) => {
-            const reached = i <= stage, current = i === stage && !done;
-            return `<div class="hz-step${reached ? ' on' : ''}${current ? ' cur' : ''}${st.goal ? ' goal' : ''}">
-                        <div class="hz-dot">${reached && !current ? HZ_CHECK : ''}</div>
+            const stopped = i === stopAt;
+            const reached = i <= stage && !stopped, current = i === stage && !done && stopAt < 0 && i < lastIdx;
+            return `<div class="hz-step${reached ? ' on' : ''}${current ? ' cur' : ''}${stopped ? ' stop' : ''}${st.goal ? ' goal' : ''}">
+                        <div class="hz-dot">${stopped ? HZ_CROSS : (reached && !current ? HZ_CHECK : '')}</div>
                         <div class="hz-label">${escPay(st.label)}</div>
                         ${st.time ? `<div class="hz-time">${st.time}</div>` : ''}
                     </div>`;
         }).join('');
-        return `<div class="hz${done ? ' done' : ''}" role="img" aria-label="Order progress: ${escPay(done ? 'Succeed' : steps[stage].label)}">${html}</div>`;
+        const aria = stopAt >= 0 ? `Order stopped at: ${steps[stopAt].label}` : `Order progress: ${done ? 'Succeed' : steps[Math.min(stage, lastIdx)].label}`;
+        return `<div class="hz${done ? ' done' : ''}" role="img" aria-label="${escPay(aria)}">${html}</div>`;
     }
 
     // --- Cards ----------------------------------------------------------------------------------
@@ -1905,10 +1938,12 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
     }
     function renderActiveOrderCard(order) {
         const meta = orderMeta(order);
+        const stopped = ORDER_CANCELLED.has(order.status);
         const etaText = order.eta && order.eta.min != null ? `${order.eta.min}–${order.eta.max} mins` : '15–25 mins';   // older orders have no saved estimate
         const est = order.deliveryMethod === 'pickup' ? `Est. Pickup: ${etaText}` : `Est. Delivery: ${etaText}`;
+        const id = escPay(order.orderId);
         return `
-            <div class="ao-card">
+            <div class="ao-card${stopped ? ' stopped' : ''}">
                 <div class="ao-head">
                     <div style="min-width:0;">
                         <div class="ao-rest">${escPay(order.restaurantName || 'Restaurant')}</div>
@@ -1916,9 +1951,64 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
                     </div>
                     <div class="order-history-status ${meta.css}">${meta.label}</div>
                 </div>
-                <div class="ao-est">${icon('bike')} ${est}</div>
+                ${stopped
+                    ? `<div class="ao-stop-note">${icon('xCircle')} ${escPay(orderStopNote(order))}</div>`
+                    : `<div class="ao-est">${icon('bike')} ${est}</div>`}
                 <div class="ao-track">${buildOrderTracker(order)}</div>
+                ${stopped ? `<div class="ao-actions"><button class="ao-btn ghost" onclick="dismissOrderUpdate('${id}')">Dismiss</button><button class="ao-btn" onclick="reorderOrder('${id}')">Order again</button></div>` : ''}
             </div>`;
+    }
+
+    // --- Last completed order (shown when nothing is active) + Reorder ---
+    function findOrderRestaurant(order) {            // the matching entry from the Home list, if it has loaded
+        if (!homeBrowseCache) return null;
+        const rid = order.restaurantId || order.restaurant_id;
+        const name = String(order.restaurantName || '').trim().toLowerCase();
+        return homeBrowseCache.find(e => (rid && String(e.restaurant.id) === String(rid)) || (name && String(e.restaurant.name || '').trim().toLowerCase() === name)) || null;
+    }
+    function orderItemsText(order) {
+        if (Array.isArray(order.items) && order.items.length) {
+            return order.items.map(i => `${i.quantity || i.qty || 1}× ${i.name}`).join(', ');
+        }
+        const n = order.itemCount || 0;
+        return `${n} item${n === 1 ? '' : 's'}`;
+    }
+    function renderLastOrderCard(order) {
+        const entry = findOrderRestaurant(order);
+        const logo = (entry && entry.restaurant.logoUrl) || order.restaurantLogo || '';
+        const when = order.createdAt ? new Date(order.createdAt * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+        const id = escPay(order.orderId);
+        return `
+            <div class="ao-card">
+                <div class="lo-top">
+                    <div class="lo-logo"><i class="ico" data-icon="store"></i><img src="${homeEsc(logo || HOME_LOGO_FALLBACK)}" ${logo ? '' : 'data-fb="1"'} alt="" onerror="homeImgFail(this)"></div>
+                    <div class="lo-info">
+                        <div class="ao-rest">${escPay(order.restaurantName || 'Restaurant')}</div>
+                        <div class="lo-items">${escPay(orderItemsText(order))}</div>
+                        <div class="ao-sub">${[when, Number(order.total || 0).toLocaleString('en-US') + ' MMK'].filter(Boolean).join(' · ')}</div>
+                    </div>
+                    <div class="order-history-status confirmed">Delivered</div>
+                </div>
+                <button type="button" class="lo-reorder" onclick="reorderOrder('${id}')">${icon('cart')} Reorder</button>
+            </div>`;
+    }
+    // Opens the restaurant's menu so the customer can order the same things again.
+    // (Putting the old items straight into the cart needs the server to send the order's items + restaurant id.)
+    function reorderOrder(orderId) {
+        const order = profileOrders.find(o => String(o.orderId) === String(orderId));
+        if (!order) return;
+        const entry = findOrderRestaurant(order);
+        const rid = entry ? entry.restaurant.id : (order.restaurantId || order.restaurant_id);
+        if (!rid) { showToast('Open the restaurant from Home to order again.'); switchNavTab('home'); return; }
+        selectRestaurant(rid);
+    }
+    // A cancelled order's red card stays on the profile until the customer dismisses it (remembered on this phone).
+    const DISMISSED_ORDERS_KEY = 'iwteat_dismissed_orders';
+    function dismissedOrders() { try { return JSON.parse(localStorage.getItem(DISMISSED_ORDERS_KEY)) || []; } catch (e) { return []; } }
+    function dismissOrderUpdate(orderId) {
+        const list = dismissedOrders(); if (!list.includes(orderId)) list.push(orderId);
+        try { localStorage.setItem(DISMISSED_ORDERS_KEY, JSON.stringify(list.slice(-30))); } catch (e) {}
+        paintProfileOrders();
     }
     function profileEmpty(iconName, title, sub, withButton) {
         return `<div class="pf-empty">${icon(iconName)}<div class="pf-empty-title">${title}</div><div class="pf-empty-sub">${sub}</div>`
@@ -1932,15 +2022,14 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
 
     // Fetches this customer's orders from GET /api/orders/<id> and paints the stats + Active Orders.
     // Runs whenever the Profile tab opens (and every 20 s while it stays open, silently).
+    let profileOrdersLoaded = false;
     async function renderProfileOrders(silent) {
         const listEl = document.getElementById('profile-active-orders');
-        const addressesStat = document.getElementById('stat-saved-addresses');
-        if (addressesStat) addressesStat.innerText = savedAddresses.length;
+        updateProfileMenu();
         if (!listEl) return;
 
         if (!telegramUser || !telegramUser.id) {
-            document.getElementById('stat-active-orders').innerText = '0';
-            document.getElementById('stat-delivered-orders').innerText = '0';
+            paintCustomerLevel();
             listEl.innerHTML = profileEmpty('package', 'Open from Telegram', 'Open this Mini App from Telegram to see your orders.', false);
             return;
         }
@@ -1952,6 +2041,7 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
             const res = await fetch(`${API_BASE}/api/orders/${telegramUser.id}`);
             const result = await res.json();
             profileOrders = (result && result.orders) || [];
+            profileOrdersLoaded = true;
         } catch (e) {
             console.error('Could not load orders:', e);
             if (!silent || !profileOrders.length) {
@@ -1962,18 +2052,118 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
         paintProfileOrders();
     }
 
+    /* ---------- Customer level (from completed orders) ---------- */
+    const CUSTOMER_LEVELS = [
+        { lv: 0, name: 'Guest',          min: 0,  icon: 'user' },
+        { lv: 1, name: 'Foodie',         min: 1,  icon: 'star' },
+        { lv: 2, name: 'Regular Foodie', min: 4,  icon: 'star' },
+        { lv: 3, name: 'Food Lover',     min: 9,  icon: 'star' },
+        { lv: 4, name: 'Foodie VIP',     min: 16, icon: 'star' },
+        { lv: 5, name: 'IWTEAT Legend',  min: 31, icon: 'flame' },
+    ];
+    function customerLevel(completed) {
+        let cur = CUSTOMER_LEVELS[0];
+        CUSTOMER_LEVELS.forEach(l => { if (completed >= l.min) cur = l; });
+        return cur;
+    }
+    function paintCustomerLevel() {
+        const el = document.getElementById('pf-level');
+        if (!el) return;
+        const signedIn = !!(telegramUser && telegramUser.id);
+        if (signedIn && !profileOrdersLoaded) { el.hidden = true; return; }     // don't flash "Guest" before the orders arrive
+        const completed = profileOrders.filter(o => ORDER_SUCCEEDED.has(o.status)).length;
+        const L = customerLevel(completed);
+        const next = CUSTOMER_LEVELS[L.lv + 1];
+        let nextHtml;
+        if (next) {
+            const need = next.min - completed;
+            const pct = Math.round(((completed - L.min) / (next.min - L.min)) * 100);
+            nextHtml = `<div class="lv-next">${need} more order${need === 1 ? '' : 's'} to ${next.name}</div><div class="lv-bar"><i style="width:${pct}%"></i></div>`;
+        } else {
+            nextHtml = `<div class="lv-next">You've reached the top level. Thank you!</div>`;
+        }
+        el.innerHTML = `<span class="lv-badge lv${L.lv}">${icon(L.icon, 13, '', L.icon === 'star')} Lv ${L.lv} · ${L.name}</span>${nextHtml}`;
+        el.hidden = false;
+    }
+
+    /* ---------- Menu list counts, Help & Support, Addresses ---------- */
+    function updateProfileMenu() {
+        const o = document.getElementById('pf-count-orders'); if (o) o.textContent = profileOrders.length ? profileOrders.length : '';
+        const a = document.getElementById('pf-count-addr');   if (a) a.textContent = savedAddresses.length ? savedAddresses.length : '';
+    }
+    const SUPPORT_USERNAME = '';      // your support account on Telegram, without the @ (e.g. 'iwteat_support'). Empty = "coming soon" message.
+    function openSupport() {
+        if (!SUPPORT_USERNAME) { showToast('Support chat is coming soon.'); return; }
+        const url = 'https://t.me/' + SUPPORT_USERNAME;
+        try { if (tg && tg.openTelegramLink) { tg.openTelegramLink(url); return; } } catch (e) {}
+        window.open(url, '_blank');
+    }
+    function paintAddressSheet() {
+        const listEl = document.getElementById('addr-sheet-list');
+        if (!listEl) return;
+        listEl.innerHTML = savedAddresses.length ? savedAddresses.map(a => `
+            <div class="addr-row">
+                <div class="addr-row-head">${icon('pin')} ${escPay(a.label)}</div>
+                <div class="addr-row-sub">${escPay(a.name)} · ${escPay(a.phone)}<br>${escPay(a.address)}</div>
+                <div class="addr-row-actions">
+                    <button type="button" onclick="openAddressModal(${a.id})">Edit</button>
+                    <button type="button" class="del" onclick="deleteAddressPrompt(${a.id})">Remove</button>
+                </div>
+            </div>`).join('')
+            : profileEmpty('pin', 'No saved addresses', 'Add one now and checkout will be faster.', false);
+        updateProfileMenu();
+    }
+    function openAddressSheet() {
+        const sheet = document.getElementById('address-sheet');
+        if (sheet.classList.contains('open')) return;
+        paintAddressSheet();
+        sheet.classList.add('open');
+        sheet.setAttribute('aria-hidden', 'false');
+        if (!history.state || history.state.type !== 'modal') history.pushState({ ...history.state, type: 'modal' }, '');
+        updateTelegramBackButton();
+    }
+    function closeAddressSheet(fromPopState) {
+        const sheet = document.getElementById('address-sheet');
+        if (!sheet || !sheet.classList.contains('open')) return;
+        sheet.classList.remove('open');
+        sheet.setAttribute('aria-hidden', 'true');
+        if (!fromPopState) history.back();
+        updateTelegramBackButton();
+    }
+
     function paintProfileOrders() {
         const listEl = document.getElementById('profile-active-orders');
         if (!listEl) return;
-        const active = profileOrders.filter(o => ORDER_ACTIVE.has(o.status || 'pending'));
-        const delivered = profileOrders.filter(o => ORDER_SUCCEEDED.has(o.status)).length;
-        document.getElementById('stat-active-orders').innerText = active.length;
-        document.getElementById('stat-delivered-orders').innerText = delivered;
-        document.getElementById('stat-saved-addresses').innerText = savedAddresses.length;
+        const titleEl = document.getElementById('pf-order-title');
+        const sorted = profileOrders.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        const active = sorted.filter(o => ORDER_ACTIVE.has(o.status || 'pending'));
 
-        listEl.innerHTML = active.length
-            ? active.map(renderActiveOrderCard).join('')
-            : profileEmpty('package', 'No active orders right now', 'When you place an order you can follow it here, step by step.', true);
+        // What the widget shows: 1) orders in progress, 2) a recent cancelled/rejected order (until dismissed),
+        // 3) the last completed order with a Reorder button, 4) an empty state.
+        const latest = sorted[0];
+        const recentStopped = latest && ORDER_CANCELLED.has(latest.status) && latest.createdAt
+            && (Date.now() / 1000 - latest.createdAt) < 24 * 3600 && !dismissedOrders().includes(latest.orderId);
+        const lastDone = sorted.find(o => ORDER_SUCCEEDED.has(o.status));
+
+        let title, html;
+        if (active.length) {
+            title = active.length > 1 ? 'Active Orders' : 'Active Order';
+            html = active.map(renderActiveOrderCard).join('');
+        } else if (recentStopped) {
+            title = 'Order Update';
+            html = renderActiveOrderCard(latest);
+        } else if (lastDone) {
+            title = 'Last Order';
+            html = renderLastOrderCard(lastDone);
+        } else {
+            title = 'Active Order';
+            html = profileEmpty('package', 'No active orders right now', 'When you place an order you can follow it here, step by step.', true);
+        }
+        if (titleEl) titleEl.textContent = title;
+        listEl.innerHTML = html;
+        hydrateIcons(listEl);
+        paintCustomerLevel();
+        updateProfileMenu();
 
         if (document.getElementById('order-history-modal').classList.contains('open')) paintHistory();
     }
@@ -2028,7 +2218,7 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
         listEl.innerHTML = rows.map(order => {
             const status = order.status || 'pending';
             const meta = orderMeta(order);
-            const expandable = !ORDER_CANCELLED.has(status);
+            const expandable = true;
             const when = order.createdAt
                 ? new Date(order.createdAt * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + fmtClock(order.createdAt) : '';
             return `
@@ -2043,7 +2233,7 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
                         <div class="order-history-status ${meta.css}">${meta.label}</div>
                         ${expandable ? `<span class="hist-chev">${icon('chevronRight')}</span>` : ''}
                     </div>
-                    ${expandable ? `<div class="hist-detail">${buildOrderTracker(order)}</div>` : ''}
+                    ${expandable ? `<div class="hist-detail">${buildOrderTracker(order)}${ORDER_CANCELLED.has(status) ? `<div class="ao-stop-note" style="margin-bottom:6px;">${icon('xCircle')} ${escPay(orderStopNote(order))}</div>` : ''}</div>` : ''}
                 </div>`;
         }).join('');
     }
@@ -2071,7 +2261,9 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
         const addrModalOpen = addrModal && addrModal.classList.contains('open');
         const histModal = document.getElementById('order-history-modal');
         const histOpen = histModal && histModal.classList.contains('open');
-        const shouldShow = modalOpen || addrModalOpen || histOpen || currentTabId !== 'home';
+        const addrSheet = document.getElementById('address-sheet');
+        const addrSheetOpen = addrSheet && addrSheet.classList.contains('open');
+        const shouldShow = modalOpen || addrModalOpen || histOpen || addrSheetOpen || currentTabId !== 'home';
         if (shouldShow) tg.BackButton.show();
         else tg.BackButton.hide();
     }
@@ -2918,6 +3110,7 @@ let homeBrowseCache = null;
             closeAddressModal();
         }
         closeOrderHistory(true);   // the "View All" history screen closes on back, like the other modals
+        closeAddressSheet(true);
         if (e.state && e.state.tab) {
             switchNavTab(e.state.tab, true);
         } else {
@@ -4770,6 +4963,7 @@ let homeBrowseCache = null;
         }
         localStorage.setItem(STORAGE_KEY_ADDRESSES, JSON.stringify(savedAddresses));
         renderRestaurantCartPage();
+        paintAddressSheet();
         showToast("Address removed.");
     }
 
@@ -4808,6 +5002,7 @@ let homeBrowseCache = null;
         
         closeAddressModal();
         renderRestaurantCartPage();
+        paintAddressSheet();
     }
 
     // App Startup Entry Point
