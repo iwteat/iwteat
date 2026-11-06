@@ -1397,6 +1397,30 @@
         .eta-warn { color: #B45309; }
         .eta-pin-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; padding: 12px; border-radius: 12px; border: 1.5px dashed var(--primary); background: #fff; color: var(--primary); font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: inherit; }
         .eta-pin-btn.set { border-style: solid; }
+
+        /* --- Compact delivery card on checkout (replaces the big "Estimated time" card) --- */
+        .dlv-card { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 16px; padding: 12px 14px; border-radius: 16px; background: var(--primary-tint); border: 1.5px solid #F9C79B; text-align: left; font-family: inherit; color: var(--text-main); }
+        .dlv-card.ask { background: #fff; border: 1.5px dashed var(--primary); cursor: pointer; }
+        .dlv-card.ask:active { background: var(--primary-tint); }
+        .dlv-card.bad { background: #FDECEC; border-color: #F5B5B5; }
+        .dlv-ico { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #fff; color: var(--primary); }
+        .dlv-card.bad .dlv-ico { color: #E5484D; }
+        .dlv-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; line-height: 1.35; }
+        .dlv-txt b { font-weight: 700; }
+        .dlv-txt span { font-size: 11.5px; color: var(--text-muted); }
+        .dlv-card.ask .dlv-txt span { font-size: 12px; }
+        .dlv-card.bad .dlv-txt span { color: #B42318; }
+        .dlv-act { flex-shrink: 0; background: none; border: none; padding: 6px 2px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--primary); cursor: pointer; }
+        .dlv-card.bad .dlv-act { color: #B42318; }
+        .dlv-excl span:first-child em { font-style: normal; font-size: 11.5px; color: var(--text-muted); }
+        .dlv-excl-note { font-size: 11.5px; color: var(--text-muted); margin: -4px 0 4px; }
+
+        /* --- Pin row inside the address form + "pin saved" tag --- */
+        .addr-pin-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px dashed var(--primary); background: #fff; font-family: inherit; text-align: left; color: var(--primary); cursor: pointer; }
+        .addr-pin-row.set { border-style: solid; background: var(--primary-tint); }
+        .addr-pin-row span { flex: 1; display: flex; flex-direction: column; gap: 2px; color: var(--text-main); font-size: 14px; }
+        .addr-pin-row small { font-size: 11.5px; color: var(--text-muted); font-weight: 400; }
+        .addr-pinned { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-tint); border-radius: 999px; padding: 2px 9px; }
         .pin-map { flex: 1; min-height: 240px; position: relative; z-index: 0; background: #EDEFF2; }
         .pin-map .map-fallback { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
         .map-pin { width: 28px; height: 28px; background: var(--primary); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.35); position: relative; }
@@ -1663,6 +1687,10 @@
                 <div class="form-group">
                     <label>Detailed Address</label>
                     <textarea id="addr-detail-input" class="form-control" placeholder="123 Street Name, City, State"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Pin location <span style="font-weight:400; color: var(--text-muted);">(recommended)</span></label>
+                    <button type="button" class="addr-pin-row" id="addr-pin-row" onclick="openPinModal('address')"></button>
                 </div>
             </div>
 
@@ -2103,7 +2131,7 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
         if (!listEl) return;
         listEl.innerHTML = savedAddresses.length ? savedAddresses.map(a => `
             <div class="addr-row">
-                <div class="addr-row-head">${icon('pin')} ${escPay(a.label)}</div>
+                <div class="addr-row-head">${icon('pin')} ${escPay(a.label)}${a.lat != null && a.lng != null ? '<span class="addr-pinned">Pin saved</span>' : ''}</div>
                 <div class="addr-row-sub">${escPay(a.name)} · ${escPay(a.phone)}<br>${escPay(a.address)}</div>
                 <div class="addr-row-actions">
                     <button type="button" onclick="openAddressModal(${a.id})">Edit</button>
@@ -2338,19 +2366,23 @@ async function submitFinalOrder() {
     let fee = 0;
     let delivery = 0, deliveryLoc = null;
     if (deliveryMethod !== 'pickup') {
+        syncPinFromAddress();
         const df = deliveryFeeFor(activeCartRestaurantId);
         if (df.needsPin) { alert('Please drop a pin on the map so we can work out your delivery fee.'); openPinModal(); return; }
+        if (df.outOfZone) { alert(df.message || "We don't deliver to your pin yet. Please move the pin, or choose Self-pick up."); openPinModal(); return; }
+        if (df.zoneError) { alert("Couldn't check your delivery area — please check your connection and try again."); retryZone(); return; }
         if (df.fee === null) { alert('Still working out your delivery distance — please try again in a moment.'); return; }
         delivery = df.fee;
         if (deliveryPin) deliveryLoc = { lat: deliveryPin.lat, lng: deliveryPin.lng, distanceKm: deliveryPin.km };
     }
     const taxInfo = computeTax(activeCartRestaurantId, subtotal);
-    let grandTotal = subtotal + fee + delivery + taxInfo.extra;
+    const feeCounts = (restaurantEtaInfo[activeCartRestaurantId] || {}).feeInTotal === true;     // shown for reference; the server works the real total out itself
+    let grandTotal = subtotal + fee + (feeCounts ? delivery : 0) + taxInfo.extra;
 
     const orderData = {
         initData: tg?.initData || '',
         user: telegramUser || { id: 0, first_name: activeAddr ? activeAddr.name : (telegramUser?.first_name || 'Guest') },
-        address: activeAddr,
+        address: activeAddr ? Object.assign({}, activeAddr, { lat: undefined, lng: undefined }) : activeAddr,   // the exact pin is not sent with the address
         deliveryMethod: deliveryMethod,
         eta: etaPayload(items),
         deliveryLocation: deliveryLoc,
@@ -4429,7 +4461,12 @@ let homeBrowseCache = null;
             if (reason) { showToast(reason); return; }
             // The check may just have cleared a choice that isn't offered any more.
             if (!deliveryMethod) { showToast('Please choose a delivery method.'); return; }
-            if (deliveryFeeFor(rid).needsPin) { showToast('Drop a pin so we can work out your delivery fee.'); openPinModal(); return; }
+            syncPinFromAddress();
+            const dfx = deliveryFeeFor(rid);
+            if (dfx.needsPin) { showToast('Drop a pin so we can work out your delivery fee.'); openPinModal(); return; }
+            if (dfx.outOfZone) { showToast(dfx.message || "We don't deliver to this pin yet."); openPinModal(); return; }
+            if (dfx.zoneError) { showToast("Couldn't check your delivery area — try again."); retryZone(); return; }
+            if (dfx.fee === null) { showToast('Still working out your delivery fee…'); return; }
             if (!selectedPaymentMethod) { showToast('Please choose a payment method.'); return; }
 
             const res = await fetch(`${API_BASE}/api/order/reserve`, {
@@ -4486,8 +4523,15 @@ let homeBrowseCache = null;
         const fees = []; // [{ label, amount }, …] — populated from the dashboard later
         const taxInfo = computeTax(activeCartRestaurantId, items.reduce((a, b) => a + (b.unitPrice * b.quantity), 0));
         if (taxInfo.enabled && taxInfo.mode === 'exclusive') fees.push({ label: `Gov Tax (${TAX_RATE_PERCENT}%)`, amount: taxInfo.tax });
+        syncPinFromAddress();
+        ensureDeliveryPinData(activeCartRestaurantId);
         const dFee = deliveryFeeFor(activeCartRestaurantId);
-        if (dFee.fee) fees.unshift({ label: dFee.km != null ? `Delivery fee (${dFee.km.toFixed(1)} km by road)` : 'Delivery fee', amount: dFee.fee });
+        // The server decides whether the delivery fee is part of the total (DELIVERY_FEE_IN_TOTAL). When it is not,
+        // the fee is shown under the total as "not included" and the rider collects it on delivery.
+        const feeInTotal = (restaurantEtaInfo[activeCartRestaurantId] || {}).feeInTotal === true;
+        if (dFee.fee && feeInTotal) fees.unshift({ label: dFee.km != null && !dFee.zoneName ? `Delivery fee (${dFee.km.toFixed(1)} km by road)` : 'Delivery fee', amount: dFee.fee });
+        const exclusiveFeeHtml = (dFee.fee && !feeInTotal)
+            ? `<div class="summary-row dlv-excl" style="padding-top: 10px;"><span>Delivery fee <em>(not included)</em></span><span>${Number(dFee.fee).toLocaleString('en-US')} MMK</span></div><div class="dlv-excl-note">${dFee.zoneName ? escPay(dFee.zoneName) + ' · ' : ''}Paid separately to your rider on delivery.</div>` : '';
 
         let itemsHtml = '';
         let itemsTotal = 0;
@@ -4508,7 +4552,10 @@ let homeBrowseCache = null;
         const paymentLabel = escPay((paymentMethods.find(p => p.id === selectedPaymentMethod) || {}).name || selectedPaymentMethod || '—');
         const noteText = orderComment && orderComment.trim() ? escPay(orderComment.trim()) : 'No note added';
 
-        const blockReason = cartBlockReason(activeCartRestaurantId) || (dFee.needsPin ? 'Drop a pin on the map so we can work out your delivery fee.' : '');
+        const blockReason = cartBlockReason(activeCartRestaurantId)
+            || (dFee.needsPin ? 'Drop a pin on the map so we can work out your delivery fee.' : '')
+            || (dFee.outOfZone ? (dFee.message || "We don't deliver to your pin yet.") : '')
+            || (dFee.zoneError ? "Couldn't check your delivery area." : '');
         container.innerHTML = `
             ${blockReason ? `<div class="cart-alert"><div>${escPay(blockReason)} Go back to review your cart.</div></div>` : ''}
             <div class="cart-section-card" style="margin-bottom: 16px;">
@@ -4527,6 +4574,7 @@ let homeBrowseCache = null;
                 ${fees.map(f => `<div class="summary-row" style="border-top: 1px dashed var(--border-light); padding-top: 10px;"><span>${escPay(f.label)}</span><span>${f.amount} MMK</span></div>`).join('')}
                 <div class="summary-row grand-total" style="border-top: 1px dashed var(--border-light); padding-top: 10px;"><span>Total</span><span style="color: var(--text-main); font-weight: 800;">${grandTotal} MMK</span></div>
                 ${taxInfo.enabled && taxInfo.mode === 'inclusive' ? `<div style="text-align:right; font-size:11.5px; color:var(--text-muted); margin-top:6px;">(incl. ${TAX_RATE_PERCENT}% commercial tax: ${taxInfo.tax} MMK)</div>` : ''}
+                ${exclusiveFeeHtml}
             </div>
 
             <div style="margin-top: 20px; margin-bottom: 24px;">
@@ -4606,16 +4654,72 @@ let homeBrowseCache = null;
         return Math.ceil(raw / p.round - 1e-9) * p.round;
     }
     // -> { fee, km, needsPin, loading }. fee === null means "can't say yet".
-    function deliveryFeeFor(restaurantId, pinOverride) {
+function deliveryFeeFor(restaurantId, pinOverride) {
         if (deliveryMethod === 'pickup') return { fee: 0, km: null, needsPin: false, loading: false };
         const info = restaurantEtaInfo[restaurantId] || {};
         if (!info.at) return { fee: null, km: null, needsPin: false, loading: true };          // restaurant details still loading
-        const p = info.pricing || DEFAULT_DELIVERY_PRICING;
         const pin = pinOverride === undefined ? deliveryPin : pinOverride;
+
+        // Delivery zones drawn by the delivery partner: the fee is the fee of the zone the pin is in.
+        if (info.zones) {
+            if (!pin) return { fee: null, km: null, needsPin: true, loading: false };
+            if (pin.zone === undefined) return { fee: null, km: pin.km != null ? pin.km : null, needsPin: false, loading: true };   // asking the server
+            if (pin.zone === null) return { fee: null, km: null, needsPin: false, loading: false, zoneError: true };                // the server couldn't be reached
+            if (pin.zone.configured !== false) {
+                if (pin.zone.deliverable === false) return { fee: null, km: null, needsPin: false, loading: false, outOfZone: true, message: pin.zone.message };
+                return { fee: pin.zone.fee, km: pin.km != null ? pin.km : null, needsPin: false, loading: false, zoneName: pin.zone.zoneName };
+            }
+        }
+
+        // No zones yet: the old distance-based fee.
+        const p = info.pricing || DEFAULT_DELIVERY_PRICING;
         if (!info.pin) return { fee: p.baseFee, km: null, needsPin: false, loading: false };    // the restaurant hasn't pinned itself: flat minimum
         if (!pin) return { fee: null, km: null, needsPin: true, loading: false };               // nothing to measure to yet
         if (pin.km == null) return { fee: null, km: null, needsPin: false, loading: true };     // road distance still being worked out
         return { fee: calcDeliveryFee(pin.km, p), km: pin.km, needsPin: false, loading: false };
+    }
+
+    /* ---------- the customer's pin: which zone is it in, how far by road ---------- */
+    const zoneCache = {};
+    async function lookupZone(lat, lng) {                       // -> the server's answer, or null if it couldn't be reached
+        const key = lat.toFixed(5) + ',' + lng.toFixed(5);
+        if (zoneCache[key]) return zoneCache[key];
+        try {
+            const res = await fetch(`${SERVER_URL}/api/get-delivery-fee`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lat, lng }) });
+            const j = await res.json();
+            if (!res.ok || !j || j.success === false) return null;
+            zoneCache[key] = j; setTimeout(() => { delete zoneCache[key]; }, 5 * 60 * 1000);      // the partner may change zones, so don't keep it long
+            return j;
+        } catch (e) { return null; }
+    }
+    function rerenderDelivery() {
+        if (currentTabId === 'restaurant-cart') renderRestaurantCartPage();
+        else if (currentTabId === 'checkout') renderCheckoutPage();
+    }
+    // Fills in whatever the saved pin is missing (zone / road distance) in the background, then redraws.
+    function ensureDeliveryPinData(restaurantId) {
+        const pin = deliveryPin, info = restaurantEtaInfo[restaurantId] || {};
+        if (!pin || deliveryMethod === 'pickup' || !info.at) return;
+        if (pin.zone === undefined && !pin.zoneBusy && info.zones) {
+            pin.zoneBusy = true;
+            lookupZone(pin.lat, pin.lng).then(z => { pin.zone = z; pin.zoneBusy = false; if (deliveryPin === pin) rerenderDelivery(); });
+        }
+        if (pin.km == null && info.pin && !pin.routeBusy) {
+            pin.routeBusy = true;
+            roadRoute(info.pin, [pin.lat, pin.lng]).then(r => { pin.km = r.km; pin.source = r.source; pin.routeBusy = false; if (deliveryPin === pin) rerenderDelivery(); });
+        }
+    }
+    function retryZone() { if (deliveryPin) { deliveryPin.zone = undefined; deliveryPin.zoneBusy = false; } rerenderDelivery(); }
+    // A pin saved with the chosen address is used automatically; a pin that belonged to another address is dropped.
+    function syncPinFromAddress() {
+        if (deliveryMethod === 'pickup') return;
+        const a = savedAddresses.find(x => x.id === activeAddressId);
+        if (a && a.lat != null && a.lng != null && isFinite(a.lat) && isFinite(a.lng)) {
+            if (!deliveryPin || deliveryPin.addrId !== a.id || deliveryPin.lat !== a.lat || deliveryPin.lng !== a.lng)
+                deliveryPin = { lat: a.lat, lng: a.lng, km: null, source: null, addrId: a.id };
+        } else if (deliveryPin && deliveryPin.addrId) {
+            deliveryPin = null;
+        }
     }
 
     // Restaurant location, busy minutes and prep time. Reloaded at most once a minute.
@@ -4626,7 +4730,7 @@ let homeBrowseCache = null;
         etaInfoLoading[restaurantId] = true;
         fetch(`${SERVER_URL}/api/restaurant-info?restaurant=${encodeURIComponent(restaurantId)}`, { cache: 'no-store' })
             .then(r => r.json())
-            .then(info => { restaurantEtaInfo[restaurantId] = { pin: parseMapPin(info.locationPin), busyMinutes: +info.busyMinutes || 0, prepTime: info.prepTime || '', pricing: info.deliveryPricing || null, at: Date.now() }; })
+            .then(info => { restaurantEtaInfo[restaurantId] = { pin: parseMapPin(info.locationPin), busyMinutes: +info.busyMinutes || 0, prepTime: info.prepTime || '', pricing: info.deliveryPricing || null, zones: info.deliveryZones === true, feeInTotal: info.deliveryFeeInTotal === true, at: Date.now() }; })
             .catch(() => { restaurantEtaInfo[restaurantId] = Object.assign({ pin: null, busyMinutes: 0, prepTime: '' }, cur, { at: Date.now() }); })
             .finally(() => {
                 etaInfoLoading[restaurantId] = false;
@@ -4678,37 +4782,54 @@ let homeBrowseCache = null;
     }
 
     // Cart-summary screen: "Estimated Delivery Time" card, right under Payment Method.
-    function etaSectionHtml(restaurantId) {
+function etaSectionHtml(restaurantId) {
         ensureEtaInfo(restaurantId);
+        syncPinFromAddress();
+        ensureDeliveryPinData(restaurantId);
         const items = cartItems.filter(i => i.restaurantId === restaurantId);
         const e = computeEta(restaurantId, items, deliveryMethod);
         const info = restaurantEtaInfo[restaurantId] || {};
-        const pickup = deliveryMethod === 'pickup';
-        let detail = `Kitchen ~${e.prep} min`;
-        if (!pickup) detail += e.source === 'pin' ? ` + ${e.travel} min travel (${e.roadKnown ? '' : 'about '}${e.km.toFixed(1)} km by road)` : ` + ${e.travel} min standard travel`;
-        if (info.busyMinutes > 0) detail += ` · includes +${info.busyMinutes} min because the restaurant is busy`;
-        const feeInfo = pickup ? null : deliveryFeeFor(restaurantId);
-        let feeLine = '';
-        if (feeInfo) feeLine = feeInfo.needsPin ? `<div class="eta-break eta-warn">Delivery fee: drop a pin so we can work it out from the road distance.</div>`
-            : feeInfo.fee === null ? `<div class="eta-break">Delivery fee: calculating…</div>`
-            : `<div class="eta-break"><b>Delivery fee: ${feeInfo.fee} MMK</b>${feeInfo.km != null ? ` · ${feeInfo.km.toFixed(1)} km by road` : ''}</div>`;
-        let extra = '';
-        if (!pickup) {
-            extra += `<button type="button" class="eta-pin-btn ${deliveryPin ? 'set' : ''}" onclick="openPinModal()">${icon(deliveryPin ? 'pin' : 'locate', 18)} ${deliveryPin ? 'Pin dropped — tap to change' : (feeInfo && feeInfo.needsPin ? 'Drop a pin to work out your delivery fee' : 'Drop a pin for a more precise time (optional)')}</button>`;
-            if (deliveryPin && info.at && !info.pin) extra += `<div class="eta-break">This restaurant hasn't shared its map location yet, so the standard travel time is used.</div>`;
-            if (e.far) extra += `<div class="eta-break eta-warn">Your pin is far from the restaurant — double-check it.</div>`;
+        const mmk = n => Number(n).toLocaleString('en-US') + ' MMK';
+
+        if (deliveryMethod === 'pickup') {
+            return `<div class="dlv-card"><span class="dlv-ico">${icon('clock', 20)}</span>
+                <div class="dlv-txt"><b>Ready for pickup in ${e.text}</b><span>Kitchen about ${e.prep} min${info.busyMinutes > 0 ? ` · +${info.busyMinutes} min because the restaurant is busy` : ''}</span></div></div>`;
         }
-        return `
-            <div class="cart-section-title" style="margin-top: 24px; margin-bottom: 12px; font-size: 16px;">Estimated ${pickup ? 'Pickup' : 'Delivery'} Time</div>
-            <div class="eta-card">
-                <div class="eta-main">
-                    <div><div class="eta-label">${pickup ? 'Ready for pickup in' : 'Arrives in about'}</div><div class="eta-value">${e.text}</div></div>
-                    <span class="eta-ico">${icon(pickup ? 'clock' : 'bike', 28)}</span>
-                </div>
-                <div class="eta-break">${detail}</div>
-                ${feeLine}
-                ${extra}
-            </div>`;
+        const f = deliveryFeeFor(restaurantId);
+        const askText = `<b>Drop a pin</b><span>to get accurate address, arrival time and estimated delivery fee</span>`;
+        if (!info.at) {
+            return `<div class="dlv-card"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt"><b>Checking delivery details…</b></div></div>`;
+        }
+        if (f.needsPin) {
+            return `<button type="button" class="dlv-card ask" onclick="openPinModal()"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt">${askText}</div>${icon('chevronRight', 16)}</button>`;
+        }
+        if (f.outOfZone) {
+            return `<div class="dlv-card bad"><span class="dlv-ico">${icon('pin', 20)}</span>
+                <div class="dlv-txt"><b>We don't deliver to this pin yet</b><span>Move the pin, or choose Self-pick up.</span></div>
+                <button type="button" class="dlv-act" onclick="openPinModal()">Change</button></div>`;
+        }
+        if (f.zoneError) {
+            return `<div class="dlv-card bad"><span class="dlv-ico">${icon('pin', 20)}</span>
+                <div class="dlv-txt"><b>Couldn't check your delivery area</b><span>Check your connection and try again.</span></div>
+                <button type="button" class="dlv-act" onclick="retryZone()">Retry</button></div>`;
+        }
+        if (f.loading) {
+            return `<div class="dlv-card"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt"><b>Working out your delivery fee…</b></div>
+                <button type="button" class="dlv-act" onclick="openPinModal()">Change</button></div>`;
+        }
+        // Ready: arrival time + fee on one line, the small print underneath.
+        const addr = deliveryPin && deliveryPin.addrId ? savedAddresses.find(a => a.id === deliveryPin.addrId) : null;
+        const small = [
+            f.zoneName || null,
+            addr ? `${addr.label} pin` : null,
+            f.zoneName || f.km == null ? null : `${f.km.toFixed(1)} km by road`,
+            info.feeInTotal ? null : 'fee not in your total',
+            info.busyMinutes > 0 ? `busy +${info.busyMinutes} min` : null,
+            e.far ? 'pin looks far from the restaurant — double-check' : null,
+        ].filter(Boolean).join(' · ');
+        return `<div class="dlv-card"><span class="dlv-ico">${icon('pin', 20)}</span>
+            <div class="dlv-txt"><b>${e.text} · Delivery fee ${mmk(f.fee)}</b>${small ? `<span>${escPay(small)}</span>` : ''}</div>
+            <button type="button" class="dlv-act" onclick="openPinModal()">${deliveryPin ? 'Change' : 'Drop pin'}</button></div>`;
     }
     // Final checkout page: one summary row that follows the pin automatically.
     function finalEtaRowHtml(restaurantId, items) {
@@ -4723,28 +4844,36 @@ let homeBrowseCache = null;
        stops moving ('moveend') the centre becomes the drop-off point, and the road distance from the restaurant
        is worked out with OSRM (Leaflet Routing Machine) — that distance sets the delivery fee. */
     let pinMap = null, pinRestMarker = null, pinDraft = null, pinRouteLine = null;
+    let pinTarget = 'order';            // 'order' = the delivery pin for this order, 'address' = the pin saved with an address
+    let addrPinDraft = null;            // the pin shown in the address form: { lat, lng } or null
+    let pinZoneSeq = 0;
+    const TAUNGGYI_CENTER = [20.7885, 97.033];
     let pinIgnoreMoveUntil = 0, pinRouteSeq = 0, pinRouteTimer = null, osrmRouter = null;
     const roadCache = {};
 
-    function openPinModal() {
-        pinDraft = deliveryPin ? { lat: deliveryPin.lat, lng: deliveryPin.lng, km: deliveryPin.km, source: deliveryPin.source } : null;
+function openPinModal(target) {
+        pinTarget = target === 'address' ? 'address' : 'order';
+        const addrMode = pinTarget === 'address';
+        const cur = addrMode ? addrPinDraft : deliveryPin;
+        pinDraft = cur ? { lat: cur.lat, lng: cur.lng, km: cur.km != null ? cur.km : null, source: cur.source || null, zone: cur.zone } : null;
         document.getElementById('pin-locate-btn').innerHTML = `${icon('locate', 18)} Use my current location`;
-        document.getElementById('pin-remove-btn').style.display = deliveryPin ? 'block' : 'none';
-        document.getElementById('pin-hint').textContent = 'Move the map so the pin sits exactly where we should deliver.';
+        document.getElementById('pin-remove-btn').style.display = cur ? 'block' : 'none';
+        document.getElementById('pin-hint').textContent = addrMode ? 'Move the map so the pin sits on your door — it is saved with this address.' : 'Move the map so the pin sits exactly where we should deliver.';
         document.getElementById('pin-modal').classList.add('open');
-        ensureEtaInfo(activeCartRestaurantId);
+        if (!addrMode) ensureEtaInfo(activeCartRestaurantId);
         initPinMap();
         setTimeout(() => {                       // the sheet is still sliding in — let the map re-measure
             if (!pinMap) return;
             pinMap.invalidateSize();
-            const info = restaurantEtaInfo[activeCartRestaurantId] || {};
+            const info = addrMode ? {} : (restaurantEtaInfo[activeCartRestaurantId] || {});
             if (info.pin) {
                 if (!pinRestMarker) pinRestMarker = L.marker(info.pin, { interactive: false, icon: L.divIcon({ className: '', html: '<div class="map-rest"></div>', iconSize: [16, 16], iconAnchor: [8, 8] }) }).addTo(pinMap);
                 else pinRestMarker.setLatLng(info.pin);
-            }
+            } else if (pinRestMarker) { pinMap.removeLayer(pinRestMarker); pinRestMarker = null; }
             if (pinDraft) pinViewAt(pinDraft.lat, pinDraft.lng, 16);
             else if (info.pin) pinViewAt(info.pin[0], info.pin[1], 14);
-            drawRoute(pinDraft ? (roadCache[roadKey(info.pin, [pinDraft.lat, pinDraft.lng])] || {}).coords : null);
+            else pinViewAt(TAUNGGYI_CENTER[0], TAUNGGYI_CENTER[1], 14);
+            drawRoute(!addrMode && pinDraft && info.pin ? (roadCache[roadKey(info.pin, [pinDraft.lat, pinDraft.lng])] || {}).coords : null);
             updatePinPreview();
         }, 350);
         updatePinPreview();
@@ -4849,42 +4978,91 @@ let homeBrowseCache = null;
         }, 350);
     }
 
+function scheduleZone() {                                          // ask the server which zone the pin is in (once per pin position)
+        const draft = pinDraft;
+        if (!draft || draft.zoneAsked) return;
+        draft.zoneAsked = true;
+        const seq = ++pinZoneSeq;
+        setTimeout(async () => {
+            const z = await lookupZone(draft.lat, draft.lng);
+            draft.zone = z;                                            // null = the server couldn't be reached
+            if (seq === pinZoneSeq && pinDraft === draft) updatePinPreview();
+        }, 250);
+    }
     function updatePinPreview() {
         const box = document.getElementById('pin-preview'), btn = document.getElementById('pin-confirm-btn');
-        const info = restaurantEtaInfo[activeCartRestaurantId] || {};
+        const addrMode = pinTarget === 'address';
+        const info = addrMode ? { at: 1 } : (restaurantEtaInfo[activeCartRestaurantId] || {});
+        const box0 = html => { box.innerHTML = html; };
         if (!info.at) {                                            // restaurant details (its location + prices) are still loading
             btn.disabled = true; box.textContent = 'Loading restaurant details…';
             if (document.getElementById('pin-modal').classList.contains('open')) setTimeout(updatePinPreview, 500);
             return;
         }
-        if (!pinDraft) { btn.disabled = true; box.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Pan and zoom the map until the pin is on your door.</span>`; return; }
-        if (info.pin && pinDraft.km == null) {                     // measuring the road
-            btn.disabled = true; box.innerHTML = '<b>Calculating road distance…</b>';
-            scheduleRoute();
+        if (!pinDraft) { btn.disabled = true; box0(`<span style="color:var(--text-muted); font-size:12px;">Pan and zoom the map until the pin is on your door.</span>`); return; }
+        const small = t => `<br><span style="color:var(--text-muted); font-size:12px;">${t}</span>`;
+        const useZones = addrMode || info.zones;
+        if (!addrMode && info.pin && pinDraft.km == null) scheduleRoute();       // road distance is only needed for the arrival time
+        if (useZones && pinDraft.zone === undefined) { btn.disabled = true; box0('<b>Checking your delivery area…</b>'); scheduleZone(); return; }
+        const z = pinDraft.zone;
+        const zoneKnown = !!(z && z.configured !== false);
+        if (useZones && z === null) {                              // couldn't reach the server
+            btn.disabled = !addrMode;
+            box0(`<b>Couldn't check the delivery area</b>${small(addrMode ? 'You can still save this pin with your address.' : 'Check your connection, then move the pin a little to try again.')}`);
             return;
         }
+        if (zoneKnown && z.deliverable === false) {
+            btn.disabled = !addrMode;
+            box0(`<b style="color:#B42318;">We don't deliver here yet</b>${small(addrMode ? 'You can still save this pin with your address.' : 'Move the pin, or choose Self-pick up.')}`);
+            return;
+        }
+        if (addrMode) {
+            btn.disabled = false;
+            box0(zoneKnown ? `<b>${escPay(z.zoneName)} · Delivery fee ${Number(z.fee).toLocaleString('en-US')} MMK</b>${small('This pin is saved with your address.')}` : `<b>Pin ready</b>${small('This pin is saved with your address.')}`);
+            return;
+        }
+        // order mode, fee known (zone) or distance-based
+        if (!useZones && info.pin && pinDraft.km == null) { btn.disabled = true; box0('<b>Calculating road distance…</b>'); return; }
         btn.disabled = false;
         const items = cartItems.filter(i => i.restaurantId === activeCartRestaurantId);
         const e = computeEta(activeCartRestaurantId, items, 'delivery', pinDraft);
         const df = deliveryFeeFor(activeCartRestaurantId, pinDraft);
-        box.innerHTML = e.source === 'pin'
-            ? `<b>Delivery fee: ${df.fee} MMK · ${e.text}</b><br><span style="color:var(--text-muted); font-size:12px;">${e.roadKnown ? '' : 'about '}${e.km.toFixed(1)} km by road · ${e.travel} min by bike${e.roadKnown ? '' : ' (routing service unavailable — estimated)'}${e.far ? ' — that is far from the restaurant, double-check the pin' : ''}</span>`
-            : `<b>Delivery fee: ${df.fee} MMK · ${e.text}</b><br><span style="color:var(--text-muted); font-size:12px;">The restaurant hasn't shared its map location, so a flat fee and the standard ${STANDARD_TRAVEL_MIN} min travel time are used.</span>`;
+        const feeNote = info.feeInTotal ? '' : ' · fee not in your total';
+        const where = df.zoneName ? escPay(df.zoneName) + ' · ' : '';
+        const dist = e.source === 'pin' ? `${e.roadKnown ? '' : 'about '}${e.km.toFixed(1)} km by road · ${e.travel} min by bike` : `standard ${STANDARD_TRAVEL_MIN} min travel`;
+        box0(`<b>Delivery fee ${Number(df.fee).toLocaleString('en-US')} MMK · ${e.text}</b>${small(`${where}${dist}${feeNote}`)}`);
     }
-    function confirmPin() {
+function confirmPin() {
         if (!pinDraft) return;
-        deliveryPin = { lat: pinDraft.lat, lng: pinDraft.lng, km: pinDraft.km, source: pinDraft.source };
+        if (pinTarget === 'address') {                             // just remember it for the address form
+            addrPinDraft = { lat: pinDraft.lat, lng: pinDraft.lng };
+            closePinModal();
+            renderAddrPinRow();
+            return;
+        }
+        deliveryPin = { lat: pinDraft.lat, lng: pinDraft.lng, km: pinDraft.km, source: pinDraft.source, zone: pinDraft.zone };
+        // Keep it with the chosen address, so next time it is already there.
+        const a = savedAddresses.find(x => x.id === activeAddressId);
+        if (a) {
+            a.lat = deliveryPin.lat; a.lng = deliveryPin.lng; deliveryPin.addrId = a.id;
+            localStorage.setItem(STORAGE_KEY_ADDRESSES, JSON.stringify(savedAddresses));
+        }
         closePinModal();
         showToast('Pin saved — delivery fee and time updated');
-        if (currentTabId === 'restaurant-cart') renderRestaurantCartPage();
-        else if (currentTabId === 'checkout') renderCheckoutPage();
+        rerenderDelivery();
     }
-    function removePin() {
+function removePin() {
+        if (pinTarget === 'address') {
+            addrPinDraft = null; pinDraft = null; drawRoute(null);
+            closePinModal(); renderAddrPinRow();
+            return;
+        }
+        const a = deliveryPin && deliveryPin.addrId ? savedAddresses.find(x => x.id === deliveryPin.addrId) : null;
+        if (a) { delete a.lat; delete a.lng; localStorage.setItem(STORAGE_KEY_ADDRESSES, JSON.stringify(savedAddresses)); }
         deliveryPin = null; pinDraft = null;
         drawRoute(null);
         closePinModal();
-        if (currentTabId === 'restaurant-cart') renderRestaurantCartPage();
-        else if (currentTabId === 'checkout') renderCheckoutPage();
+        rerenderDelivery();
     }
 
     const MAX_SAVED_ADDRESSES = 2;
@@ -4907,6 +5085,7 @@ let homeBrowseCache = null;
             document.getElementById('addr-name-input').value = addr.name;
             document.getElementById('addr-phone-input').value = addr.phone;
             document.getElementById('addr-detail-input').value = addr.address;
+            addrPinDraft = (addr.lat != null && addr.lng != null) ? { lat: addr.lat, lng: addr.lng } : null;
         } else {
             // Create new
             document.getElementById('address-modal-title').innerText = 'Add New Address';
@@ -4915,7 +5094,9 @@ let homeBrowseCache = null;
             document.getElementById('addr-name-input').value = '';
             document.getElementById('addr-phone-input').value = '';
             document.getElementById('addr-detail-input').value = '';
+            addrPinDraft = null;
         }
+        renderAddrPinRow();
 
         // The recipient name always comes from Telegram and is locked — it's the same
         // person delivery is confirmed with, so it shouldn't drift from their account name.
@@ -4928,6 +5109,13 @@ let homeBrowseCache = null;
     // Forces the address "Full Name" field to the user's Telegram name and locks it,
     // when opened inside Telegram. Falls back to a normal editable field otherwise
     // (e.g. testing outside Telegram, where there's no name to lock to).
+    function renderAddrPinRow() {
+        const el = document.getElementById('addr-pin-row');
+        if (!el) return;
+        el.className = 'addr-pin-row' + (addrPinDraft ? ' set' : '');
+        el.innerHTML = `${icon('pin', 22)}<span><b>${addrPinDraft ? 'Pin dropped' : 'Drop a pin on the map'}</b><small>${addrPinDraft ? 'Tap to change it' : 'For an accurate delivery spot, arrival time and fee'}</small></span>${icon('chevronRight', 16)}`;
+    }
+
     function applyTelegramNameLock() {
         const nameInput = document.getElementById('addr-name-input');
         if (!nameInput) return;
@@ -4984,7 +5172,7 @@ let homeBrowseCache = null;
             // Update existing
             const index = savedAddresses.findIndex(a => a.id == idInput);
             if (index !== -1) {
-                savedAddresses[index] = { id: parseInt(idInput), label, name, phone, address: addressText };
+                savedAddresses[index] = Object.assign({ id: parseInt(idInput), label, name, phone, address: addressText }, addrPinDraft ? { lat: addrPinDraft.lat, lng: addrPinDraft.lng } : {});
             }
         } else {
             // Add new (guarded by the cap in openAddressModal, but double-checked here too)
@@ -4993,7 +5181,7 @@ let homeBrowseCache = null;
                 return;
             }
             const newId = Date.now();
-            savedAddresses.push({ id: newId, label, name, phone, address: addressText });
+            savedAddresses.push(Object.assign({ id: newId, label, name, phone, address: addressText }, addrPinDraft ? { lat: addrPinDraft.lat, lng: addrPinDraft.lng } : {}));
             activeAddressId = newId; // Auto select the new one
         }
 
