@@ -8,7 +8,8 @@
   IWTEAT delivery-fee manager (for the delivery partner, opened as a Telegram Mini App).
     1. "Fees": the fee per km, the minimum fee, the farthest delivery, and the rider start point (the town-centre hub).
     2. Draw zones for places that need a different fee per km (e.g. a hill area), then press Save.
-  Fee = fee per km x (hub -> restaurant + restaurant -> customer), never below the minimum, rounded up to 100 MMK.
+  Fee = fee per km x (hub -> restaurant + how far the customer is off the road back to the hub), never below the minimum,
+  rounded up to 100 MMK. A customer ON the way back to the hub adds no extra distance.
 
   Needs on the server (minibot.py): pip install shapely, and the partner's Telegram ID in ZONE_ADMIN_IDS.
   Host this file next to index.html (GitHub Pages) and open it as a Mini App from one of your bots
@@ -167,7 +168,7 @@
 
 <div class="sheet" id="fees-sheet" role="dialog" aria-modal="true">
   <h2>Delivery fee settings</h2>
-  <div class="formula">Fee = <b>fee per km</b> × (rider start point → restaurant + restaurant → customer). Never less than the <b>minimum</b>. Rounded up to the next 100 MMK.</div>
+  <div class="formula">Fee = <b>fee per km</b> × (hub → restaurant + how far the customer is <b>off the road back to the hub</b>). A customer on the way back adds nothing. Never less than the <b>minimum</b>. Rounded up to the next 100 MMK.</div>
   <label for="f-rate">Fee per km (MMK)</label>
   <input id="f-rate" type="text" inputmode="numeric" placeholder="e.g. 500" autocomplete="off">
   <label for="f-min">Minimum delivery fee (MMK)</label>
@@ -176,7 +177,7 @@
   <input id="f-max" type="text" inputmode="decimal" placeholder="e.g. 10" autocomplete="off">
   <label>Rider start point (town-centre hub)</label>
   <div class="hubrow"><span id="f-hub">—</span><button type="button" id="f-hub-centre">Use map centre</button></div>
-  <p class="help">The black <b>H</b> on the map is the hub — you can also drag it. Distances are estimated along roads (straight line × 1.4).</p>
+  <p class="help">The black <b>H</b> on the map is the hub — you can also drag it. Distances are estimated along roads (straight line × 1.4). Use “Try it” to see how a customer’s fee is worked out.</p>
   <div class="err" id="fees-err"></div>
   <div class="row"><button class="btn-ghost" id="f-cancel">Cancel</button><button class="btn-main" id="f-ok">Done</button></div>
 </div>
@@ -227,7 +228,7 @@ const zoneGroup = L.featureGroup().addTo(map);
 
 let dirty = false, feeInTotal = false, canUndo = false;
 let settings = { ratePerKm: 500, minFee: 1500, maxKm: 10, hub: { lat: START_CENTER[0], lng: START_CENTER[1] } };
-let settingsSaved = false, restaurants = [], detour = 1.4, roundTo = 100;
+let settingsSaved = false, restaurants = [], detour = 1.4, roundTo = 100, offCount = 1;
 function setDirty(v) {
   dirty = v;
   try { if (tg) v ? tg.enableClosingConfirmation() : tg.disableClosingConfirmation(); } catch (e) {}
@@ -270,7 +271,7 @@ const HINTS = {
   draw: 'Tap the map to place corners around the area. Press “Finish zone” (or tap the first corner) to close it.',
   edit: 'Drag a corner to reshape a zone. Drag the small middle dots to add a corner. Press Reshape again when done.',
   remove: 'Tap a zone to delete it. Press Delete again when done.',
-  test: 'Pick a restaurant above, then tap where a customer would be. You will see the working and the fee — using what is on the map now, even before you save.',
+  test: 'Pick a restaurant above, then tap where a customer would be. The blue line is the road back to the hub, the red line is the extra distance charged. Uses what is on the map now, even before you save.',
 };
 function setMode(next) {
   if (mode === 'draw') map.pm.disableDraw();
@@ -370,7 +371,7 @@ $('z-delete').onclick = () => {
 
 /* ============================== try it: the same formula as the server ============================== */
 let testMarker = null;
-function clearTest() { if (testMarker) { map.removeLayer(testMarker); testMarker = null; } }
+function clearTest() { if (testMarker) { map.removeLayer(testMarker); testMarker = null; } if (typeof testLines !== 'undefined' && testLines) { map.removeLayer(testLines); testLines = null; } }
 function inRing(pt, ring) {                                    // ray casting; points are {lat, lng}
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -394,22 +395,40 @@ function termsAt(pt) {                                         // rate + minimum
   const z = zoneAt(pt), p = z ? z.feature.properties : null;
   return { rate: p ? p.rate_per_km : settings.ratePerKm, min: p && p.min_fee != null ? p.min_fee : settings.minFee, zone: p ? p.zone_name : '' };
 }
+function toSegment(p, a, b) {                                  // nearest point of the segment a-b to p (all {lat, lng}) — same maths as the server
+  const kx = 111.32 * Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180), ky = 110.57;
+  const px = (p.lng - a.lng) * kx, py = (p.lat - a.lat) * ky, bx = (b.lng - a.lng) * kx, by = (b.lat - a.lat) * ky;
+  const seg2 = bx * bx + by * by, t = seg2 === 0 ? 0 : Math.max(0, Math.min(1, (px * bx + py * by) / seg2));
+  const nx = bx * t, ny = by * t;
+  return { km: Math.hypot(px - nx, py - ny), pt: { lat: a.lat + ny / ky, lng: a.lng + nx / kx } };
+}
 function quote(rest, cust) {
   const hub = settings.hub, k = x => x.toFixed(1);
   const l1 = hav(hub, rest) * detour, l2 = hav(rest, cust) * detour;
-  if (l2 > settings.maxKm) return `<b>Too far</b><br>${k(l2)} km from the restaurant — the limit is ${settings.maxKm} km.<br>The customer must choose Self-pick up.`;
+  if (l2 > settings.maxKm) return { html: `<b>Too far</b><br>${k(l2)} km from the restaurant — the limit is ${settings.maxKm} km.<br>The customer must choose Self-pick up.` };
+  const seg = toSegment(cust, rest, hub), off = seg.km * detour * offCount;
   const t1 = termsAt(rest), t2 = termsAt(cust), rate = Math.max(t1.rate, t2.rate), min = Math.max(t1.min, t2.min);
-  const km = l1 + l2, metered = Math.ceil(rate * km / roundTo - 1e-9) * roundTo, fee = Math.max(min, metered);
+  const km = l1 + off, metered = Math.ceil(rate * km / roundTo - 1e-9) * roundTo, fee = Math.max(min, metered);
   const zone = [t2, t1].filter(t => t.zone && t.rate >= rate)[0];
-  return `Hub → restaurant: ${k(l1)} km<br>Restaurant → customer: ${k(l2)} km<br>Total ${k(km)} km × ${fmt(rate)}/km = ${fmt(metered)}`
-    + `${zone ? `<br>Zone rate: ${esc(zone.zone)}` : ''}<br>Minimum fee: ${fmt(min)}${metered < min ? ' (applies)' : ''}<br><b class="fee">Fee: ${fmt(fee)} MMK</b>`;
+  const side = off < 0.05 ? 'On the way back to the hub — no extra distance' : `Off the way back to the hub: ${k(off)} km`;
+  return { nearest: off < 0.05 ? null : seg.pt, html: `Hub → restaurant: ${k(l1)} km<br>${side}<br>Total ${k(km)} km × ${fmt(rate)}/km = ${fmt(metered)}`
+    + `${zone ? `<br>Zone rate: ${esc(zone.zone)}` : ''}<br>Minimum fee: ${fmt(min)}${metered < min ? ' (applies)' : ''}<br><b class="fee">Fee: ${fmt(fee)} MMK</b>` };
+}
+let testLines = null;
+function drawTestLines(rest, cust, nearest) {                  // blue = road back to the hub, red = the extra distance charged
+  if (testLines) map.removeLayer(testLines);
+  testLines = L.layerGroup([L.polyline([[rest.lat, rest.lng], [settings.hub.lat, settings.hub.lng]], { color: '#2563EB', weight: 4, opacity: .8 })]);
+  if (nearest) testLines.addLayer(L.polyline([[cust.lat, cust.lng], [nearest.lat, nearest.lng]], { color: '#E5484D', weight: 3, dashArray: '6 6' }));
+  testLines.addTo(map);
 }
 function placeTest(latlng) {
   clearTest();
   const r = restaurants.find(x => x.id === $('test-rest').value);
   if (!r) { toast('There are no restaurants with a pin to test.', 'bad'); return; }
+  const rest = { lat: r.lat, lng: r.lng }, q = quote(rest, latlng);
+  drawTestLines(rest, latlng, q.nearest);
   testMarker = L.marker(latlng, { icon: L.divIcon({ className: '', html: '<div class="pin-test"></div>', iconSize: [22, 22], iconAnchor: [11, 22] }) })
-    .addTo(map).bindPopup(`<div class="work">${quote({ lat: r.lat, lng: r.lng }, latlng)}</div>`, { closeButton: false }).openPopup();
+    .addTo(map).bindPopup(`<div class="work">${q.html}</div>`, { closeButton: false }).openPopup();
 }
 map.on('click', e => { if (mode === 'test') placeTest(e.latlng); });
 
@@ -473,7 +492,7 @@ async function loadZones() {
   }
   zoneGroup.clearLayers();
   feeInTotal = !!r.body.feeInTotal; canUndo = !!r.body.canUndo;
-  settings = r.body.settings; settingsSaved = !!settings.saved; restaurants = r.body.restaurants || []; detour = r.body.detourFactor || 1.4; roundTo = r.body.roundTo || 100;
+  settings = r.body.settings; settingsSaved = !!settings.saved; restaurants = r.body.restaurants || []; detour = r.body.detourFactor || 1.4; roundTo = r.body.roundTo || 100; offCount = r.body.offPathCount || 1;
   hubMarker.setLatLng([settings.hub.lat, settings.hub.lng]); drawRestaurants();
   L.geoJSON(r.body.zones, { onEachFeature: (f, layer) => adopt(layer) });
   const notes = (r.body.overlaps || []).slice();
