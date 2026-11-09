@@ -4529,9 +4529,9 @@ let homeBrowseCache = null;
         // The server decides whether the delivery fee is part of the total (DELIVERY_FEE_IN_TOTAL). When it is not,
         // the fee is shown under the total as "not included" and the rider collects it on delivery.
         const feeInTotal = (restaurantEtaInfo[activeCartRestaurantId] || {}).feeInTotal === true;
-        if (dFee.fee && feeInTotal) fees.unshift({ label: dFee.km != null && !dFee.zoneName ? `Delivery fee (${dFee.km.toFixed(1)} km by road)` : 'Delivery fee', amount: dFee.fee });
+        if (dFee.fee && feeInTotal) fees.unshift({ label: dFee.km != null ? `Delivery fee (${dFee.km.toFixed(1)} km by road)` : 'Delivery fee', amount: dFee.fee });
         const exclusiveFeeHtml = (dFee.fee && !feeInTotal)
-            ? `<div class="summary-row dlv-excl" style="padding-top: 10px;"><span>Delivery fee <em>(not included)</em></span><span>${Number(dFee.fee).toLocaleString('en-US')} MMK</span></div><div class="dlv-excl-note">${dFee.zoneName ? escPay(dFee.zoneName) + ' · ' : ''}Paid separately to your rider on delivery.</div>` : '';
+            ? `<div class="summary-row dlv-excl" style="padding-top: 10px;"><span>Delivery fee <em>(not included)</em></span><span>${Number(dFee.fee).toLocaleString('en-US')} MMK</span></div><div class="dlv-excl-note">Paid separately to your rider on delivery.</div>` : '';
 
         let itemsHtml = '';
         let itemsTotal = 0;
@@ -4654,24 +4654,29 @@ let homeBrowseCache = null;
         return Math.ceil(raw / p.round - 1e-9) * p.round;
     }
     // -> { fee, km, needsPin, loading }. fee === null means "can't say yet".
-function deliveryFeeFor(restaurantId, pinOverride) {
+// The server's fee answer for a pin + this restaurant: undefined = not asked yet, null = couldn't reach the server.
+    function pinQuote(pin, restaurantId) { return pin && pin.quote && pin.quote.rid === restaurantId ? pin.quote.data : undefined; }
+
+    function deliveryFeeFor(restaurantId, pinOverride) {
         if (deliveryMethod === 'pickup') return { fee: 0, km: null, needsPin: false, loading: false };
         const info = restaurantEtaInfo[restaurantId] || {};
         if (!info.at) return { fee: null, km: null, needsPin: false, loading: true };          // restaurant details still loading
         const pin = pinOverride === undefined ? deliveryPin : pinOverride;
 
-        // Delivery zones drawn by the delivery partner: the fee is the fee of the zone the pin is in.
-        if (info.zones) {
+        // The delivery partner's settings (fee per km, minimum, hub) live on the server: it works the fee out
+        // from the restaurant + the customer's pin, so the price shown here is the price that is charged.
+        if (info.serverFee) {
             if (!pin) return { fee: null, km: null, needsPin: true, loading: false };
-            if (pin.zone === undefined) return { fee: null, km: pin.km != null ? pin.km : null, needsPin: false, loading: true };   // asking the server
-            if (pin.zone === null) return { fee: null, km: null, needsPin: false, loading: false, zoneError: true };                // the server couldn't be reached
-            if (pin.zone.configured !== false) {
-                if (pin.zone.deliverable === false) return { fee: null, km: null, needsPin: false, loading: false, outOfZone: true, message: pin.zone.message };
-                return { fee: pin.zone.fee, km: pin.km != null ? pin.km : null, needsPin: false, loading: false, zoneName: pin.zone.zoneName };
+            const q = pinQuote(pin, restaurantId);
+            if (q === undefined) return { fee: null, km: null, needsPin: false, loading: true };                                   // asking the server
+            if (q === null) return { fee: null, km: null, needsPin: false, loading: false, zoneError: true };                      // the server couldn't be reached
+            if (q.configured !== false) {
+                if (q.deliverable === false) return { fee: null, km: null, needsPin: false, loading: false, outOfZone: true, message: q.message };
+                return { fee: q.fee, km: null, needsPin: false, loading: false, minApplied: q.minApplied };
             }
         }
 
-        // No zones yet: the old distance-based fee.
+        // The delivery partner hasn't saved fee settings yet: the old distance-based fee.
         const p = info.pricing || DEFAULT_DELIVERY_PRICING;
         if (!info.pin) return { fee: p.baseFee, km: null, needsPin: false, loading: false };    // the restaurant hasn't pinned itself: flat minimum
         if (!pin) return { fee: null, km: null, needsPin: true, loading: false };               // nothing to measure to yet
@@ -4681,14 +4686,14 @@ function deliveryFeeFor(restaurantId, pinOverride) {
 
     /* ---------- the customer's pin: which zone is it in, how far by road ---------- */
     const zoneCache = {};
-    async function lookupZone(lat, lng) {                       // -> the server's answer, or null if it couldn't be reached
-        const key = lat.toFixed(5) + ',' + lng.toFixed(5);
+async function lookupQuote(restaurantId, lat, lng) {       // -> the server's fee answer, or null if it couldn't be reached
+        const key = restaurantId + '|' + lat.toFixed(5) + ',' + lng.toFixed(5);
         if (zoneCache[key]) return zoneCache[key];
         try {
-            const res = await fetch(`${SERVER_URL}/api/get-delivery-fee`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lat, lng }) });
+            const res = await fetch(`${SERVER_URL}/api/get-delivery-fee`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lat, lng, restaurant: restaurantId }) });
             const j = await res.json();
             if (!res.ok || !j || j.success === false) return null;
-            zoneCache[key] = j; setTimeout(() => { delete zoneCache[key]; }, 5 * 60 * 1000);      // the partner may change zones, so don't keep it long
+            zoneCache[key] = j; setTimeout(() => { delete zoneCache[key]; }, 5 * 60 * 1000);      // the partner may change the fees, so don't keep it long
             return j;
         } catch (e) { return null; }
     }
@@ -4697,19 +4702,19 @@ function deliveryFeeFor(restaurantId, pinOverride) {
         else if (currentTabId === 'checkout') renderCheckoutPage();
     }
     // Fills in whatever the saved pin is missing (zone / road distance) in the background, then redraws.
-    function ensureDeliveryPinData(restaurantId) {
+function ensureDeliveryPinData(restaurantId) {
         const pin = deliveryPin, info = restaurantEtaInfo[restaurantId] || {};
         if (!pin || deliveryMethod === 'pickup' || !info.at) return;
-        if (pin.zone === undefined && !pin.zoneBusy && info.zones) {
-            pin.zoneBusy = true;
-            lookupZone(pin.lat, pin.lng).then(z => { pin.zone = z; pin.zoneBusy = false; if (deliveryPin === pin) rerenderDelivery(); });
+        if (info.serverFee && pinQuote(pin, restaurantId) === undefined && !pin.quoteBusy) {
+            pin.quoteBusy = true;
+            lookupQuote(restaurantId, pin.lat, pin.lng).then(q => { pin.quote = { rid: restaurantId, data: q }; pin.quoteBusy = false; if (deliveryPin === pin) rerenderDelivery(); });
         }
-        if (pin.km == null && info.pin && !pin.routeBusy) {
+        if (pin.km == null && info.pin && !pin.routeBusy) {                 // road distance: only used for the arrival time here
             pin.routeBusy = true;
             roadRoute(info.pin, [pin.lat, pin.lng]).then(r => { pin.km = r.km; pin.source = r.source; pin.routeBusy = false; if (deliveryPin === pin) rerenderDelivery(); });
         }
     }
-    function retryZone() { if (deliveryPin) { deliveryPin.zone = undefined; deliveryPin.zoneBusy = false; } rerenderDelivery(); }
+function retryZone() { if (deliveryPin) { deliveryPin.quote = undefined; deliveryPin.quoteBusy = false; } rerenderDelivery(); }
     // A pin saved with the chosen address is used automatically; a pin that belonged to another address is dropped.
     function syncPinFromAddress() {
         if (deliveryMethod === 'pickup') return;
@@ -4730,7 +4735,7 @@ function deliveryFeeFor(restaurantId, pinOverride) {
         etaInfoLoading[restaurantId] = true;
         fetch(`${SERVER_URL}/api/restaurant-info?restaurant=${encodeURIComponent(restaurantId)}`, { cache: 'no-store' })
             .then(r => r.json())
-            .then(info => { restaurantEtaInfo[restaurantId] = { pin: parseMapPin(info.locationPin), busyMinutes: +info.busyMinutes || 0, prepTime: info.prepTime || '', pricing: info.deliveryPricing || null, zones: info.deliveryZones === true, feeInTotal: info.deliveryFeeInTotal === true, at: Date.now() }; })
+            .then(info => { restaurantEtaInfo[restaurantId] = { pin: parseMapPin(info.locationPin), busyMinutes: +info.busyMinutes || 0, prepTime: info.prepTime || '', pricing: info.deliveryPricing || null, serverFee: info.deliveryFeeMode === 'server', feeInTotal: info.deliveryFeeInTotal === true, at: Date.now() }; })
             .catch(() => { restaurantEtaInfo[restaurantId] = Object.assign({ pin: null, busyMinutes: 0, prepTime: '' }, cur, { at: Date.now() }); })
             .finally(() => {
                 etaInfoLoading[restaurantId] = false;
@@ -4805,7 +4810,7 @@ function etaSectionHtml(restaurantId) {
         }
         if (f.outOfZone) {
             return `<div class="dlv-card bad"><span class="dlv-ico">${icon('pin', 20)}</span>
-                <div class="dlv-txt"><b>We don't deliver to this pin yet</b><span>Move the pin, or choose Self-pick up.</span></div>
+                <div class="dlv-txt"><b>We can't deliver to this pin</b><span>${escPay(f.message || 'Move the pin, or choose Self-pick up.')}</span></div>
                 <button type="button" class="dlv-act" onclick="openPinModal()">Change</button></div>`;
         }
         if (f.zoneError) {
@@ -4820,9 +4825,8 @@ function etaSectionHtml(restaurantId) {
         // Ready: arrival time + fee on one line, the small print underneath.
         const addr = deliveryPin && deliveryPin.addrId ? savedAddresses.find(a => a.id === deliveryPin.addrId) : null;
         const small = [
-            f.zoneName || null,
             addr ? `${addr.label} pin` : null,
-            f.zoneName || f.km == null ? null : `${f.km.toFixed(1)} km by road`,
+            info.serverFee || f.km == null ? null : `${f.km.toFixed(1)} km by road`,
             info.feeInTotal ? null : 'fee not in your total',
             info.busyMinutes > 0 ? `busy +${info.busyMinutes} min` : null,
             e.far ? 'pin looks far from the restaurant — double-check' : null,
@@ -4855,7 +4859,7 @@ function openPinModal(target) {
         pinTarget = target === 'address' ? 'address' : 'order';
         const addrMode = pinTarget === 'address';
         const cur = addrMode ? addrPinDraft : deliveryPin;
-        pinDraft = cur ? { lat: cur.lat, lng: cur.lng, km: cur.km != null ? cur.km : null, source: cur.source || null, zone: cur.zone } : null;
+        pinDraft = cur ? { lat: cur.lat, lng: cur.lng, km: cur.km != null ? cur.km : null, source: cur.source || null, quote: cur.quote } : null;
         document.getElementById('pin-locate-btn').innerHTML = `${icon('locate', 18)} Use my current location`;
         document.getElementById('pin-remove-btn').style.display = cur ? 'block' : 'none';
         document.getElementById('pin-hint').textContent = addrMode ? 'Move the map so the pin sits on your door — it is saved with this address.' : 'Move the map so the pin sits exactly where we should deliver.';
@@ -4978,18 +4982,18 @@ function openPinModal(target) {
         }, 350);
     }
 
-function scheduleZone() {                                          // ask the server which zone the pin is in (once per pin position)
-        const draft = pinDraft;
-        if (!draft || draft.zoneAsked) return;
-        draft.zoneAsked = true;
+function scheduleQuote() {                                         // ask the server for the fee (once per pin position)
+        const draft = pinDraft, rid = activeCartRestaurantId;
+        if (!draft || draft.quoteAsked) return;
+        draft.quoteAsked = true;
         const seq = ++pinZoneSeq;
         setTimeout(async () => {
-            const z = await lookupZone(draft.lat, draft.lng);
-            draft.zone = z;                                            // null = the server couldn't be reached
+            const q = await lookupQuote(rid, draft.lat, draft.lng);
+            draft.quote = { rid, data: q };                            // data null = the server couldn't be reached
             if (seq === pinZoneSeq && pinDraft === draft) updatePinPreview();
         }, 250);
     }
-    function updatePinPreview() {
+function updatePinPreview() {
         const box = document.getElementById('pin-preview'), btn = document.getElementById('pin-confirm-btn');
         const addrMode = pinTarget === 'address';
         const info = addrMode ? { at: 1 } : (restaurantEtaInfo[activeCartRestaurantId] || {});
@@ -5001,36 +5005,29 @@ function scheduleZone() {                                          // ask the se
         }
         if (!pinDraft) { btn.disabled = true; box0(`<span style="color:var(--text-muted); font-size:12px;">Pan and zoom the map until the pin is on your door.</span>`); return; }
         const small = t => `<br><span style="color:var(--text-muted); font-size:12px;">${t}</span>`;
-        const useZones = addrMode || info.zones;
-        if (!addrMode && info.pin && pinDraft.km == null) scheduleRoute();       // road distance is only needed for the arrival time
-        if (useZones && pinDraft.zone === undefined) { btn.disabled = true; box0('<b>Checking your delivery area…</b>'); scheduleZone(); return; }
-        const z = pinDraft.zone;
-        const zoneKnown = !!(z && z.configured !== false);
-        if (useZones && z === null) {                              // couldn't reach the server
-            btn.disabled = !addrMode;
-            box0(`<b>Couldn't check the delivery area</b>${small(addrMode ? 'You can still save this pin with your address.' : 'Check your connection, then move the pin a little to try again.')}`);
-            return;
-        }
-        if (zoneKnown && z.deliverable === false) {
-            btn.disabled = !addrMode;
-            box0(`<b style="color:#B42318;">We don't deliver here yet</b>${small(addrMode ? 'You can still save this pin with your address.' : 'Move the pin, or choose Self-pick up.')}`);
-            return;
-        }
-        if (addrMode) {
+        if (addrMode) {                                            // the fee depends on the restaurant, so it is worked out when you order
             btn.disabled = false;
-            box0(zoneKnown ? `<b>${escPay(z.zoneName)} · Delivery fee ${Number(z.fee).toLocaleString('en-US')} MMK</b>${small('This pin is saved with your address.')}` : `<b>Pin ready</b>${small('This pin is saved with your address.')}`);
+            box0(`<b>Pin ready</b>${small('It is saved with this address. Your delivery fee and arrival time are worked out when you order.')}`);
             return;
         }
-        // order mode, fee known (zone) or distance-based
-        if (!useZones && info.pin && pinDraft.km == null) { btn.disabled = true; box0('<b>Calculating road distance…</b>'); return; }
+        if (info.pin && pinDraft.km == null) scheduleRoute();      // road distance is used for the arrival time
+        if (info.serverFee) {
+            const q = pinQuote(pinDraft, activeCartRestaurantId);
+            if (q === undefined) { btn.disabled = true; box0('<b>Working out your delivery fee…</b>'); scheduleQuote(); return; }
+            if (q === null) { btn.disabled = true; box0(`<b>Couldn't work out the delivery fee</b>${small('Check your connection, then move the pin a little to try again.')}`); return; }
+            if (q.configured !== false && q.deliverable === false) {
+                btn.disabled = true;
+                box0(`<b style="color:#B42318;">We can't deliver here</b>${small(escPay(q.message || 'Move the pin, or choose Self-pick up.'))}`);
+                return;
+            }
+        } else if (info.pin && pinDraft.km == null) { btn.disabled = true; box0('<b>Calculating road distance…</b>'); return; }
         btn.disabled = false;
         const items = cartItems.filter(i => i.restaurantId === activeCartRestaurantId);
         const e = computeEta(activeCartRestaurantId, items, 'delivery', pinDraft);
         const df = deliveryFeeFor(activeCartRestaurantId, pinDraft);
-        const feeNote = info.feeInTotal ? '' : ' · fee not in your total';
-        const where = df.zoneName ? escPay(df.zoneName) + ' · ' : '';
-        const dist = e.source === 'pin' ? `${e.roadKnown ? '' : 'about '}${e.km.toFixed(1)} km by road · ${e.travel} min by bike` : `standard ${STANDARD_TRAVEL_MIN} min travel`;
-        box0(`<b>Delivery fee ${Number(df.fee).toLocaleString('en-US')} MMK · ${e.text}</b>${small(`${where}${dist}${feeNote}`)}`);
+        const feeNote = info.feeInTotal ? 'The fee is added to your total.' : 'The fee is not in your total — you pay it to the rider.';
+        const dist = !info.serverFee && e.source === 'pin' ? `${e.roadKnown ? '' : 'about '}${e.km.toFixed(1)} km by road · ${e.travel} min by bike · ` : '';
+        box0(`<b>Delivery fee ${Number(df.fee).toLocaleString('en-US')} MMK · ${e.text}</b>${small(`${dist}${feeNote}`)}`);
     }
 function confirmPin() {
         if (!pinDraft) return;
@@ -5040,7 +5037,7 @@ function confirmPin() {
             renderAddrPinRow();
             return;
         }
-        deliveryPin = { lat: pinDraft.lat, lng: pinDraft.lng, km: pinDraft.km, source: pinDraft.source, zone: pinDraft.zone };
+        deliveryPin = { lat: pinDraft.lat, lng: pinDraft.lng, km: pinDraft.km, source: pinDraft.source, quote: pinDraft.quote };
         // Keep it with the chosen address, so next time it is already there.
         const a = savedAddresses.find(x => x.id === activeAddressId);
         if (a) {
