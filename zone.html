@@ -87,10 +87,32 @@
   .btn-danger { background: #FDECEC; color: #B42318; flex: 0 0 auto !important; padding: 0 16px; }
   .err { color: #B42318; font-size: 12.5px; margin-top: 8px; min-height: 16px; }
 
+  #statusbar { flex: 0 0 auto; padding: 8px 14px 10px; background: #fff; border-bottom: 1px solid var(--border); z-index: 590; }
+  .strow { display: flex; align-items: center; gap: 8px; }
+  .strow + .strow { margin-top: 7px; }
+  .strow .lab { flex: 0 0 74px; font-size: 12px; font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .led { width: 9px; height: 9px; border-radius: 50%; background: #9CA3AF; }
+  .led.on { background: #16A34A; box-shadow: 0 0 0 3px rgba(22,163,74,.2); }
+  .led.off { background: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,.18); }
+  .seg { flex: 1; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: #F1F2F4; border-radius: 11px; padding: 3px; gap: 3px; }
+  .seg button { border: none; background: transparent; border-radius: 9px; height: 32px; font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; }
+  .seg button.on { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(244,119,33,.35); }
+  .seg button.on.closed { background: #DC2626; box-shadow: 0 2px 8px rgba(220,38,38,.3); }
+  #st-gear { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 11px; border: none; background: #F1F2F4; font-size: 17px; }
+  #st-note { margin: 6px 0 0 82px; font-size: 11.5px; color: #B45309; min-height: 0; }
   .hub-icon { width: 30px; height: 30px; border-radius: 50%; background: #141414; color: #fff; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); font: 800 14px/24px system-ui, sans-serif; text-align: center; }
   .rest-dot { width: 12px; height: 12px; border-radius: 50%; background: #2563EB; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
   #testbar { top: 12px; display: none; }
-  #testbar select { pointer-events: auto; width: 100%; height: 42px; border-radius: 12px; border: none; padding: 0 12px; font-family: inherit; font-size: 14px; font-weight: 600; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  #testbar > * { pointer-events: auto; }
+  #testbar select { width: 100%; height: 42px; border-radius: 12px; border: none; padding: 0 12px; font-family: inherit; font-size: 14px; font-weight: 600; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  #testcard { margin-top: 8px; background: #fff; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,.22); padding: 10px 12px; max-height: 38vh; overflow-y: auto; }
+  #testcard .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; }
+  #testcard .head button { border: none; background: #F5F6F8; border-radius: 999px; width: 28px; height: 28px; font-size: 14px; line-height: 1; color: var(--muted); }
+  #testcard .body { margin-top: 6px; }
+  #testcard.min .body { display: none; }
+  #testcard .src { margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+  #testcard .src.warn { color: #B45309; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
   #banner { display: none; margin: 0; padding: 8px 14px; background: #FFFBEB; border-bottom: 1px solid #FCD34D; color: #92400E; font-size: 12px; line-height: 1.4; }
   .work { font-size: 12.5px; line-height: 1.55; min-width: 210px; }
   .work b.fee { color: var(--primary); font-size: 15px; }
@@ -110,7 +132,7 @@
   #gate input { width: 100%; height: 46px; border: 1.5px solid var(--border); border-radius: 12px; padding: 0 12px; font-size: 14px; margin-bottom: 10px; }
   #gate button { width: 100%; height: 46px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-size: 15px; font-weight: 700; }
 
-  #toast { position: fixed; left: 50%; top: calc(70px + env(safe-area-inset-top, 0px)); transform: translateX(-50%) translateY(-20px); background: #222; color: #fff; border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 600; opacity: 0; transition: .2s; z-index: 3000; pointer-events: none; max-width: 90%; text-align: center; }
+  #toast { position: fixed; left: 50%; bottom: calc(190px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: #222; color: #fff; border-radius: 999px; padding: 9px 16px; font-size: 13px; font-weight: 600; opacity: 0; transition: .2s; z-index: 3000; pointer-events: none; max-width: 90%; text-align: center; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.bad { background: #B42318; }
   #toast.good { background: #15803D; }
@@ -125,11 +147,22 @@
     </button>
   </div>
 
+  <div id="statusbar">
+    <div class="strow"><span class="lab"><span class="led" id="st-led"></span>Delivery</span>
+      <div class="seg" id="seg-mode"><button data-v="auto">Auto</button><button data-v="open">Open</button><button data-v="closed">Closed</button></div>
+      <button id="st-gear" aria-label="Opening hours and surcharge time">⚙</button></div>
+    <div class="strow"><span class="lab">Surcharge</span>
+      <div class="seg" id="seg-sur"><button data-v="normal">Normal</button><button data-v="rain" id="sur-rain">Rain</button><button data-v="busy" id="sur-busy">Busy</button></div></div>
+    <div id="st-note"></div>
+  </div>
   <div id="banner"></div>
   <div class="mapwrap">
     <div id="map"></div>
     <div class="float" id="hint"><div id="hint-text"></div></div>
-    <div class="float" id="testbar"><select id="test-rest" aria-label="Restaurant to test"></select></div>
+    <div class="float" id="testbar">
+      <select id="test-rest" aria-label="Restaurant to test"></select>
+      <div id="testcard"><div class="head"><span id="tc-title">Tap the map where a customer would be</span><button type="button" id="tc-toggle" aria-label="Hide details">▾</button></div><div class="body" id="tc-body"></div></div>
+    </div>
     <div class="float" id="drawbar"><button class="undo" id="btn-undo-point">Undo point</button><button class="finish" id="btn-finish">Finish zone</button></div>
     <div id="notes"><button id="notes-x" aria-label="Close">×</button><span id="notes-text"></span></div>
   </div>
@@ -166,6 +199,21 @@
   </div>
 </div>
 
+<div class="sheet" id="hours-sheet" role="dialog" aria-modal="true">
+  <h2>Opening hours &amp; surcharge time</h2>
+  <label style="display:flex;align-items:center;gap:10px;margin-top:4px;font-size:14px;color:var(--text);font-weight:700;"><input id="h-on" type="checkbox" style="width:22px;height:22px;"> Open and close automatically</label>
+  <p class="help">With “Auto” selected above, delivery follows these hours (Myanmar time). “Open” or “Closed” overrides them until you switch back to Auto.</p>
+  <div style="display:flex;gap:10px;margin-top:6px;">
+    <div style="flex:1"><label for="h-open">Opens</label><input id="h-open" type="time" value="08:00"></div>
+    <div style="flex:1"><label for="h-close">Closes</label><input id="h-close" type="time" value="21:00"></div>
+  </div>
+  <label>One tap of Rain or Busy stays on for</label>
+  <div class="quick" id="h-sur"></div>
+  <p class="help">It switches itself off after that, so it can’t be forgotten.</p>
+  <div class="err" id="hours-err"></div>
+  <div class="row"><button class="btn-ghost" id="h-cancel">Cancel</button><button class="btn-main" id="h-ok">Save</button></div>
+</div>
+
 <div class="sheet" id="fees-sheet" role="dialog" aria-modal="true">
   <h2>Delivery fee settings</h2>
   <div class="formula">Fee = <b>fee per km</b> × (hub → restaurant + how far the customer is <b>off the road back to the hub</b>). A customer on the way back adds nothing. Never less than the <b>minimum</b>. Rounded up to the next 100 MMK.</div>
@@ -175,9 +223,13 @@
   <input id="f-min" type="text" inputmode="numeric" placeholder="e.g. 1500" autocomplete="off">
   <label for="f-max">Farthest delivery from the restaurant (km)</label>
   <input id="f-max" type="text" inputmode="decimal" placeholder="e.g. 10" autocomplete="off">
+  <label for="f-rain">Rain surcharge (MMK, added on top of the fee)</label>
+  <input id="f-rain" type="text" inputmode="numeric" placeholder="e.g. 500" autocomplete="off">
+  <label for="f-busy">Busy surcharge (MMK)</label>
+  <input id="f-busy" type="text" inputmode="numeric" placeholder="e.g. 1000" autocomplete="off">
   <label>Rider start point (town-centre hub)</label>
   <div class="hubrow"><span id="f-hub">—</span><button type="button" id="f-hub-centre">Use map centre</button></div>
-  <p class="help">The black <b>H</b> on the map is the hub — you can also drag it. Distances are estimated along roads (straight line × 1.4). Use “Try it” to see how a customer’s fee is worked out.</p>
+  <p class="help">The black <b>H</b> on the map is the hub — you can also drag it. Distances are measured along real roads (if the road service is unavailable, a straight-line estimate × 1.4 is used). Use “Try it” to see how a fee is worked out.</p>
   <div class="err" id="fees-err"></div>
   <div class="row"><button class="btn-ghost" id="f-cancel">Cancel</button><button class="btn-main" id="f-ok">Done</button></div>
 </div>
@@ -227,7 +279,8 @@ street.addTo(map);
 const zoneGroup = L.featureGroup().addTo(map);
 
 let dirty = false, feeInTotal = false, canUndo = false;
-let settings = { ratePerKm: 500, minFee: 1500, maxKm: 10, hub: { lat: START_CENTER[0], lng: START_CENTER[1] } };
+let settings = { ratePerKm: 500, minFee: 1500, maxKm: 10, rainFee: 500, busyFee: 1000, hub: { lat: START_CENTER[0], lng: START_CENTER[1] } };
+let status = null, savedFees = { rain: 500, busy: 1000 };
 let settingsSaved = false, restaurants = [], detour = 1.4, roundTo = 100, offCount = 1;
 function setDirty(v) {
   dirty = v;
@@ -271,15 +324,16 @@ const HINTS = {
   draw: 'Tap the map to place corners around the area. Press “Finish zone” (or tap the first corner) to close it.',
   edit: 'Drag a corner to reshape a zone. Drag the small middle dots to add a corner. Press Reshape again when done.',
   remove: 'Tap a zone to delete it. Press Delete again when done.',
-  test: 'Pick a restaurant above, then tap where a customer would be. The blue line is the road back to the hub, the red line is the extra distance charged. Uses what is on the map now, even before you save.',
+  test: '',
 };
 function setMode(next) {
   if (mode === 'draw') map.pm.disableDraw();
   if (mode === 'edit') map.pm.disableGlobalEditMode();
   if (mode === 'remove') map.pm.disableGlobalRemovalMode();
-  if (mode === 'test') clearTest();
+  if (mode === 'test') { clearTest(); }
   mode = next === mode ? null : next;
-  if (mode) $('notes').style.display = 'none';           // the overlap note would sit on top of the drawing buttons
+  if (mode) $('notes').style.display = 'none';
+  if (mode === 'test') { tcShow('Tap the map where a customer would be', 'Blue = the road back to the hub. Red dots = the extra distance that is charged. This uses the numbers on the screen, even before you save.'); $('testcard').classList.remove('min'); $('tc-toggle').textContent = '▾'; }           // the overlap note would sit on top of the drawing buttons
   if (mode === 'draw') map.pm.enableDraw('Polygon', { snappable: true, snapDistance: 14, allowSelfIntersection: false, finishOn: null,
     templineStyle: { color: '#F47721' }, hintlineStyle: { color: '#F47721', dashArray: [6, 6] }, pathOptions: { color: '#F47721', weight: 3, fillOpacity: 0.25 } });
   if (mode === 'edit') map.pm.enableGlobalEditMode({ allowSelfIntersection: false, snappable: true });
@@ -362,7 +416,7 @@ $('z-ok').onclick = () => {
   closeSheet(); setDirty(true);
 };
 $('z-cancel').onclick = () => { if (sheetIsNew && sheetLayer) { zoneGroup.removeLayer(sheetLayer); } closeSheet(); refreshUi(); };
-$('scrim').onclick = () => { if ($('fees-sheet').classList.contains('open')) closeFees(); else $('z-cancel').click(); };
+$('scrim').onclick = () => { if ($('fees-sheet').classList.contains('open')) closeFees(); else if ($('hours-sheet').classList.contains('open')) closeHours(); else $('z-cancel').click(); };
 $('z-delete').onclick = () => {
   if (!sheetLayer) return;
   if (!confirm(`Delete the zone "${sheetLayer.feature.properties.zone_name}"?`)) return;
@@ -371,7 +425,7 @@ $('z-delete').onclick = () => {
 
 /* ============================== try it: the same formula as the server ============================== */
 let testMarker = null;
-function clearTest() { if (testMarker) { map.removeLayer(testMarker); testMarker = null; } if (typeof testLines !== 'undefined' && testLines) { map.removeLayer(testLines); testLines = null; } }
+function clearTest() { if (testMarker) { map.removeLayer(testMarker); testMarker = null; } if (typeof testLines !== 'undefined' && testLines) { map.removeLayer(testLines); testLines = null; } testSeq++; }
 function inRing(pt, ring) {                                    // ray casting; points are {lat, lng}
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -395,40 +449,58 @@ function termsAt(pt) {                                         // rate + minimum
   const z = zoneAt(pt), p = z ? z.feature.properties : null;
   return { rate: p ? p.rate_per_km : settings.ratePerKm, min: p && p.min_fee != null ? p.min_fee : settings.minFee, zone: p ? p.zone_name : '' };
 }
-function toSegment(p, a, b) {                                  // nearest point of the segment a-b to p (all {lat, lng}) — same maths as the server
-  const kx = 111.32 * Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180), ky = 110.57;
-  const px = (p.lng - a.lng) * kx, py = (p.lat - a.lat) * ky, bx = (b.lng - a.lng) * kx, by = (b.lat - a.lat) * ky;
-  const seg2 = bx * bx + by * by, t = seg2 === 0 ? 0 : Math.max(0, Math.min(1, (px * bx + py * by) / seg2));
-  const nx = bx * t, ny = by * t;
-  return { km: Math.hypot(px - nx, py - ny), pt: { lat: a.lat + ny / ky, lng: a.lng + nx / kx } };
-}
-function quote(rest, cust) {
-  const hub = settings.hub, k = x => x.toFixed(1);
-  const l1 = hav(hub, rest) * detour, l2 = hav(rest, cust) * detour;
-  if (l2 > settings.maxKm) return { html: `<b>Too far</b><br>${k(l2)} km from the restaurant — the limit is ${settings.maxKm} km.<br>The customer must choose Self-pick up.` };
-  const seg = toSegment(cust, rest, hub), off = seg.km * detour * offCount;
-  const t1 = termsAt(rest), t2 = termsAt(cust), rate = Math.max(t1.rate, t2.rate), min = Math.max(t1.min, t2.min);
-  const km = l1 + off, metered = Math.ceil(rate * km / roundTo - 1e-9) * roundTo, fee = Math.max(min, metered);
-  const zone = [t2, t1].filter(t => t.zone && t.rate >= rate)[0];
-  const side = off < 0.05 ? 'On the way back to the hub — no extra distance' : `Off the way back to the hub: ${k(off)} km`;
-  return { nearest: off < 0.05 ? null : seg.pt, html: `Hub → restaurant: ${k(l1)} km<br>${side}<br>Total ${k(km)} km × ${fmt(rate)}/km = ${fmt(metered)}`
-    + `${zone ? `<br>Zone rate: ${esc(zone.zone)}` : ''}<br>Minimum fee: ${fmt(min)}${metered < min ? ' (applies)' : ''}<br><b class="fee">Fee: ${fmt(fee)} MMK</b>` };
-}
-let testLines = null;
-function drawTestLines(rest, cust, nearest) {                  // blue = road back to the hub, red = the extra distance charged
+let testLines = null, testSeq = 0;
+function drawTestLines(d, rest, cust) {
+  // blue = the road back from the restaurant to the hub; red dashed = the trip to the customer and back to the hub.
+  // Where the customer is on the way back, the red runs under the blue, so only the extra distance shows as red.
   if (testLines) map.removeLayer(testLines);
-  testLines = L.layerGroup([L.polyline([[rest.lat, rest.lng], [settings.hub.lat, settings.hub.lng]], { color: '#2563EB', weight: 4, opacity: .8 })]);
-  if (nearest) testLines.addLayer(L.polyline([[cust.lat, cust.lng], [nearest.lat, nearest.lng]], { color: '#E5484D', weight: 3, dashArray: '6 6' }));
+  const ll = g => g.coordinates.map(c => [c[1], c[0]]);
+  let blue, red;
+  if (d.geometry) { blue = ll(d.geometry.restToHub); red = ll(d.geometry.restToCust).concat(ll(d.geometry.custToHub)); }
+  else {                                                        // estimate: straight lines, via the nearest point of the road back
+    blue = [[rest.lat, rest.lng], [settings.hub.lat, settings.hub.lng]];
+    red = d.nearest ? [[cust.lat, cust.lng], [d.nearest.lat, d.nearest.lng]] : [];
+  }
+  testLines = L.layerGroup();
+  if (red.length) testLines.addLayer(L.polyline(red, { color: '#E5484D', weight: 6, opacity: .75, dashArray: '2 9', lineCap: 'round' }));
+  testLines.addLayer(L.polyline(blue, { color: '#2563EB', weight: 3, opacity: .95 }));
   testLines.addTo(map);
+  map.fitBounds(L.latLngBounds(blue.concat(red, [[cust.lat, cust.lng]])), { paddingTopLeft: [24, 190], paddingBottomRight: [24, 24], maxZoom: map.getZoom() });   // only ever zooms out, never in
 }
-function placeTest(latlng) {
-  clearTest();
+function tcShow(title, html, srcNote, warn) {
+  $('tc-title').textContent = title;
+  $('tc-body').innerHTML = html + (srcNote ? `<div class="src${warn ? ' warn' : ''}">${srcNote}</div>` : '');
+}
+$('tc-toggle').onclick = () => { const c = $('testcard'); c.classList.toggle('min'); $('tc-toggle').textContent = c.classList.contains('min') ? '▴' : '▾'; };
+async function placeTest(latlng) {
   const r = restaurants.find(x => x.id === $('test-rest').value);
   if (!r) { toast('There are no restaurants with a pin to test.', 'bad'); return; }
-  const rest = { lat: r.lat, lng: r.lng }, q = quote(rest, latlng);
-  drawTestLines(rest, latlng, q.nearest);
-  testMarker = L.marker(latlng, { icon: L.divIcon({ className: '', html: '<div class="pin-test"></div>', iconSize: [22, 22], iconAnchor: [11, 22] }) })
-    .addTo(map).bindPopup(`<div class="work">${q.html}</div>`, { closeButton: false }).openPopup();
+  clearTest();
+  testMarker = L.marker(latlng, { icon: L.divIcon({ className: '', html: '<div class="pin-test"></div>', iconSize: [22, 22], iconAnchor: [11, 22] }) }).addTo(map);
+  $('testcard').classList.remove('min'); $('tc-toggle').textContent = '▾';
+  tcShow('Measuring the roads…', '');
+  const seq = ++testSeq, rest = { lat: r.lat, lng: r.lng };
+  let res;
+  try { res = await api('/api/admin/road-legs', { method: 'POST', body: JSON.stringify({ restaurant: r.id, lat: latlng.lat, lng: latlng.lng, hub: settings.hub }) }); }
+  catch (e) { return tcShow('No connection', 'Could not measure the roads. Check your internet.'); }
+  if (seq !== testSeq) return;                                     // the partner tapped somewhere else meanwhile
+  if (!res.ok) return tcShow('Could not measure', esc(res.body.error || 'Something went wrong.'));
+  const d = res.body, fmtKm = x => x.toFixed(1);
+  const t1 = termsAt(rest), t2 = termsAt(latlng), rate = Math.max(t1.rate, t2.rate), min = Math.max(t1.min, t2.min);
+  const note = d.source === 'road' ? 'Measured along real roads.' : 'The road service did not answer, so this is a straight-line estimate (× ' + detour + ').';
+  if (d.dropKm > settings.maxKm) {
+    drawTestLines(d, rest, latlng);
+    return tcShow('Too far for delivery', `${fmtKm(d.dropKm)} km from the restaurant — the limit is ${settings.maxKm} km.<br>The customer must choose Self-pick up.`, note, d.source !== 'road');
+  }
+  const km = d.baseKm + d.offKm, metered = Math.ceil(rate * km / roundTo - 1e-9) * roundTo;
+  const sur = status && status.surcharge && status.surcharge.amount ? status.surcharge : null, fee = Math.max(min, metered) + (sur ? sur.amount : 0);
+  const zone = [t2, t1].filter(t => t.zone && t.rate >= rate)[0];
+  drawTestLines(d, rest, latlng);
+  const side = d.offKm < 0.05 ? 'On the way back to the hub — no extra distance' : `Off the way back to the hub: ${fmtKm(d.offKm)} km`;
+  tcShow(`Estimated fee: ${fmt(fee)} MMK`,
+    `<span class="dot" style="background:#2563EB"></span>Hub → restaurant: ${fmtKm(d.baseKm)} km<br><span class="dot" style="background:#E5484D"></span>${side}<br>`
+    + `Total ${fmtKm(km)} km × ${fmt(rate)}/km = ${fmt(metered)}${zone ? `<br>Zone rate: ${esc(zone.zone)}` : ''}<br>Minimum fee: ${fmt(min)}${metered < min ? ' (applies)' : ''}${sur ? `<br>${sur.kind === 'rain' ? 'Rain' : 'Busy'} surcharge: +${fmt(sur.amount)} (on now)` : ''}`,
+    note, d.source !== 'road');
 }
 map.on('click', e => { if (mode === 'test') placeTest(e.latlng); });
 
@@ -448,22 +520,24 @@ function drawRestaurants() {
 /* ============================== fee settings sheet ============================== */
 function hubText() { return `${settings.hub.lat.toFixed(5)}, ${settings.hub.lng.toFixed(5)}`; }
 function openFees() {
-  $('f-rate').value = settings.ratePerKm; $('f-min').value = settings.minFee; $('f-max').value = settings.maxKm;
+  $('f-rate').value = settings.ratePerKm; $('f-min').value = settings.minFee; $('f-max').value = settings.maxKm; $('f-rain').value = settings.rainFee; $('f-busy').value = settings.busyFee;
   $('f-hub').textContent = hubText(); $('fees-err').textContent = '';
   $('scrim').classList.add('open'); $('fees-sheet').classList.add('open');
 }
 function closeFees() { $('scrim').classList.remove('open'); $('fees-sheet').classList.remove('open'); }
-['f-rate', 'f-min'].forEach(id => $(id).addEventListener('input', () => { $(id).value = $(id).value.replace(/\D/g, '').slice(0, 6); }));
+['f-rate', 'f-min', 'f-rain', 'f-busy'].forEach(id => $(id).addEventListener('input', () => { $(id).value = $(id).value.replace(/\D/g, '').slice(0, 6); }));
 $('f-max').addEventListener('input', () => { $('f-max').value = $('f-max').value.replace(/[^\d.]/g, '').slice(0, 5); });
 $('f-hub-centre').onclick = () => { const c = map.getCenter(); settings.hub = { lat: +c.lat.toFixed(6), lng: +c.lng.toFixed(6) }; hubMarker.setLatLng(c); $('f-hub').textContent = hubText(); };
 $('f-cancel').onclick = () => closeFees();
 $('f-ok').onclick = () => {
   const rate = parseInt($('f-rate').value, 10), min = parseInt($('f-min').value, 10), max = parseFloat($('f-max').value);
+  const rain = parseInt($('f-rain').value, 10), busy = parseInt($('f-busy').value, 10);
   const err = m => { $('fees-err').textContent = m; };
   if (!isFinite(rate) || rate < 0 || rate > 20000) return err('Enter the fee per km (0 – 20,000 MMK).');
   if (!isFinite(min) || min < 0 || min > 100000) return err('Enter the minimum delivery fee (0 – 100,000 MMK).');
   if (!isFinite(max) || max < 1 || max > 100) return err('Enter the farthest delivery in km (1 – 100).');
-  settings.ratePerKm = rate; settings.minFee = min; settings.maxKm = max;
+  if (!isFinite(rain) || rain < 0 || rain > 100000 || !isFinite(busy) || busy < 0 || busy > 100000) return err('Enter the rain and busy surcharges (0 – 100,000 MMK).');
+  settings.ratePerKm = rate; settings.minFee = min; settings.maxKm = max; settings.rainFee = rain; settings.busyFee = busy;
   closeFees(); setDirty(true);
 };
 $('t-fees').onclick = () => { setMode(null); openFees(); };
@@ -492,7 +566,7 @@ async function loadZones() {
   }
   zoneGroup.clearLayers();
   feeInTotal = !!r.body.feeInTotal; canUndo = !!r.body.canUndo;
-  settings = r.body.settings; settingsSaved = !!settings.saved; restaurants = r.body.restaurants || []; detour = r.body.detourFactor || 1.4; roundTo = r.body.roundTo || 100; offCount = r.body.offPathCount || 1;
+  settings = r.body.settings; settingsSaved = !!settings.saved; status = r.body.status; savedFees = { rain: settings.rainFee, busy: settings.busyFee }; paintStatus(); restaurants = r.body.restaurants || []; detour = r.body.detourFactor || 1.4; roundTo = r.body.roundTo || 100; offCount = r.body.offPathCount || 1;
   hubMarker.setLatLng([settings.hub.lat, settings.hub.lng]); drawRestaurants();
   L.geoJSON(r.body.zones, { onEachFeature: (f, layer) => adopt(layer) });
   const notes = (r.body.overlaps || []).slice();
@@ -514,12 +588,12 @@ $('save').onclick = async () => {
   const features = layers.map(l => ({ type: 'Feature', properties: { zone_name: l.feature.properties.zone_name, rate_per_km: l.feature.properties.rate_per_km, min_fee: l.feature.properties.min_fee == null ? null : l.feature.properties.min_fee }, geometry: l.toGeoJSON().geometry }));
   $('save').disabled = true; $('save').textContent = 'Saving…';
   let r;
-  try { r = await api('/api/admin/save-zones', { method: 'POST', body: JSON.stringify({ type: 'FeatureCollection', features, confirmEmpty, settings: { ratePerKm: settings.ratePerKm, minFee: settings.minFee, maxKm: settings.maxKm, hub: settings.hub } }) }); }
+  try { r = await api('/api/admin/save-zones', { method: 'POST', body: JSON.stringify({ type: 'FeatureCollection', features, confirmEmpty, settings: { ratePerKm: settings.ratePerKm, minFee: settings.minFee, maxKm: settings.maxKm, rainFee: settings.rainFee, busyFee: settings.busyFee, hub: settings.hub } }) }); }
   catch (e) { toast('No connection — nothing was saved.', 'bad'); refreshUi(); return; }
   if (!r.ok) { toast(r.body.error || 'Could not save.', 'bad'); refreshUi(); return; }
   toast('Fee settings saved — the app now uses them', 'good');
   showNotes(r.body.overlaps);
-  settingsSaved = true; canUndo = true; setDirty(false);
+  settingsSaved = true; canUndo = true; savedFees = { rain: settings.rainFee, busy: settings.busyFee }; paintStatus(); setDirty(false);
 };
 
 $('undo-save').onclick = async () => {
@@ -529,6 +603,46 @@ $('undo-save').onclick = async () => {
   toast('Previous settings restored', 'good');
   await loadZones();
 };
+
+/* ============================== delivery status: open / closed + surcharge (applies immediately) ============================== */
+const yangonTime = unix => new Date(unix * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Yangon' });
+function paintStatus() {
+  if (!status) return;
+  $('seg-mode').querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.v === status.mode); b.classList.toggle('closed', b.dataset.v === 'closed'); });
+  $('seg-sur').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === status.surcharge.kind));
+  $('sur-rain').textContent = `Rain +${fmt(savedFees.rain)}`; $('sur-busy').textContent = `Busy +${fmt(savedFees.busy)}`;
+  $('st-led').className = 'led ' + (status.isOpen ? 'on' : 'off');
+  const notes = [];
+  notes.push(status.isOpen ? '' : 'Delivery is closed — customers can only choose Self-pick up.');
+  if (status.surcharge.kind !== 'normal') notes.push(`${status.surcharge.kind === 'rain' ? 'Rain' : 'Busy'} surcharge is on until ${yangonTime(status.surcharge.until)}.`);
+  $('st-note').textContent = notes.filter(Boolean).join(' ');
+}
+async function sendStatus(body, okMsg) {
+  let r;
+  try { r = await api('/api/admin/delivery-status', { method: 'POST', body: JSON.stringify(body) }); }
+  catch (e) { return toast('No connection — nothing changed.', 'bad'); }
+  if (!r.ok) return toast(r.body.error || 'Could not change it.', 'bad');
+  status = r.body.status; paintStatus(); if (okMsg) toast(okMsg(status), 'good');
+}
+$('seg-mode').onclick = e => { const v = e.target.dataset && e.target.dataset.v; if (v && v !== status.mode) sendStatus({ action: 'set_mode', mode: v }, st => ({ auto: st.isOpen ? 'Delivery follows the opening hours — open now' : 'Delivery follows the opening hours — closed now', open: 'Delivery is open', closed: 'Delivery is closed' }[st.mode])); };
+$('seg-sur').onclick = e => { const v = e.target.dataset && e.target.dataset.v; if (v && v !== status.surcharge.kind) sendStatus({ action: 'set_surcharge', kind: v }, st => v === 'normal' ? 'Surcharge is off' : `${v === 'rain' ? 'Rain' : 'Busy'} surcharge +${fmt(st.surcharge.amount)} is on for ${st.surchargeHours} hour${st.surchargeHours === 1 ? '' : 's'}`); };
+
+let surHours = 2;
+[1, 2, 3, 4, 6].forEach(h => { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = String(h); b.textContent = h + ' h'; b.onclick = () => { surHours = h; [...$('h-sur').children].forEach(x => x.classList.toggle('on', x.dataset.v === String(h))); }; $('h-sur').appendChild(b); });
+$('st-gear').onclick = () => {
+  if (!status) return;
+  $('h-on').checked = status.hoursOn; $('h-open').value = status.openAt; $('h-close').value = status.closeAt; surHours = status.surchargeHours;
+  [...$('h-sur').children].forEach(x => x.classList.toggle('on', x.dataset.v === String(surHours)));
+  $('hours-err').textContent = ''; $('scrim').classList.add('open'); $('hours-sheet').classList.add('open');
+};
+function closeHours() { $('scrim').classList.remove('open'); $('hours-sheet').classList.remove('open'); }
+$('h-cancel').onclick = closeHours;
+$('h-ok').onclick = async () => {
+  if ($('h-on').checked && (!$('h-open').value || !$('h-close').value || $('h-open').value === $('h-close').value)) { $('hours-err').textContent = 'Choose different opening and closing times.'; return; }
+  closeHours();
+  await sendStatus({ action: 'set_hours', hoursOn: $('h-on').checked, openAt: $('h-open').value || '08:00', closeAt: $('h-close').value || '21:00', surchargeHours: surHours }, () => 'Saved');
+};
+setInterval(async () => { if (document.hidden || !status) return; const r = await api('/api/admin/delivery-status').catch(() => null); if (r && r.ok) { status = r.body.status; paintStatus(); } }, 60000);   // a surcharge that has timed out switches itself off here too
 
 loadZones();
 </script>
