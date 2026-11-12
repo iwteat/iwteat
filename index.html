@@ -2368,6 +2368,7 @@ async function submitFinalOrder() {
     if (deliveryMethod !== 'pickup') {
         syncPinFromAddress();
         const df = deliveryFeeFor(activeCartRestaurantId);
+        if (df.closed) { alert(df.message); return; }
         if (df.needsPin) { alert('Please drop a pin on the map so we can work out your delivery fee.'); openPinModal(); return; }
         if (df.outOfZone) { alert(df.message || "We don't deliver to your pin yet. Please move the pin, or choose Self-pick up."); openPinModal(); return; }
         if (df.zoneError) { alert("Couldn't check your delivery area — please check your connection and try again."); retryZone(); return; }
@@ -4463,6 +4464,7 @@ let homeBrowseCache = null;
             if (!deliveryMethod) { showToast('Please choose a delivery method.'); return; }
             syncPinFromAddress();
             const dfx = deliveryFeeFor(rid);
+            if (dfx.closed) { showToast(dfx.message); return; }
             if (dfx.needsPin) { showToast('Drop a pin so we can work out your delivery fee.'); openPinModal(); return; }
             if (dfx.outOfZone) { showToast(dfx.message || "We don't deliver to this pin yet."); openPinModal(); return; }
             if (dfx.zoneError) { showToast("Couldn't check your delivery area — try again."); retryZone(); return; }
@@ -4529,9 +4531,9 @@ let homeBrowseCache = null;
         // The server decides whether the delivery fee is part of the total (DELIVERY_FEE_IN_TOTAL). When it is not,
         // the fee is shown under the total as "not included" and the rider collects it on delivery.
         const feeInTotal = (restaurantEtaInfo[activeCartRestaurantId] || {}).feeInTotal === true;
-        if (dFee.fee && feeInTotal) fees.unshift({ label: dFee.km != null ? `Delivery fee (${dFee.km.toFixed(1)} km by road)` : 'Delivery fee', amount: dFee.fee });
+        if (dFee.fee && feeInTotal) fees.unshift({ label: dFee.km != null ? `Est. delivery fee (${dFee.km.toFixed(1)} km by road)` : 'Est. delivery fee', amount: dFee.fee });
         const exclusiveFeeHtml = (dFee.fee && !feeInTotal)
-            ? `<div class="summary-row dlv-excl" style="padding-top: 10px;"><span>Delivery fee <em>(not included)</em></span><span>${Number(dFee.fee).toLocaleString('en-US')} MMK</span></div><div class="dlv-excl-note">Paid separately to your rider on delivery.</div>` : '';
+            ? `<div class="summary-row dlv-excl" style="padding-top: 10px;"><span>Estimated delivery fee <em>(not included)</em></span><span>${dFee.noPin ? 'from ' : ''}${Number(dFee.fee).toLocaleString('en-US')} MMK</span></div><div class="dlv-excl-note">${dFee.noPin ? 'No pin was dropped, so this is the minimum. ' : ''}Paid separately to your rider on delivery. The final delivery fee is confirmed by the delivery service.</div>` : '';
 
         let itemsHtml = '';
         let itemsTotal = 0;
@@ -4553,6 +4555,7 @@ let homeBrowseCache = null;
         const noteText = orderComment && orderComment.trim() ? escPay(orderComment.trim()) : 'No note added';
 
         const blockReason = cartBlockReason(activeCartRestaurantId)
+            || (dFee.closed ? dFee.message : '')
             || (dFee.needsPin ? 'Drop a pin on the map so we can work out your delivery fee.' : '')
             || (dFee.outOfZone ? (dFee.message || "We don't deliver to your pin yet.") : '')
             || (dFee.zoneError ? "Couldn't check your delivery area." : '');
@@ -4657,22 +4660,25 @@ let homeBrowseCache = null;
 // The server's fee answer for a pin + this restaurant: undefined = not asked yet, null = couldn't reach the server.
     function pinQuote(pin, restaurantId) { return pin && pin.quote && pin.quote.rid === restaurantId ? pin.quote.data : undefined; }
 
-    function deliveryFeeFor(restaurantId, pinOverride) {
+function deliveryFeeFor(restaurantId, pinOverride) {
         if (deliveryMethod === 'pickup') return { fee: 0, km: null, needsPin: false, loading: false };
         const info = restaurantEtaInfo[restaurantId] || {};
         if (!info.at) return { fee: null, km: null, needsPin: false, loading: true };          // restaurant details still loading
+        if (info.open === false) return { fee: null, km: null, needsPin: false, loading: false, closed: true, message: info.closedMsg || 'Delivery is closed right now. You can still order Self-pick up.' };
         const pin = pinOverride === undefined ? deliveryPin : pinOverride;
 
-        // The delivery partner's settings (fee per km, minimum, hub) live on the server: it works the fee out
-        // from the restaurant + the customer's pin, so the price shown here is the price that is charged.
+        // The delivery partner's settings (fee per km, minimum, hub, surcharge) live on the server. The fee is an ESTIMATE kept
+        // outside the food bill. Without a pin (some customers can't share a location) the estimate is the minimum fee.
         if (info.serverFee) {
-            if (!pin) return { fee: null, km: null, needsPin: true, loading: false };
+            const surOf = x => (x && x.amount > 0 ? x : null);
+            if (!pin) return { fee: (info.minFee || 0) + (surOf(info.surcharge) ? info.surcharge.amount : 0), km: null, needsPin: false, loading: false, estimate: true, noPin: true, surcharge: surOf(info.surcharge) };
             const q = pinQuote(pin, restaurantId);
             if (q === undefined) return { fee: null, km: null, needsPin: false, loading: true };                                   // asking the server
             if (q === null) return { fee: null, km: null, needsPin: false, loading: false, zoneError: true };                      // the server couldn't be reached
             if (q.configured !== false) {
+                if (q.closed) return { fee: null, km: null, needsPin: false, loading: false, closed: true, message: q.message };
                 if (q.deliverable === false) return { fee: null, km: null, needsPin: false, loading: false, outOfZone: true, message: q.message };
-                return { fee: q.fee, km: null, needsPin: false, loading: false, minApplied: q.minApplied };
+                return { fee: q.fee, km: null, needsPin: false, loading: false, minApplied: q.minApplied, surcharge: surOf(q.surcharge) };
             }
         }
 
@@ -4735,7 +4741,7 @@ function retryZone() { if (deliveryPin) { deliveryPin.quote = undefined; deliver
         etaInfoLoading[restaurantId] = true;
         fetch(`${SERVER_URL}/api/restaurant-info?restaurant=${encodeURIComponent(restaurantId)}`, { cache: 'no-store' })
             .then(r => r.json())
-            .then(info => { restaurantEtaInfo[restaurantId] = { pin: parseMapPin(info.locationPin), busyMinutes: +info.busyMinutes || 0, prepTime: info.prepTime || '', pricing: info.deliveryPricing || null, serverFee: info.deliveryFeeMode === 'server', feeInTotal: info.deliveryFeeInTotal === true, at: Date.now() }; })
+            .then(info => { restaurantEtaInfo[restaurantId] = { pin: parseMapPin(info.locationPin), busyMinutes: +info.busyMinutes || 0, prepTime: info.prepTime || '', pricing: info.deliveryPricing || null, serverFee: info.deliveryFeeMode === 'server', feeInTotal: info.deliveryFeeInTotal === true, open: info.deliveryOpen !== false, closedMsg: info.deliveryClosedMessage || '', minFee: info.deliveryMinFee, surcharge: info.deliverySurcharge || null, at: Date.now() }; })
             .catch(() => { restaurantEtaInfo[restaurantId] = Object.assign({ pin: null, busyMinutes: 0, prepTime: '' }, cur, { at: Date.now() }); })
             .finally(() => {
                 etaInfoLoading[restaurantId] = false;
@@ -4801,12 +4807,18 @@ function etaSectionHtml(restaurantId) {
                 <div class="dlv-txt"><b>Ready for pickup in ${e.text}</b><span>Kitchen about ${e.prep} min${info.busyMinutes > 0 ? ` · +${info.busyMinutes} min because the restaurant is busy` : ''}</span></div></div>`;
         }
         const f = deliveryFeeFor(restaurantId);
-        const askText = `<b>Drop a pin</b><span>to get accurate address, arrival time and estimated delivery fee</span>`;
         if (!info.at) {
             return `<div class="dlv-card"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt"><b>Checking delivery details…</b></div></div>`;
         }
-        if (f.needsPin) {
-            return `<button type="button" class="dlv-card ask" onclick="openPinModal()"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt">${askText}</div>${icon('chevronRight', 16)}</button>`;
+        if (f.closed) {
+            return `<div class="dlv-card bad"><span class="dlv-ico">${icon('clock', 20)}</span>
+                <div class="dlv-txt"><b>Delivery is closed right now</b><span>${escPay(String(f.message || '').replace(/^Delivery is closed right now\.\s*/, ''))}</span></div>
+                <button type="button" class="dlv-act" onclick="selectDeliveryMethod('pickup')">Self-pick up</button></div>`;
+        }
+        const surText = f.surcharge ? `${f.surcharge.kind === 'rain' ? 'rain' : 'busy'} surcharge +${Number(f.surcharge.amount).toLocaleString('en-US')} included` : null;
+        if (f.needsPin || f.noPin) {                     // no pin yet: an invitation, not a wall (the order can still go ahead with an estimate)
+            const est = f.noPin ? `<br>Estimated delivery fee now: from ${mmk(f.fee)}${surText ? ' · ' + surText : ''}` : '';
+            return `<button type="button" class="dlv-card ask" onclick="openPinModal()"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt"><b>Drop a pin</b><span>to get accurate address, arrival time and estimated delivery fee${est}</span></div>${icon('chevronRight', 16)}</button>`;
         }
         if (f.outOfZone) {
             return `<div class="dlv-card bad"><span class="dlv-ico">${icon('pin', 20)}</span>
@@ -4822,17 +4834,18 @@ function etaSectionHtml(restaurantId) {
             return `<div class="dlv-card"><span class="dlv-ico">${icon('pin', 20)}</span><div class="dlv-txt"><b>Working out your delivery fee…</b></div>
                 <button type="button" class="dlv-act" onclick="openPinModal()">Change</button></div>`;
         }
-        // Ready: arrival time + fee on one line, the small print underneath.
+        // Ready: arrival time + estimated fee on one line, the small print underneath.
         const addr = deliveryPin && deliveryPin.addrId ? savedAddresses.find(a => a.id === deliveryPin.addrId) : null;
         const small = [
             addr ? `${addr.label} pin` : null,
             info.serverFee || f.km == null ? null : `${f.km.toFixed(1)} km by road`,
-            info.feeInTotal ? null : 'fee not in your total',
+            info.feeInTotal ? 'estimate' : 'estimate · not in your total',
+            surText,
             info.busyMinutes > 0 ? `busy +${info.busyMinutes} min` : null,
             e.far ? 'pin looks far from the restaurant — double-check' : null,
         ].filter(Boolean).join(' · ');
         return `<div class="dlv-card"><span class="dlv-ico">${icon('pin', 20)}</span>
-            <div class="dlv-txt"><b>${e.text} · Delivery fee ${mmk(f.fee)}</b>${small ? `<span>${escPay(small)}</span>` : ''}</div>
+            <div class="dlv-txt"><b>${e.text} · Est. delivery fee ${mmk(f.fee)}</b>${small ? `<span>${escPay(small)}</span>` : ''}</div>
             <button type="button" class="dlv-act" onclick="openPinModal()">${deliveryPin ? 'Change' : 'Drop pin'}</button></div>`;
     }
     // Final checkout page: one summary row that follows the pin automatically.
@@ -5011,6 +5024,7 @@ function updatePinPreview() {
             return;
         }
         if (info.pin && pinDraft.km == null) scheduleRoute();      // road distance is used for the arrival time
+        if (info.open === false) { btn.disabled = true; box0(`<b style="color:#B42318;">Delivery is closed right now</b>${small(escPay(String(info.closedMsg || '').replace(/^Delivery is closed right now\.\s*/, '') || 'You can still order Self-pick up.'))}`); return; }
         if (info.serverFee) {
             const q = pinQuote(pinDraft, activeCartRestaurantId);
             if (q === undefined) { btn.disabled = true; box0('<b>Working out your delivery fee…</b>'); scheduleQuote(); return; }
@@ -5025,9 +5039,10 @@ function updatePinPreview() {
         const items = cartItems.filter(i => i.restaurantId === activeCartRestaurantId);
         const e = computeEta(activeCartRestaurantId, items, 'delivery', pinDraft);
         const df = deliveryFeeFor(activeCartRestaurantId, pinDraft);
-        const feeNote = info.feeInTotal ? 'The fee is added to your total.' : 'The fee is not in your total — you pay it to the rider.';
+        const feeNote = info.feeInTotal ? 'This is an estimate and it is added to your total.' : 'This is an estimate. It is not in your total — you pay the final fee to the rider.';
+        const surNote = df.surcharge ? ` Includes a ${df.surcharge.kind === 'rain' ? 'rain' : 'busy'} surcharge of ${Number(df.surcharge.amount).toLocaleString('en-US')} MMK.` : '';
         const dist = !info.serverFee && e.source === 'pin' ? `${e.roadKnown ? '' : 'about '}${e.km.toFixed(1)} km by road · ${e.travel} min by bike · ` : '';
-        box0(`<b>Delivery fee ${Number(df.fee).toLocaleString('en-US')} MMK · ${e.text}</b>${small(`${dist}${feeNote}`)}`);
+        box0(`<b>Estimated delivery fee ${Number(df.fee).toLocaleString('en-US')} MMK · ${e.text}</b>${small(`${dist}${feeNote}${surNote}`)}`);
     }
 function confirmPin() {
         if (!pinDraft) return;
