@@ -337,6 +337,9 @@
         .food-media { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: #F0F0F2; }
         .food-media img { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #F0F0F2; transition: transform .4s ease; }
         .food-card:active .food-media img { transform: scale(1.04); }
+        .food-media.no-photo { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #FFF1E6, #FFE0CC); }
+        .food-media.no-photo::before { content: ''; width: 44px; height: 44px; opacity: .55; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F47721' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2'/><path d='M7 2v20'/><path d='M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'/></svg>") center/contain no-repeat; }
+        .cart-item-img { background: #FFF1E6; }
         .food-rating {
             position: absolute; top: 10px; left: 10px; z-index: 2;
             display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px;
@@ -3205,7 +3208,7 @@ let homeBrowseCache = null;
                 id: 'cat-1', name: 'Premium Pizza', icon: '⭐', sizeNames: ['Small', 'Medium', 'Large'],
                 items: [
                     {
-                        id: 101, name: 'Cheesy Margherita', price: 8500, image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?q=80&w=600&auto=format&fit=crop', description: 'Classic delight with 100% real mozzarella cheese and fresh basil leaves.', rating: '4.9', time: '20-25 Min',
+                        id: 101, name: 'Cheesy Margherita', price: 8500, image: '', description: 'Classic delight with 100% real mozzarella cheese and fresh basil leaves.', rating: '4.9', time: '20-25 Min',
                         // Sizes: names are always Small/Medium/Large; price is set per size.
                         sizes: [{name: 'Small', price: 8500}, {name: 'Medium', price: 12500}, {name: 'Large', price: 16500}],
 
@@ -3259,13 +3262,14 @@ let homeBrowseCache = null;
                 const dishQty = getCartQuantityForDish(dish.id);
                 card.dataset.search = `${dish.name || ''} ${dish.description || ''}`.toLowerCase();
                 const ratingHtml = dish.rating ? `<span class="food-rating"><span class="rating-star">${icon("star", 12)}</span>${homeEsc(dish.rating)}</span>` : '';
+                const hasPhoto = !!(dish.image && String(dish.image).trim());
                 const hasSizes = dish.sizes && dish.sizes.length > 0;
                 const priceNum = hasSizes ? displayPrice.replace('+', '') : displayPrice;
 
                 // Prep time lives in the restaurant header (see renderRestaurantBadges), not on each card.
                 card.innerHTML = `
-                    <div class="food-media">
-                        <img src="${homeEsc(dish.image)}" loading="lazy" alt="${homeEsc(dish.name)}" onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop'">
+                    <div class="food-media${hasPhoto ? '' : ' no-photo'}">
+                        ${hasPhoto ? `<img src="${homeEsc(dish.image)}" loading="lazy" alt="${homeEsc(dish.name)}" onerror="this.parentElement.classList.add('no-photo');this.remove()">` : ''}
                         ${ratingHtml}
                         <div class="card-qty-zone" id="qty-zone-${dish.id}">${dish.soldOut ? '' : buildCardQtyControlHTML(dishQty)}</div>
                     </div>
@@ -3425,7 +3429,7 @@ let homeBrowseCache = null;
         modalQuantityValue = 1;
         selectedGroupChoices = {};
 
-        document.getElementById('m-img').src = dish.image;
+        { const mi = document.getElementById('m-img'); if (dish.image) { mi.src = dish.image; mi.style.display = ''; } else { mi.removeAttribute('src'); mi.style.display = 'none'; } }
         document.getElementById('m-title').innerText = dish.name;
         document.getElementById('m-desc').innerText = dish.description;
         refreshModalInCartIndicator(dish.id);
@@ -4316,7 +4320,7 @@ let homeBrowseCache = null;
             const unavailable = !!lineProblem;
             itemsHtml += `
                 <div class="cart-item-row ${unavailable ? 'cart-item-unavailable' : ''}" data-dish-id="${item.dishId !== undefined ? item.dishId : ''}" onclick="if(!event.target.closest('.qty-control')) openSavedDish('${item.restaurantId}', ${item.dishId !== undefined ? item.dishId : 'undefined'})">
-                    <img src="${item.image}" class="cart-item-img" alt="food" onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop'">
+                    <img src="${item.image}" class="cart-item-img" alt="food" onerror="this.removeAttribute('src')">
                     <div class="cart-item-info">
                         <div class="cart-item-title">${item.name}</div>
                         <div class="cart-item-options">${item.options}</div>
