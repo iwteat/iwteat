@@ -160,34 +160,74 @@
            name/logo/tagline are filled in by loadRestaurantInfo() from
            GET /api/restaurant-info, so an admin.html panel can update them later
            without touching this file again. */
-        /* ================= RESTAURANT PAGE (IWTEAT) ================= */
-        .rest-top { background: var(--bg-card); flex-shrink: 0; padding-bottom: 14px; }
-        .rest-banner { position: relative; height: 88px; background: var(--primary); overflow: hidden; }
+        /* ================= RESTAURANT PAGE (IWTEAT) =================
+           Immersive cover -> floating logo card -> info + status pills -> sticky pill bar -> 2-col grid */
+        .rest-top { background: var(--bg-card); flex-shrink: 0; padding-bottom: 8px; }
+        .rest-banner {
+            position: relative; height: 200px; overflow: hidden;
+            background:
+                radial-gradient(120% 90% at 88% 0%, rgba(255, 190, 120, .85) 0%, rgba(255, 190, 120, 0) 58%),
+                linear-gradient(135deg, #F47721 0%, #C2410C 100%);
+        }
         .rest-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
-        .rest-search-btn { position: absolute; top: 12px; right: 16px; width: 38px; height: 38px; border-radius: 50%; border: none; background: #FFFFFF; color: var(--text-main); font-size: 19px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; }
-        .rest-back-btn { position: absolute; top: 12px; left: 16px; width: 38px; height: 38px; border-radius: 50%; border: none; background: #FFFFFF; color: var(--text-main); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; z-index: 3; }
+        /* clean gradient overlay: darkens the top (so the white buttons always read) and the foot (so the logo card lifts off) */
+        .rest-banner::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(180deg, rgba(12,12,14,.50) 0%, rgba(12,12,14,0) 38%, rgba(12,12,14,.04) 62%, rgba(12,12,14,.40) 100%);
+        }
+        .rest-actions { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+        .rest-back-btn, .rest-search-btn {
+            width: 40px; height: 40px; border-radius: 50%; padding: 0; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 19px;
+            background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.32);
+            -webkit-backdrop-filter: blur(10px) saturate(1.4); backdrop-filter: blur(10px) saturate(1.4);
+            box-shadow: 0 2px 10px rgba(0,0,0,.12);
+            transition: transform .15s ease, background .2s ease;
+        }
+        .rest-back-btn:active, .rest-search-btn:active { transform: scale(.9); background: rgba(255,255,255,.32); }
         .rest-back-btn svg { width: 20px; height: 20px; }
-        .menu-cart-bar { position: absolute; left: 16px; right: 16px; bottom: calc(16px + var(--app-bottom-inset)); z-index: 30; display: none; align-items: center; justify-content: space-between; background: var(--accent); color: #fff; border: none; border-radius: 16px; padding: 14px 18px; font-size: 14px; font-weight: 700; box-shadow: 0 6px 16px rgba(255, 106, 31, 0.35); cursor: pointer; }
+
+        .rest-head { display: flex; flex-direction: column; align-items: flex-start; padding: 0 16px; margin-top: -42px; position: relative; z-index: 2; }
+        .restaurant-hero-logo {
+            width: 84px; height: 84px; border-radius: 26px; object-fit: cover; flex-shrink: 0;
+            border: 4px solid #fff; background: #fff;
+            box-shadow: 0 10px 28px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);
+        }
+        .restaurant-hero-fallback { display: flex; align-items: center; justify-content: center; font-size: 34px; color: var(--primary); background: var(--primary-tint); }
+        .restaurant-hero-text { width: 100%; min-width: 0; padding-top: 12px; }
+        .restaurant-hero-text h1 { color: var(--text-main); font-size: 22px; font-weight: 700; line-height: 1.22; letter-spacing: -0.4px; }
+        .restaurant-hero-tagline { display: block; font-size: 13px; font-weight: 400; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+        .restaurant-hero-tagline:empty { display: none; }
+
+        /* status pills */
+        .rest-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px 16px 0; }
+        .rest-pill {
+            display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+            border-radius: 999px; background: #F4F5F7; color: #3B3B40; font-size: 12px; font-weight: 600; white-space: nowrap;
+        }
+        .rest-pill .ico { font-size: 14px; color: var(--primary); }
+        .rest-status { background: #E7F7EE; color: #0E8F47; }
+        .rest-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(14,143,71,.18); }
+        .rest-status.closed { background: #FDECEC; color: #D64545; }
+        .rest-status.closed::before { box-shadow: 0 0 0 3px rgba(214,69,69,.16); }
+
+        /* address (+ phone / hours) */
+        .rest-info { padding: 12px 16px 0; display: flex; flex-direction: column; gap: 8px; font-size: 12.5px; color: var(--text-muted); }
+        .rest-info:empty { display: none; }
+        .rest-info-row { display: flex; align-items: center; gap: 10px; line-height: 1.45; min-width: 0; }
+        .rest-info-ico { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-tint); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+        .rest-info-text { min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .rest-info-row a.rest-info-text { color: var(--text-main); font-weight: 500; text-decoration: none; }
+
+        .menu-cart-bar { position: absolute; left: 16px; right: 16px; bottom: calc(16px + var(--app-bottom-inset)); z-index: 30; display: none; align-items: center; justify-content: space-between; background: var(--accent); color: #fff; border: none; border-radius: 18px; padding: 15px 18px; font-size: 14px; font-weight: 700; box-shadow: 0 10px 24px rgba(244, 119, 33, 0.38); cursor: pointer; transition: transform .15s ease; }
+        .menu-cart-bar:active { transform: scale(.98); }
         .menu-cart-bar.show { display: flex; }
         .menu-cart-bar .ico { font-size: 18px; }
         .menu-cart-bar span { display: inline-flex; align-items: center; gap: 8px; }
-        .rest-head { display: flex; gap: 12px; padding: 0 16px; margin-top: -30px; align-items: flex-start; }
-        .restaurant-hero-logo { width: 68px; height: 68px; border-radius: 18px; object-fit: cover; flex-shrink: 0; border: 3px solid #FFFFFF; background: #FFFFFF; box-shadow: 0 2px 10px rgba(0,0,0,0.12); position: relative; z-index: 1; }
-        .restaurant-hero-fallback { display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--primary); background: var(--primary-tint); }
-        .restaurant-hero-text { flex: 1; min-width: 0; padding-top: 36px; }
-        .restaurant-hero-text h1 { color: var(--text-main); font-size: 19px; font-weight: 700; line-height: 1.25; letter-spacing: -0.2px; }
-        .restaurant-hero-tagline { display: block; font-size: 12.5px; font-weight: 400; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
-        .rest-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 12px 16px 0; font-size: 12.5px; font-weight: 500; color: var(--text-main); }
-        .rest-badge { display: inline-flex; align-items: center; gap: 5px; }
-        .rest-badge .ico { font-size: 15px; color: var(--primary); }
-        .rest-status { font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #E8F7EE; color: #12A150; }
-        .rest-status.closed { background: #F1F1F1; color: #888888; }
-        .rest-info { padding: 10px 16px 0; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--text-muted); }
-        .rest-info:empty { display: none; }
-        .rest-info-row { display: flex; align-items: flex-start; gap: 8px; line-height: 1.45; }
-        .rest-info-row .ico { font-size: 15px; color: var(--primary); margin-top: 1px; }
-        .rest-info-row a { color: var(--text-main); font-weight: 500; text-decoration: none; }
-        .menu-search { display: none; align-items: center; gap: 10px; margin: 12px 16px 0; padding: 0 14px; height: 44px; background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 14px; font-size: 18px; color: var(--text-muted); }
+
+        .menu-search { display: none; align-items: center; gap: 10px; margin: 14px 16px 0; padding: 0 14px; height: 46px; background: #F4F5F7; border: 1.5px solid transparent; border-radius: 16px; font-size: 18px; color: var(--text-muted); transition: border-color .2s, background .2s; }
+        .menu-search:focus-within { background: #fff; border-color: var(--primary); }
         .menu-search.open { display: flex; }
         .menu-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 14px; color: var(--text-main); }
         .menu-search button { background: none; border: none; color: var(--text-muted); font-size: 18px; display: flex; cursor: pointer; }
@@ -219,38 +259,42 @@
         .category-scroll {
             display: flex;
             overflow-x: auto;
-            background: var(--bg-card);
+            background: rgba(255,255,255,.94);
+            -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
             padding: 10px 16px;
             gap: 8px;
             scrollbar-width: none;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
             position: sticky;
             top: 0;
             z-index: 6;
             flex-shrink: 0;
-            border-bottom: 1px solid var(--border-light);
+            box-shadow: 0 1px 0 var(--border-light), 0 6px 16px -10px rgba(0,0,0,.18);
         }
         .category-scroll::-webkit-scrollbar { display: none; }
         .cat-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border-light);
+            background: #F4F5F7;
+            border: none;
             border-radius: 999px;
-            padding: 7px 14px 7px 10px;
+            height: 38px;
+            padding: 0 16px 0 12px;
             display: flex;
             align-items: center;
             gap: 6px;
             cursor: pointer;
-            transition: 0.2s ease;
+            transition: background .2s ease, color .2s ease, box-shadow .2s ease, transform .15s ease;
             flex-shrink: 0;
             white-space: nowrap;
         }
+        .cat-btn:active { transform: scale(.94); }
         .cat-icon-container { display: flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; width: auto; height: auto; background: none; border: none; }
-        .cat-text { font-size: 13px; font-weight: 500; color: var(--text-main); line-height: 1.2; }
-        .cat-btn.active { background: var(--primary); border-color: var(--primary); }
-        .cat-btn.active .cat-text { color: #FFFFFF; font-weight: 600; }
+        .cat-text { font-size: 13px; font-weight: 600; color: #4A4A50; line-height: 1.2; transition: color .2s ease; }
+        .cat-btn.active { background: var(--primary); box-shadow: 0 6px 14px rgba(244,119,33,.32); }
+        .cat-btn.active .cat-text { color: #FFFFFF; }
 
         .grid-content {
-            padding: 16px 16px calc(104px + var(--app-bottom-inset)) 16px;
+            padding: 10px 16px calc(104px + var(--app-bottom-inset)) 16px;
         }
 
         /* padding (not margin) so sections touch — the scroll-spy line is never in a gap.
@@ -258,12 +302,13 @@
            scrollIntoView({ block: 'start' }) puts the section title right below the bar. */
         /* flow-root: stops the title's top margin from collapsing out of the section (that left a 4px gap
            between sections where the scroll-spy line belonged to nobody when scrolling upward). */
-        .category-section { display: flow-root; padding-bottom: 24px; scroll-margin-top: calc(var(--cat-bar-h, 56px) - 2px); }
+        .category-section { display: flow-root; padding-bottom: 20px; scroll-margin-top: calc(var(--cat-bar-h, 56px) - 2px); }
         .category-section-title {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
             color: var(--text-main);
-            margin: 4px 0 12px 0;
+            margin: 8px 0 14px 0;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -271,131 +316,90 @@
 
         .item-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
         }
 
         .food-card {
             background: var(--bg-card);
-            border-radius: 16px;
+            border-radius: 22px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            box-shadow: 0 6px 20px rgba(20, 20, 24, 0.07);
+            border: 1px solid rgba(0,0,0,.04);
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform .18s ease, box-shadow .18s ease;
             display: flex;
             flex-direction: column;
-            border: 1px solid var(--border-light);
             position: relative;
             min-width: 0;
         }
+        .food-card:active { transform: scale(0.97); box-shadow: 0 2px 10px rgba(20, 20, 24, 0.08); }
+        .food-media { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: #F0F0F2; }
+        .food-media img { width: 100%; height: 100%; object-fit: cover; display: block; background-color: #F0F0F2; transition: transform .4s ease; }
+        .food-card:active .food-media img { transform: scale(1.04); }
+        .food-rating {
+            position: absolute; top: 10px; left: 10px; z-index: 2;
+            display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px;
+            border-radius: 999px; background: rgba(255,255,255,.94);
+            -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+            font-size: 11.5px; font-weight: 700; color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,.12);
+        }
+        .food-rating .rating-star { font-size: 12px; }
+
+        /* "Add" lives on the photo's corner: big touch target, soft shadow, press feedback */
+        .card-qty-zone { position: absolute; right: 10px; bottom: 10px; z-index: 3; }
+        .add-card-btn {
+            position: relative;
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            background: #fff; color: var(--primary);
+            border: none; font-size: 24px; font-weight: 500; line-height: 1; padding: 0 0 2px; cursor: pointer;
+            box-shadow: 0 6px 16px rgba(0,0,0,.20), 0 1px 3px rgba(0,0,0,.10);
+            transition: transform .15s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+        }
+        .add-card-btn::after { content: ''; position: absolute; inset: -6px; }   /* 50px tap area */
+        .add-card-btn:active { transform: scale(.86); background: var(--primary); color: #fff; box-shadow: 0 3px 8px rgba(244,119,33,.45); }
         @keyframes qtyBump {
             0% { transform: scale(1); }
             45% { transform: scale(1.4); }
             100% { transform: scale(1); }
         }
         .card-qty-stepper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--primary);
-            border-radius: 20px;
-            padding: 3px;
-            box-shadow: 0 4px 10px rgba(244, 119, 33, 0.28);
+            display: flex; align-items: center; gap: 4px;
+            background: var(--primary); border-radius: 22px; padding: 4px;
+            box-shadow: 0 8px 18px rgba(244, 119, 33, 0.40);
         }
         .card-qty-btn {
-            background: rgba(255,255,255,0.25);
-            color: var(--text-white);
-            border: none;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            padding: 0;
+            background: rgba(255,255,255,0.22); color: var(--text-white); border: none; border-radius: 50%;
+            width: 30px; height: 30px; font-size: 17px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0;
+            transition: transform .12s ease, background .2s ease;
         }
-        .card-qty-num {
-            color: var(--text-white);
-            font-size: 13px;
-            font-weight: 800;
-            min-width: 14px;
-            text-align: center;
-            display: inline-block;
-        }
+        .card-qty-btn:active { transform: scale(.86); background: rgba(255,255,255,.4); }
+        .card-qty-num { color: var(--text-white); font-size: 13.5px; font-weight: 800; min-width: 16px; text-align: center; display: inline-block; }
         .card-qty-num.bump { animation: qtyBump 0.3s ease; }
-        .food-card:active { transform: scale(0.97); }
-        .food-card img {
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            height: auto;
-            object-fit: cover;
-            display: block;
-            background-color: #F0F0F0;
-        }
-        .food-info {
-            padding: 10px 12px 12px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-        .food-title-row { display: flex; flex-direction: column; margin-bottom: 4px; gap: 2px; }
+
+        .food-info { padding: 12px 13px 14px; display: flex; flex-direction: column; flex: 1; }
         .food-info h3 {
-            font-size: 14px;
-            color: var(--text-main);
-            font-weight: 600;
-            line-height: 1.3;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            font-size: 14.5px; color: var(--text-main); font-weight: 700; line-height: 1.3; letter-spacing: -0.15px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .price-bubble { color: var(--primary); font-weight: 700; font-size: 13.5px; white-space: nowrap; }
-        .food-card.sold-out .price-bubble { color: var(--text-muted); font-weight: 600; }
         .food-desc {
-            font-size: 11.5px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            font-size: 12px; color: var(--text-muted); margin: 4px 0 10px; line-height: 1.45;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .food-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: auto;
-        }
-        .meta-group {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            color: var(--text-muted);
-            font-weight: 500;
+        .food-price-row { margin-top: auto; display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 5px; }
+        .price-from { font-size: 10.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
+        .price-bubble { color: var(--primary); font-weight: 800; font-size: 16px; letter-spacing: -0.2px; white-space: nowrap; }
+        .price-bubble small { font-size: 11px; font-weight: 700; letter-spacing: 0; margin-left: 2px; opacity: .85; }
+        .food-card.sold-out .price-bubble { color: var(--text-muted); }
+        .food-card.sold-out .food-media::after {
+            content: 'Sold out'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            padding: 6px 14px; border-radius: 999px; background: rgba(20,20,24,.72); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .2px;
         }
         .rating-star { color: #FFA801; display: inline-flex; font-size: 13px; }
         .rating-star svg { fill: currentColor; }
-        .add-card-btn {
-            background: var(--primary);
-            color: var(--text-white);
-            border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            font-size: 20px;
-            line-height: 1;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(244, 119, 33, 0.28);
-        }
 
         .cart-header {
             background: var(--bg-card);
@@ -1486,8 +1490,10 @@
             <div class="rest-top" id="restaurant-hero">
                 <div class="rest-banner" id="rest-banner">
                     <img id="rest-banner-img" src="" alt="">
-                    <button class="rest-back-btn" aria-label="Back" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-                    <button class="rest-search-btn" aria-label="Search this restaurant" onclick="toggleMenuSearch()"><i class="ico" data-icon="search"></i></button>
+                    <div class="rest-actions">
+                        <button class="rest-back-btn" aria-label="Back" onclick="history.back()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+                        <button class="rest-search-btn" aria-label="Search this restaurant" onclick="toggleMenuSearch()"><i class="ico" data-icon="search"></i></button>
+                    </div>
                 </div>
                 <div class="rest-head">
                     <div class="restaurant-hero-logo restaurant-hero-fallback" id="restaurant-hero-fallback"><i class="ico" data-icon="store"></i></div>
@@ -3079,18 +3085,18 @@ let homeBrowseCache = null;
 
         const open = info.isOpen !== false;
         const prep = getRestaurantPrepTime();
-        let html = `<span class="rest-status ${open ? '' : 'closed'}">● ${open ? 'Open' : 'Closed'}</span>`;
-        if (prep) html += `<span class="rest-badge">${icon('clock')} ${homeEsc(prep)} min</span>`;
-        if (info.deliveryAvailable !== false) html += `<span class="rest-badge">${icon('bike')} Delivery available</span>`;
+        let html = `<span class="rest-pill rest-status ${open ? '' : 'closed'}">${open ? 'Open' : 'Closed'}</span>`;
+        if (prep) html += `<span class="rest-pill">${icon('clock')} ${homeEsc(prep)} min</span>`;
+        if (info.deliveryAvailable !== false) html += `<span class="rest-pill">${icon('bike')} Delivery available</span>`;
         badges.innerHTML = html;
 
         let rows = '';
-        if (info.address) rows += `<div class="rest-info-row">${icon('pin')}<span>${homeEsc(info.address)}</span></div>`;
+        if (info.address) rows += `<div class="rest-info-row"><span class="rest-info-ico">${icon('pin')}</span><span class="rest-info-text">${homeEsc(info.address)}</span></div>`;
         if (info.phone) {
             const tel = String(info.phone).replace(/[^0-9+]/g, '');
-            rows += `<div class="rest-info-row">${icon('call')}<a href="tel:${tel}">${homeEsc(info.phone)}</a></div>`;
+            rows += `<div class="rest-info-row"><span class="rest-info-ico">${icon('call')}</span><a class="rest-info-text" href="tel:${tel}">${homeEsc(info.phone)}</a></div>`;
         }
-        if (info.openingHours) rows += `<div class="rest-info-row">${icon('clock')}<span>${homeEsc(info.openingHours)}</span></div>`;
+        if (info.openingHours) rows += `<div class="rest-info-row"><span class="rest-info-ico">${icon('clock')}</span><span class="rest-info-text">${homeEsc(info.openingHours)}</span></div>`;
         infoBox.innerHTML = rows;
     }
 
@@ -3240,7 +3246,7 @@ let homeBrowseCache = null;
             const section = document.createElement('div');
             section.className = 'category-section';
             section.id = `cat-sec-${cat.id}`;
-            section.innerHTML = `<div class="category-section-title"><span>${cat.icon}</span> ${cat.name}</div><div class="item-grid" id="grid-${cat.id}"></div>`;
+            section.innerHTML = `<div class="category-section-title"><span>${cat.icon}</span> ${homeEsc(cat.name)}</div><div class="item-grid" id="grid-${cat.id}"></div>`;
             container.appendChild(section);
             
             const grid = document.getElementById(`grid-${cat.id}`);
@@ -3252,21 +3258,23 @@ let homeBrowseCache = null;
                 if(dish.sizes && dish.sizes.length > 0) displayPrice = Math.min(...dish.sizes.map(s => Math.round(s.price))).toLocaleString('en-US') + '+';
                 const dishQty = getCartQuantityForDish(dish.id);
                 card.dataset.search = `${dish.name || ''} ${dish.description || ''}`.toLowerCase();
-                const ratingHtml = dish.rating ? `<div class="meta-group"><span class="rating-star">${icon("star", 13)}</span>${homeEsc(dish.rating)}</div>` : '<div></div>';
+                const ratingHtml = dish.rating ? `<span class="food-rating"><span class="rating-star">${icon("star", 12)}</span>${homeEsc(dish.rating)}</span>` : '';
+                const hasSizes = dish.sizes && dish.sizes.length > 0;
+                const priceNum = hasSizes ? displayPrice.replace('+', '') : displayPrice;
 
-                // Prep time is deliberately NOT shown on each card any more — it lives in the
-                // restaurant header (see renderRestaurantBadges).
+                // Prep time lives in the restaurant header (see renderRestaurantBadges), not on each card.
                 card.innerHTML = `
-                    <img src="${homeEsc(dish.image)}" loading="lazy" alt="${homeEsc(dish.name)}" onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop'">
+                    <div class="food-media">
+                        <img src="${homeEsc(dish.image)}" loading="lazy" alt="${homeEsc(dish.name)}" onerror="this.src='https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=600&auto=format&fit=crop'">
+                        ${ratingHtml}
+                        <div class="card-qty-zone" id="qty-zone-${dish.id}">${dish.soldOut ? '' : buildCardQtyControlHTML(dishQty)}</div>
+                    </div>
                     <div class="food-info">
-                        <div class="food-title-row">
-                            <h3>${homeEsc(dish.name)}</h3>
-                            <span class="price-bubble">${dish.soldOut ? 'Sold out' : displayPrice + ' MMK'}</span>
-                        </div>
+                        <h3>${homeEsc(dish.name)}</h3>
                         <p class="food-desc">${homeEsc(dish.description)}</p>
-                        <div class="food-meta">
-                            ${ratingHtml}
-                            <div class="card-qty-zone" id="qty-zone-${dish.id}">${dish.soldOut ? '' : buildCardQtyControlHTML(dishQty)}</div>
+                        <div class="food-price-row">
+                            ${hasSizes ? '<span class="price-from">From</span>' : ''}
+                            <span class="price-bubble">${priceNum}<small>MMK</small></span>
                         </div>
                     </div>`;
                 wireCardQtyControls(card, dish);
