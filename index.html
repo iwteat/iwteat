@@ -1196,6 +1196,28 @@
         /* static promo banner: banner.png on top, built-in orange panel underneath as the fallback */
         .hm-banner { position: relative; margin: 14px 16px 0; border-radius: 22px; overflow: hidden; aspect-ratio: 2.6 / 1; background: linear-gradient(115deg, #FFF4E8 0%, #FFD3A8 55%, #F9964A 100%); pointer-events: none; user-select: none; }
         .hm-banner.hm-hide { display: none; }
+        /* live promotional banners (managed from the admin dashboard): a swipeable carousel, the whole image is the tap target */
+        .hm-carousel { position: relative; margin: 14px 16px 0; }
+        .hm-carousel.hm-hide { display: none; }
+        .hm-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; border-radius: 22px; overscroll-behavior-x: contain; }
+        .hm-track::-webkit-scrollbar { display: none; }
+        .hm-slide { flex: 0 0 100%; scroll-snap-align: center; aspect-ratio: 2.6 / 1; border-radius: 22px; overflow: hidden; background: #FFE9D6; padding: 0; border: 0; display: block; position: relative; -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+        button.hm-slide { cursor: pointer; } button.hm-slide:active { transform: scale(.985); }
+        .hm-slide img { width: 100%; height: 100%; object-fit: cover; display: block; -webkit-user-drag: none; user-select: none; }
+        .hm-dots { display: flex; justify-content: center; gap: 6px; margin-top: 9px; }
+        .hm-dots:empty { display: none; }
+        .hm-dot { width: 6px; height: 6px; border-radius: 99px; background: #D9DCE3; transition: width .2s ease, background .2s ease; }
+        .hm-dot.on { width: 18px; background: var(--primary); }
+        .hm-promo { position: fixed; inset: 0; z-index: 3000; background: rgba(15,15,20,.55); display: flex; align-items: flex-end; justify-content: center; animation: hmPromoFade .18s ease; }
+        .hm-promo-card { width: 100%; max-width: 520px; background: #fff; border-radius: 24px 24px 0 0; padding: 0 0 calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 88vh; overflow-y: auto; animation: hmPromoUp .22s ease; }
+        .hm-promo-card img { width: 100%; aspect-ratio: 2.6 / 1; object-fit: cover; display: block; border-radius: 24px 24px 0 0; }
+        .hm-promo-card .hm-promo-in { padding: 16px 20px 4px; }
+        .hm-promo-card h3 { margin: 0 0 8px; font-size: 19px; letter-spacing: -.3px; color: var(--text-main); }
+        .hm-promo-card p { margin: 0 0 16px; font-size: 14px; line-height: 1.55; color: var(--text-muted); white-space: pre-line; }
+        .hm-promo-actions { display: grid; gap: 8px; padding: 0 20px; }
+        .hm-promo-actions button { height: 46px; border-radius: 14px; border: 0; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .hm-promo-actions .go { background: var(--primary); color: #fff; } .hm-promo-actions .close { background: #F3F4F6; color: var(--text-main); }
+        @keyframes hmPromoFade { from { opacity: 0 } to { opacity: 1 } } @keyframes hmPromoUp { from { transform: translateY(40px) } to { transform: none } }
         .hm-banner-fallback { position: absolute; inset: 0; padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
         .hm-banner-fallback strong { font-size: 21px; line-height: 1.2; font-weight: 700; color: #2A1A0E; letter-spacing: -0.3px; }
         .hm-banner-fallback strong em { display: block; font-style: normal; color: var(--primary); }
@@ -1480,6 +1502,8 @@
                 <div class="hm-banner-fallback"><strong>Delicious Food<em>Closer to You!</em></strong><span>Order Now</span></div>
                 <img src="assets/images/banner.png" alt="" onerror="this.remove()">
             </div>
+            <!-- Live banners from the admin dashboard. Empty until /api/banners returns at least one; then they replace the static banner above. -->
+            <div class="hm-carousel hm-hide" id="home-carousel"><div class="hm-track" id="hm-track"></div><div class="hm-dots" id="hm-dots"></div></div>
             <div id="home-body"></div>
         </div>
     </div>
@@ -2751,7 +2775,91 @@ let homeBrowseCache = null;
         if (!document.getElementById('home-body')) return;
         renderHomeLocation();
         renderHomeBody();
+        loadHomeBanners();
         await fetchHomeBrowseData(homeBrowseCache === null);
+    }
+
+    /* ================= HOME BANNERS (managed in the admin dashboard) ================= */
+    let homeBanners = [], homeBannersAt = 0, homeBannerTimer = null, homeBannerPause = 0;
+    // Cloudinary can hand out a smaller, modern-format copy of the same image.
+    const homeBannerImg = url => /res\.cloudinary\.com/.test(url || '') ? String(url).replace('/upload/', '/upload/f_auto,q_auto,w_1040/') : url;
+    async function loadHomeBanners(force) {
+        if (!force && homeBannersAt && Date.now() - homeBannersAt < 60000) return;
+        homeBannersAt = Date.now();
+        try {
+            const res = await fetch(`${API_BASE}/api/banners`);
+            const data = await res.json();
+            const next = Array.isArray(data.banners) ? data.banners : [];
+            if (JSON.stringify(next) !== JSON.stringify(homeBanners)) { homeBanners = next; renderHomeBanners(); }
+        } catch (e) { /* offline: keep whatever is showing — the static banner is the fallback */ }
+    }
+    function homeSyncBanners(filtering) {
+        const stat = document.getElementById('home-banner'), car = document.getElementById('home-carousel');
+        const live = homeBanners.length > 0;
+        if (stat) stat.classList.toggle('hm-hide', filtering || live);
+        if (car) car.classList.toggle('hm-hide', filtering || !live);
+    }
+    function renderHomeBanners() {
+        const track = document.getElementById('hm-track'), dots = document.getElementById('hm-dots');
+        if (!track) return;
+        track.innerHTML = homeBanners.map((b, i) => {
+            const img = `<img src="${homeEsc(homeBannerImg(b.imageUrl))}" alt="${homeEsc(b.title || 'Promotion')}" draggable="false" ${i ? 'loading="lazy"' : ''}>`;
+            return b.destType === 'none' ? `<div class="hm-slide">${img}</div>` : `<button type="button" class="hm-slide" data-i="${i}" aria-label="${homeEsc(b.title || 'Promotion')}">${img}</button>`;
+        }).join('');
+        dots.innerHTML = homeBanners.length > 1 ? homeBanners.map((_, i) => `<span class="hm-dot ${i ? '' : 'on'}"></span>`).join('') : '';
+        track.scrollLeft = 0;
+        track.onclick = e => { const el = e.target.closest('button.hm-slide'); if (el) homeBannerTap(Number(el.dataset.i)); };
+        track.onscroll = () => { homeBannerPause = Date.now() + 8000; requestAnimationFrame(updateBannerDots); };
+        homeSyncBanners(!!(homeQuery.trim() || homeCategory));
+        startBannerAutoplay();
+    }
+    function updateBannerDots() {
+        const track = document.getElementById('hm-track'); if (!track) return;
+        const step = track.clientWidth + 10, i = Math.round(track.scrollLeft / Math.max(1, step));
+        document.querySelectorAll('#hm-dots .hm-dot').forEach((d, k) => d.classList.toggle('on', k === i));
+    }
+    function startBannerAutoplay() {
+        clearInterval(homeBannerTimer);
+        if (homeBanners.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        homeBannerTimer = setInterval(() => {
+            const track = document.getElementById('hm-track');
+            if (!track || document.hidden || Date.now() < homeBannerPause || track.offsetParent === null) return;   // hidden, paused by a swipe, or not on screen
+            const step = track.clientWidth + 10, i = Math.round(track.scrollLeft / Math.max(1, step));
+            track.scrollTo({ left: ((i + 1) % homeBanners.length) * step, behavior: 'smooth' });
+        }, 5000);
+    }
+    function homeBannerLink(url) {
+        if (!/^https:\/\//i.test(url)) return;
+        if (/^https:\/\/(t|telegram)\.me\//i.test(url) && tg && tg.openTelegramLink) tg.openTelegramLink(url);
+        else if (tg && tg.openLink) tg.openLink(url);
+        else window.open(url, '_blank', 'noopener');
+    }
+    function closeHomePromo() { const el = document.getElementById('hm-promo'); if (el) el.remove(); }
+    function openHomePromo(b) {
+        closeHomePromo();
+        const el = document.createElement('div'); el.className = 'hm-promo'; el.id = 'hm-promo';
+        el.innerHTML = `<div class="hm-promo-card" role="dialog" aria-modal="true"><img src="${homeEsc(homeBannerImg(b.imageUrl))}" alt=""><div class="hm-promo-in"><h3>${homeEsc(b.promoTitle)}</h3><p>${homeEsc(b.promoBody)}</p></div>
+            <div class="hm-promo-actions">${b.restaurantId ? '<button class="go" type="button">View restaurant</button>' : ''}<button class="close" type="button">Close</button></div></div>`;
+        el.addEventListener('click', e => { if (e.target === el || e.target.closest('.close')) closeHomePromo(); else if (e.target.closest('.go')) { closeHomePromo(); selectRestaurant(b.restaurantId); } });
+        document.body.appendChild(el);
+    }
+    async function openBannerDish(restaurantId, dishId) {
+        await selectRestaurant(restaurantId);
+        const dish = (menuCategories || []).flatMap(c => c.items || []).find(i => String(i.id) === String(dishId));
+        if (dish) openModal(dish); else showToast('Sorry, that dish is no longer available.');
+    }
+    function homeBannerTap(i) {
+        const b = homeBanners[i]; if (!b) return;
+        fetch(`${API_BASE}/api/banners/${b.id}/click`, { method: 'POST' }).catch(() => {});     // lets the admin see which banners get taps
+        if (b.destType === 'restaurant') selectRestaurant(b.destValue);
+        else if (b.destType === 'category') {
+            if (!HOME_CATEGORIES.some(c => c.key === b.destValue)) { showToast('That category is not available.'); return; }
+            homeCategory = b.destValue; renderHomeBody();
+            const body = document.getElementById('home-body'); if (body) body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        else if (b.destType === 'product') openBannerDish(b.restaurantId, b.destValue);
+        else if (b.destType === 'promotion') openHomePromo(b);
+        else if (b.destType === 'url') homeBannerLink(b.destValue);
     }
 
     // showLoadingUi is true only for the very first load (no cache yet) — on a
@@ -2893,8 +3001,7 @@ let homeBrowseCache = null;
         const q = homeQuery.trim().toLowerCase();
         const cat = HOME_CATEGORIES.find(c => c.key === homeCategory) || null;
         const filtering = !!(q || cat);
-        const banner = document.getElementById('home-banner');
-        if (banner) banner.classList.toggle('hm-hide', filtering);
+        homeSyncBanners(filtering);
 
         const catsAction = HOME_CATEGORIES.length > 5
             ? `<button class="home-see-all" onclick="homeToggleCats()">${homeCatsExpanded ? 'Show less' : 'See all'} ${icon('chevronRight')}</button>` : '';
