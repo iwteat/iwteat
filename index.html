@@ -17,12 +17,12 @@
             --primary-hover: #DB6516;
             --primary-tint: #FEF1E8; /* Light orange tint for backgrounds */
             --secondary: #FF9A52;
-            --bg-main: #F8F9FB;
+            --bg-main: #FFF6EC;
             --bg-card: #FFFFFF;
-            --text-main: #222222;
-            --text-muted: #888888;
+            --text-main: #3B1A0E;
+            --text-muted: #8C7565;
             --text-white: #FFFFFF;
-            --border-light: #EEEEEE;
+            --border-light: #F0E2D3;
             --kbz-blue: #0056B3; 
             --tg-star: #2AABEE; 
             --star-gold: #FFC107;
@@ -30,6 +30,11 @@
                where Telegram floats its own Close / minimize buttons over the top of the app. */
             --accent: #F47721; /* IWTEAT orange */
             --app-top-inset: 0px;
+            --tg-safe-top: 0px;      /* status-bar part of the top inset (fullscreen only) */
+            --tg-content-top: 0px;   /* height of Telegram's floating Close / minimize row (fullscreen only) */
+            --hg-side: 0px;          /* keeps the location pill clear of Telegram's Close and minimize buttons */
+            --glass: rgba(255,246,236,.72);
+            --brown-grad: linear-gradient(135deg,#5A2A14 0%,#8A431B 60%,#B8601F 100%);
             --app-bottom-inset: 0px;
             --success-green: #10B981;
             --danger-red: #EF4444;
@@ -60,7 +65,7 @@
             width: 100%;
             height: 100vh;
             height: 100dvh;
-            background-color: var(--bg-main);
+            background: linear-gradient(180deg,#FFF6EC 0%,#FDE6CF 100%);
             position: relative;
             display: flex;
             flex-direction: column;
@@ -99,8 +104,8 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: var(--app-top-inset);
-            background: var(--bg-card);
-            z-index: 15;
+            background: #FFF6EC;
+            z-index: 1;
             pointer-events: none;
         }
 
@@ -673,40 +678,45 @@
         .bottom-nav {
             position: fixed;
             left: 50%;
-            bottom: calc(14px + var(--app-bottom-inset));
+            bottom: calc(12px + var(--app-bottom-inset));
             transform: translateX(-50%);
             z-index: 1000;
-            width: min(calc(100% - 40px), 360px);
-            height: 66px;
-            padding: 0 8px;
-            background: #141414;
-            border-radius: 33px;
+            width: min(calc(100% - 32px), 380px);
+            height: 56px;
+            padding: 0 6px;
+            background: rgba(255,255,255,.62);
+            -webkit-backdrop-filter: blur(18px) saturate(1.6);
+            backdrop-filter: blur(18px) saturate(1.6);
+            border: 1px solid rgba(255,255,255,.7);
+            border-radius: 28px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.30), 0 2px 8px rgba(0,0,0,0.20);
+            box-shadow: 0 10px 28px rgba(59,26,14,.12), inset 0 1px 0 rgba(255,255,255,.6);
             transition: transform 0.3s ease;
+        }
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+            .bottom-nav { background: rgba(255,250,244,.97); }
         }
         /* Hidden on restaurant menu / cart-summary / checkout screens (switchNavTab toggles this class). */
         .bottom-nav.hidden-nav { display: none !important; }
         /* On a desktop browser the app is a centred 450px "phone" — keep the bar inside that frame. */
         @media (min-width: 600px) { .bottom-nav { position: absolute; } }
         .nav-item { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .nav-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; color: #A9ADB5; transition: background .2s, color .2s, transform .15s; }
+        .nav-icon { position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 40px; border-radius: 16px; color: #A8917F; transition: background .2s, color .2s, transform .15s; }
         .nav-item:active .nav-icon { transform: scale(.92); }
-        .nav-icon .ico { width: 26px; height: 26px; }
-        .nav-icon svg { width: 26px; height: 26px; fill: currentColor; }
-        .nav-item.active .nav-icon { background: var(--accent); color: #FFFFFF; box-shadow: 0 4px 12px rgba(244,119,33,0.45); }
+        .nav-icon .ico { width: 24px; height: 24px; }
+        .nav-icon svg { width: 24px; height: 24px; fill: currentColor; }
+        .nav-item.active .nav-icon { background: rgba(244,119,33,.14); color: var(--accent); box-shadow: none; }
         .nav-item.active .ic-fill { fill: currentColor; }
         .cart-badge {
-            position: absolute; top: 2px; right: 0;
+            position: absolute; top: -2px; right: 0;
             background: var(--accent); color: #FFFFFF;
-            font-size: 10.5px; font-weight: 700;
-            min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px;
+            font-size: 10px; font-weight: 700;
+            min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
             display: flex; justify-content: center; align-items: center;
-            border: 2px solid #141414; line-height: 1;
+            border: 2px solid #FFF6EC; line-height: 1;
         }
-        .nav-item.active .cart-badge { background: #141414; border-color: var(--accent); }
 
         /* Line icons (inline SVG) that replace the old emojis */
         .ico { display: inline-block; width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; }
@@ -1164,25 +1174,39 @@
 
         /* ================= HOME (IWTEAT white + orange) =================
            Everything for the customer home screen lives in this block (classes: home-*, hm-*). */
-        .home-scroll { padding-bottom: calc(110px + var(--app-bottom-inset)); background: #FFFFFF; }
-        .home-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 4px; background: #FFFFFF; }
-        .home-logo { height: 38px; width: auto; display: block; }
-        .home-header-actions { display: flex; gap: 4px; }
-        .home-icon-btn { position: relative; background: none; border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 26px; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .home-icon-btn.accent { color: var(--primary); }
+        #home-view.page-view { top: 0; height: 100%; }   /* the glass header owns the area behind Telegram's buttons */
+        .home-scroll { padding-bottom: calc(110px + var(--app-bottom-inset)); background: transparent; }
+
+        #home-body, #home-all-section { scroll-margin-top: calc(var(--tg-safe-top) + var(--tg-content-top) + 108px); }
+        /* ---- glass header (sticky) ---- */
+        .home-glass { position: sticky; top: 0; z-index: 30; padding: var(--tg-safe-top) 16px 10px;
+            background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+            border-bottom: 1px solid transparent; transition: box-shadow .2s, border-color .2s; }
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .home-glass { background: #FFF6EC; } }
+        .home-glass.scrolled { border-bottom-color: rgba(240,226,211,.9); box-shadow: 0 6px 18px rgba(59,26,14,.07); }
+        .hg-top { display: flex; align-items: center; justify-content: center; min-height: max(var(--tg-content-top), 46px); padding: 0 var(--hg-side); }
+        .hg-row { display: flex; align-items: center; gap: 10px; }
+        .hg-logo { font-size: 21px; font-weight: 800; letter-spacing: -.5px; color: #3B1A0E; line-height: 1; flex-shrink: 0; user-select: none; }
+        .hg-logo b { color: var(--primary); font-weight: 800; }
+        .hg-search { flex: 1; min-width: 0; height: 42px; display: flex; align-items: center; gap: 9px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+            background: rgba(255,255,255,.7); border: 1px solid rgba(240,226,211,.95); box-shadow: 0 2px 10px rgba(59,26,14,.05); color: var(--text-muted); font-size: 13.5px; text-align: left; font-family: inherit; }
+        .hg-search .ico { font-size: 18px; color: var(--primary); }
+        .hg-search span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .hg-search:active { background: rgba(255,255,255,.95); }
+        .home-icon-btn { position: relative; background: rgba(255,255,255,.7); border: 1px solid rgba(240,226,211,.95); width: 42px; height: 42px; border-radius: 50%; font-size: 22px; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
         .home-icon-btn:active { background: var(--primary-tint); }
-        .hm-badge { position: absolute; top: 3px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #EF4444; color: #fff; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; border: 2px solid #fff; box-sizing: content-box; }
+        .hm-badge { position: absolute; top: 3px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #EF4444; color: #fff; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; border: 2px solid #FFF6EC; box-sizing: content-box; }
         .hm-badge[hidden] { display: none; }
 
         /* location pill + its little dropdown */
-        .hm-loc-row { position: relative; padding: 4px 16px 0; background: #FFFFFF; }
-        .hm-loc { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px 0 10px; border-radius: 999px; background: var(--primary-tint); border: 1px solid #FBDCC6; color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; }
+        .hm-loc-row { position: relative; display: flex; justify-content: center; max-width: 100%; }
+        .hm-loc { display: inline-flex; align-items: center; gap: 6px; height: 34px; max-width: 100%; padding: 0 12px 0 10px; border-radius: 999px; background: rgba(255,255,255,.65); border: 1px solid rgba(240,226,211,.95); box-shadow: 0 2px 10px rgba(59,26,14,.05); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; }
         .hm-loc .ico { font-size: 16px; color: var(--primary); }
         .hm-loc .hm-loc-arrow { font-size: 14px; color: var(--text-muted); transition: transform .2s; }
         .hm-loc.open .hm-loc-arrow { transform: rotate(180deg); }
         .hm-menu { display: none; position: absolute; z-index: 20; min-width: 210px; padding: 6px; background: #fff; border: 1px solid var(--border-light); border-radius: 16px; box-shadow: 0 12px 32px rgba(20,20,20,.14); }
         .hm-menu.open { display: block; }
-        .hm-loc-row .hm-menu { left: 16px; top: 42px; }
+        .hm-loc-row .hm-menu { left: 50%; transform: translateX(-50%); top: 42px; }
         .hm-menu button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 10px 12px; border: none; background: none; border-radius: 10px; font-size: 13.5px; color: var(--text-main); text-align: left; cursor: pointer; }
         .hm-menu button.on { color: var(--primary); font-weight: 600; background: var(--primary-tint); }
         .hm-menu button .ico { font-size: 16px; }
@@ -1194,10 +1218,10 @@
         .home-search button { background: none; border: none; color: var(--text-muted); font-size: 18px; display: flex; cursor: pointer; }
 
         /* static promo banner: banner.png on top, built-in orange panel underneath as the fallback */
-        .hm-banner { position: relative; margin: 14px 16px 0; border-radius: 22px; overflow: hidden; aspect-ratio: 2.6 / 1; background: linear-gradient(115deg, #FFF4E8 0%, #FFD3A8 55%, #F9964A 100%); pointer-events: none; user-select: none; }
+        .hm-banner { position: relative; margin: 12px 16px 0; border-radius: 22px; overflow: hidden; aspect-ratio: 2.6 / 1; background: var(--brown-grad); box-shadow: 0 10px 24px rgba(90,42,20,.22); pointer-events: none; user-select: none; }
         .hm-banner.hm-hide { display: none; }
         /* live promotional banners (managed from the admin dashboard): a swipeable carousel, the whole image is the tap target */
-        .hm-carousel { position: relative; margin: 14px 16px 0; }
+        .hm-carousel { position: relative; margin: 12px 16px 0; }
         .hm-carousel.hm-hide { display: none; }
         .hm-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; border-radius: 22px; overscroll-behavior-x: contain; }
         .hm-track::-webkit-scrollbar { display: none; }
@@ -1219,31 +1243,32 @@
         .hm-promo-actions .go { background: var(--primary); color: #fff; } .hm-promo-actions .close { background: #F3F4F6; color: var(--text-main); }
         @keyframes hmPromoFade { from { opacity: 0 } to { opacity: 1 } } @keyframes hmPromoUp { from { transform: translateY(40px) } to { transform: none } }
         .hm-banner-fallback { position: absolute; inset: 0; padding: 18px 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-        .hm-banner-fallback strong { font-size: 21px; line-height: 1.2; font-weight: 700; color: #2A1A0E; letter-spacing: -0.3px; }
-        .hm-banner-fallback strong em { display: block; font-style: normal; color: var(--primary); }
+        .hm-banner-fallback strong { font-size: 21px; line-height: 1.2; font-weight: 700; color: #FFF6EC; letter-spacing: -0.3px; }
+        .hm-banner-fallback strong em { display: block; font-style: normal; color: #FFB067; }
+        .hm-banner-fallback small { font-size: 11.5px; color: rgba(255,246,236,.8); margin-top: -4px; }
         .hm-banner-fallback span { align-self: flex-start; padding: 8px 18px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; }
         .hm-banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
         /* section headings: orange marker (or icon) + title, "See all" on the right */
-        .home-section { padding: 0 16px; margin-top: 24px; }
-        .home-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-        .home-section-head h2 { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 600; color: var(--text-main); letter-spacing: -0.2px; }
+        .home-section { padding: 0 16px; margin-top: 22px; }
+        .home-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+        .home-section-head h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; color: var(--text-main); letter-spacing: -0.2px; }
         .hm-bar { width: 4px; height: 22px; border-radius: 2px; background: var(--primary); flex-shrink: 0; }
         .hm-head-ico { font-size: 26px; color: var(--primary); }
         .home-see-all { background: none; border: none; color: var(--primary); font-size: 13.5px; font-weight: 500; display: flex; align-items: center; gap: 2px; cursor: pointer; padding: 4px 0; }
         .home-see-all .ico { font-size: 15px; margin: 0; }
-        .home-hscroll { display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 10px; scrollbar-width: none; scroll-snap-type: x proximity; }
+        .home-hscroll { display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 10px; scrollbar-width: none; scroll-snap-type: x proximity; scroll-padding: 0 16px; }
         .home-hscroll::-webkit-scrollbar { display: none; }
 
         /* categories: round photo, name underneath */
-        .hm-cats { display: flex; gap: 14px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; }
+        .hm-cats { display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none; }
         .hm-cats::-webkit-scrollbar { display: none; }
         .hm-cats.expanded { flex-wrap: wrap; overflow: visible; row-gap: 14px; }
-        .hm-cat { flex: 0 0 72px; text-align: center; cursor: pointer; background: none; border: none; padding: 0; }
-        .hm-cat-img { position: relative; width: 72px; height: 72px; border-radius: 50%; background: var(--primary-tint); border: 3px solid #FDE9DA; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--primary); transition: border-color .15s, transform .1s; }
+        .hm-cat { flex: 0 0 68px; text-align: center; cursor: pointer; background: none; border: none; padding: 0; }
+        .hm-cat-img { position: relative; width: 64px; height: 64px; margin: 0 auto; border-radius: 50%; background: var(--primary-tint); border: 2.5px solid rgba(255,255,255,.9); box-shadow: 0 4px 12px rgba(59,26,14,.12); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--primary); transition: border-color .15s, transform .1s; }
         .hm-cat-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
         .hm-cat:active .hm-cat-img { transform: scale(.95); }
-        .hm-cat span { display: block; margin-top: 7px; font-size: 13px; color: var(--text-main); }
+        .hm-cat span { display: block; margin-top: 6px; font-size: 12.5px; color: var(--text-main); }
         .hm-cat.on .hm-cat-img { border-color: var(--primary); }
         .hm-cat.on span { color: var(--primary); font-weight: 600; }
 
@@ -1258,21 +1283,26 @@
         .hm-name { font-size: 16px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hm-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .hm-meta .ico { font-size: 14px; flex-shrink: 0; }
-        .hm-meta.time .ico { color: var(--primary); }
+        .hm-meta.time .ico, .hm-meta.fee .ico { color: var(--primary); }
+        .hm-meta.fee { font-weight: 500; color: var(--text-main); }
+        .hm-chips { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px 12px; padding: 2px 16px; scrollbar-width: none; }
+        .hm-chips::-webkit-scrollbar { display: none; }
+        .hm-chip { flex-shrink: 0; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(240,226,211,.95); background: rgba(255,255,255,.7); color: var(--text-main); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .hm-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
         .hm-meta span { overflow: hidden; text-overflow: ellipsis; }
 
         /* featured: two cards across, photo on top */
-        .hm-feat { flex: 0 0 calc((100% - 12px) / 2); min-width: 0; scroll-snap-align: start; background: #fff; border-radius: 18px; box-shadow: 0 4px 18px rgba(30,20,10,.08); cursor: pointer; overflow: hidden; display: flex; flex-direction: column; }
+        .hm-feat { flex: 0 0 calc((100% - 12px) / 2); min-width: 0; scroll-snap-align: start; background: rgba(255,255,255,.88); border-radius: 18px; box-shadow: 0 6px 20px rgba(59,26,14,.08); cursor: pointer; overflow: hidden; display: flex; flex-direction: column; }
         .hm-feat:active { transform: scale(.98); }
-        .hm-feat .hm-photo { height: 104px; }
+        .hm-feat .hm-photo { height: auto; aspect-ratio: 16 / 10; }
         .hm-feat .hm-rate { position: absolute; top: 8px; right: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-        .hm-feat-body { padding: 12px 12px 14px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .hm-feat-body { padding: 10px 12px 12px; display: flex; flex-direction: column; flex: 1; min-width: 0; }
         .hm-order { margin-top: 12px; align-self: stretch; height: 36px; border-radius: 999px; border: 1.5px solid var(--primary); background: #fff; color: var(--primary); font-size: 13.5px; font-weight: 600; cursor: pointer; }
         .hm-order:active { background: var(--primary-tint); }
 
         /* all restaurants: one wide card per restaurant */
         .hm-list { display: flex; flex-direction: column; gap: 12px; }
-        .hm-row { display: flex; align-items: stretch; gap: 12px; background: #fff; border-radius: 18px; padding: 8px; box-shadow: 0 4px 18px rgba(30,20,10,.08); cursor: pointer; }
+        .hm-row { display: flex; align-items: stretch; gap: 12px; background: rgba(255,255,255,.88); border-radius: 18px; padding: 8px; box-shadow: 0 6px 20px rgba(59,26,14,.08); cursor: pointer; }
         .hm-row:active { transform: scale(.985); }
         .hm-row .hm-photo { width: 98px; min-height: 86px; border-radius: 14px; flex-shrink: 0; font-size: 28px; }
         .hm-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
@@ -1461,6 +1491,34 @@
         .pin-map.moving .pin-center { margin-top: -42px; }
         #pin-preview { padding: 12px 20px 0; font-size: 13px; color: var(--text-main); line-height: 1.5; min-height: 20px; }
 
+
+        /* ---- Search + Notifications pages ---- */
+        .sub-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px; flex-shrink: 0;
+            background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8); }
+        @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .sub-head { background: #FFF6EC; } }
+        .sub-back { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(240,226,211,.95); background: rgba(255,255,255,.7); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; flex-shrink: 0; }
+        .sub-back .ico { transform: rotate(180deg); }
+        .sub-title { font-size: 18px; font-weight: 600; flex: 1; }
+        .sub-action { background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .sp-input { flex: 1; min-width: 0; height: 42px; display: flex; align-items: center; gap: 9px; padding: 0 12px 0 14px; border-radius: 999px; background: rgba(255,255,255,.85); border: 1px solid rgba(240,226,211,.95); box-shadow: 0 2px 10px rgba(59,26,14,.05); }
+        .sp-input .ico { font-size: 18px; color: var(--primary); }
+        .sp-input input { flex: 1; min-width: 0; border: none; outline: none; background: none; font-size: 14px; color: var(--text-main); font-family: inherit; }
+        .sp-input button { background: none; border: none; color: var(--text-muted); font-size: 18px; display: flex; cursor: pointer; padding: 0; }
+        .sp-input button[hidden] { display: none; }
+        .sp-body { padding: 4px 16px 24px; }
+        .sp-label { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 10px; font-size: 15px; font-weight: 600; }
+        .sp-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+        .sp-count { font-size: 12.5px; color: var(--text-muted); margin: 14px 0 10px; }
+        .nt-group { margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
+        .nt-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px; margin-bottom: 8px; border-radius: 16px; background: rgba(255,255,255,.88); box-shadow: 0 4px 14px rgba(59,26,14,.06); position: relative; }
+        .nt-ico { width: 38px; height: 38px; border-radius: 12px; background: var(--primary-tint); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .nt-main { flex: 1; min-width: 0; }
+        .nt-title { font-size: 14px; font-weight: 600; }
+        .nt-text { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
+        .nt-time { font-size: 11.5px; color: var(--text-muted); margin-top: 4px; }
+        .nt-item.unread::after { content: ''; position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+        .nt-empty { text-align: center; padding: 60px 24px; color: var(--text-muted); font-size: 13.5px; line-height: 1.6; }
+        .nt-empty .ico { font-size: 44px; color: var(--primary); opacity: .55; display: block; margin: 0 auto 12px; }
     </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1478,34 +1536,54 @@
     <div id="home-view" class="page-view active-view">
         <!-- The header lives INSIDE the scroller, so it scrolls away with the page. -->
         <div class="scrollable-view-content home-scroll">
-            <div class="home-header">
-                <img class="home-logo" src="assets/images/logo.png" alt="IWTEAT" onerror="this.onerror=null;this.src='data:image/jpeg;base64,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'">
-                <div class="home-header-actions">
-                    <button class="home-icon-btn accent" aria-label="Search" onclick="toggleHomeSearch()"><i class="ico" data-icon="search"></i></button>
-                    <button class="home-icon-btn" aria-label="Notifications" onclick="showToast('No new notifications')"><i class="ico" data-icon="bell"></i><span class="hm-badge" id="home-bell-badge" hidden></span></button>
+            <!-- Glass header: location pill sits in Telegram's own button row, then logo / search pill / bell. -->
+            <div class="home-glass" id="home-glass">
+                <div class="hg-top">
+                    <div class="hm-loc-row">
+                        <button type="button" class="hm-loc" id="home-loc-btn" aria-haspopup="true" onclick="toggleHomeMenu('loc', event)">
+                            <i class="ico" data-icon="pin"></i><span id="home-loc-label">Taunggyi</span><i class="ico hm-loc-arrow" data-icon="chevronDown"></i>
+                        </button>
+                        <div class="hm-menu" id="home-loc-menu"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="hm-loc-row">
-                <button type="button" class="hm-loc" id="home-loc-btn" aria-haspopup="true" onclick="toggleHomeMenu('loc', event)">
-                    <i class="ico" data-icon="pin"></i><span id="home-loc-label">Taunggyi, Shan State</span><i class="ico hm-loc-arrow" data-icon="chevronDown"></i>
-                </button>
-                <div class="hm-menu" id="home-loc-menu"></div>
-            </div>
-            <div class="home-search" id="home-search">
-                <i class="ico" data-icon="search"></i>
-                <input type="text" id="home-search-input" placeholder="Search restaurants or dishes" oninput="onHomeSearch(this.value)">
-                <button aria-label="Clear" onclick="toggleHomeSearch(false)"><i class="ico" data-icon="close"></i></button>
+                <div class="hg-row">
+                    <span class="hg-logo" aria-label="IWTEAT"><b>IWT</b>EAT</span>
+                    <button type="button" class="hg-search" aria-label="Search" onclick="openSearchPage()"><i class="ico" data-icon="search"></i><span>Search for food, restaurants...</span></button>
+                    <button type="button" class="home-icon-btn" aria-label="Notifications" onclick="openNotificationsPage()"><i class="ico" data-icon="bell"></i><span class="hm-badge" id="home-bell-badge" hidden></span></button>
+                </div>
             </div>
             <!-- Static promo banner (not tappable). Put your artwork at assets/images/banner.png;
                  until it exists, the orange panel underneath shows instead. -->
             <div class="hm-banner" id="home-banner" aria-hidden="true">
-                <div class="hm-banner-fallback"><strong>Delicious Food<em>Closer to You!</em></strong><span>Order Now</span></div>
+                <div class="hm-banner-fallback"><strong>Delicious Food<em>Closer to You!</em></strong><small>Delivery from 3,000 MMK</small><span>Order Now</span></div>
                 <img src="assets/images/banner.png" alt="" onerror="this.remove()">
             </div>
             <!-- Live banners from the admin dashboard. Empty until /api/banners returns at least one; then they replace the static banner above. -->
             <div class="hm-carousel hm-hide" id="home-carousel"><div class="hm-track" id="hm-track"></div><div class="hm-dots" id="hm-dots"></div></div>
             <div id="home-body"></div>
         </div>
+    </div>
+
+    <!-- SEARCH VIEW — opened from the header search pill -->
+    <div id="search-view" class="page-view">
+        <div class="sub-head">
+            <button type="button" class="sub-back" aria-label="Back" onclick="history.back()"><i class="ico" data-icon="chevronRight"></i></button>
+            <div class="sp-input">
+                <i class="ico" data-icon="search"></i>
+                <input type="text" id="sp-input" placeholder="Search for food, restaurants..." enterkeyhint="search" autocomplete="off" oninput="onSearchPage(this.value)" onkeydown="if(event.key==='Enter'){saveRecentSearch(this.value);this.blur();}">
+                <button type="button" id="sp-clear" aria-label="Clear" hidden onclick="clearSearchPage()"><i class="ico" data-icon="close"></i></button>
+            </div>
+        </div>
+        <div class="scrollable-view-content sp-body" id="sp-body"></div>
+    </div>
+
+    <!-- NOTIFICATIONS VIEW — opened from the bell -->
+    <div id="notifications-view" class="page-view">
+        <div class="sub-head">
+            <button type="button" class="sub-back" aria-label="Back" onclick="history.back()"><i class="ico" data-icon="chevronRight"></i></button>
+            <div class="sub-title">Notifications</div>
+        </div>
+        <div class="scrollable-view-content sp-body" id="nt-body"></div>
     </div>
 
     <!-- EXPLORE VIEW — the active restaurant's live menu (swapped in from the
@@ -1646,7 +1724,7 @@
     </div>
 
 
-    <!-- Floating bottom navigation (black pill) -->
+    <!-- Floating glass bottom navigation -->
     <nav class="bottom-nav" id="main-bottom-nav" aria-label="Main">
         <div class="nav-item active" role="button" aria-label="Home" onclick="switchNavTab('home')">
             <span class="nav-icon"><i class="ico" data-icon="home" data-fill="1"></i></span>
@@ -1656,6 +1734,9 @@
         </div>
         <div class="nav-item" role="button" aria-label="Cart" onclick="switchNavTab('cart')">
             <span class="nav-icon"><i class="ico" data-icon="cart"></i><span class="cart-badge" id="cart-badge-count">0</span></span>
+        </div>
+        <div class="nav-item" role="button" aria-label="Orders" onclick="openOrderHistory()">
+            <span class="nav-icon"><i class="ico" data-icon="package"></i></span>
         </div>
         <div class="nav-item" role="button" aria-label="Profile" onclick="switchNavTab('profile')">
             <span class="nav-icon"><i class="ico" data-icon="user" data-fill="1"></i></span>
@@ -1831,6 +1912,9 @@ function applyTelegramInsets() {
     const bottom = (tg.safeAreaInset?.bottom || 0);
     root.setProperty('--app-top-inset', top + 'px');
     root.setProperty('--app-bottom-inset', bottom + 'px');
+    root.setProperty('--tg-safe-top', (full ? (tg.safeAreaInset?.top || 0) : 0) + 'px');
+    root.setProperty('--tg-content-top', (full ? (tg.contentSafeAreaInset?.top || 0) : 0) + 'px');
+    root.setProperty('--hg-side', full ? '112px' : '0px');
 }
 
 if (tg) {
@@ -1838,9 +1922,9 @@ if (tg) {
     tg.expand();
 
     // Colours the (non-fullscreen) header / bottom bar to match the app, so no stray bar shows.
-    try { tg.setHeaderColor('#FFFFFF'); } catch (e) {}
-    try { tg.setBackgroundColor('#F8F9FB'); } catch (e) {}
-    try { tg.setBottomBarColor('#FFFFFF'); } catch (e) {}
+    try { tg.setHeaderColor('#FFF6EC'); } catch (e) {}
+    try { tg.setBackgroundColor('#FFF6EC'); } catch (e) {}
+    try { tg.setBottomBarColor('#FFF6EC'); } catch (e) {}
 
     // Keep Telegram's swipe-down-to-minimize gesture switched on.
     try { if (tg.isVersionAtLeast('7.7')) tg.enableVerticalSwipes(); } catch (e) {}
@@ -2674,7 +2758,7 @@ async function submitFinalOrder() {
             }
         }
 
-        const tabIcons = { 'home': 0, 'explore': 0, 'saved': 1, 'cart': 2, 'profile': 3, 'restaurant-cart': 2 }; // explore (a restaurant's menu) highlights Home, since that's where it's reached from now; restaurant-cart keeps the Cart icon highlighted — it's still part of the cart flow
+        const tabIcons = { 'home': 0, 'explore': 0, 'saved': 1, 'cart': 2, 'profile': 4, 'restaurant-cart': 2 }; // explore (a restaurant's menu) highlights Home, since that's where it's reached from now; restaurant-cart keeps the Cart icon highlighted — it's still part of the cart flow
         if (tabIcons[tabName] !== undefined) {
             document.querySelectorAll('.bottom-nav .nav-item')[tabIcons[tabName]].classList.add('active');
         }
@@ -2686,12 +2770,14 @@ async function submitFinalOrder() {
         if (tabName === 'checkout') { renderCheckoutPage(); syncCart(activeCartRestaurantId); }
         if (tabName === 'profile') renderProfileOrders(); // Refresh pending/succeeded orders + history each visit
         if (tabName === 'home') renderHomeBrowseView(); // Refresh restaurant directory + previews each visit
+        if (tabName === 'search') initSearchPage(!fromHistory);
+        if (tabName === 'notifications') renderNotificationsPage();
 
         if (!fromHistory) {
             if (PRIMARY_TABS.includes(tabName)) {
                 // Bottom-nav tabs collapse into one history slot so hopping between them
                 // doesn't pile up Back-button presses.
-                if (currentTabId === 'home') {
+                if (currentTabId === 'home' || currentTabId === 'search') {   // from Search, opening a restaurant keeps Search one Back-press away
                     history.pushState({ tab: tabName }, '');
                 } else {
                     history.replaceState({ tab: tabName }, '');
@@ -2943,6 +3029,12 @@ let homeBrowseCache = null;
         return e ? `<div class="hm-meta time">${icon('clock')}<span>${e.min} – ${e.max} min</span></div>` : '';
     }
 
+    // Delivery fee starts from 3,000 MMK (the final fee is worked out at checkout).
+    const HOME_DELIVERY_FROM = 3000;
+    function homeFeeLine() {
+        return `<div class="hm-meta fee">${icon('bike')}<span>From ${HOME_DELIVERY_FROM.toLocaleString('en-US')} MMK</span></div>`;
+    }
+
     function homeFeatCard(entry) {
         const id = homeEsc(entry.restaurant.id);
         return `<div class="hm-feat" onclick="selectRestaurant('${id}')">
@@ -2951,7 +3043,7 @@ let homeBrowseCache = null;
                 <div class="hm-name">${homeEsc(entry.restaurant.name)}</div>
                 <div class="hm-meta">${icon('utensils')}<span>${homeEsc(homeTags(entry))}</span></div>
                 ${homeTimeLine(entry)}
-                <button type="button" class="hm-order" onclick="event.stopPropagation(); selectRestaurant('${id}')">Order Now</button>
+                ${homeFeeLine()}
             </div>
         </div>`;
     }
@@ -2963,6 +3055,7 @@ let homeBrowseCache = null;
                 <div class="hm-name">${homeEsc(entry.restaurant.name)}</div>
                 <div class="hm-meta">${icon('utensils')}<span>${homeEsc(homeTags(entry))}</span></div>
                 ${homeTimeLine(entry)}
+                ${homeFeeLine()}
             </div>
             <div class="hm-row-side">${homeRatePill(entry)}${icon('chevronRight')}</div>
         </div>`;
@@ -3005,7 +3098,7 @@ let homeBrowseCache = null;
 
         const catsAction = HOME_CATEGORIES.length > 5
             ? `<button class="home-see-all" onclick="homeToggleCats()">${homeCatsExpanded ? 'Show less' : 'See all'} ${icon('chevronRight')}</button>` : '';
-        const categoriesHtml = `<div class="home-section">${homeHead('Food Categories', '<span class="hm-bar"></span>', catsAction)}
+        const categoriesHtml = `<div class="home-section">${homeHead('Food Categories', '', catsAction)}
             <div class="hm-cats ${homeCatsExpanded ? 'expanded' : ''}">${HOME_CATEGORIES.map(c => `
                 <button type="button" class="hm-cat ${c.key === homeCategory ? 'on' : ''}" onclick="toggleHomeCategory('${c.key}')">
                     <div class="hm-cat-img"><i class="ico" data-icon="${c.icon}"></i><img src="${HOME_ASSET_DIR}${c.key}.png" alt="" loading="lazy" onerror="homeCatImgFail(this,'${c.key}')"></div>
@@ -3027,19 +3120,21 @@ let homeBrowseCache = null;
 
         let html = categoriesHtml;
         if (!filtering) {
-            html += `<div class="home-section">${homeHead('Featured Restaurants', icon('flame', 26, 'hm-head-ico'),
+            html += `<div class="home-section">${homeHead('Featured Restaurants', '',
                 `<button class="home-see-all" onclick="homeSeeAllFeatured()">See all ${icon('chevronRight')}</button>`)}
                 <div class="home-hscroll">${homeFeatured().map(homeFeatCard).join('')}</div></div>`;
         }
 
         const title = cat ? `${cat.label} Restaurants` : (q ? 'Search Results' : 'All Restaurants');
         const sortLabel = (HOME_SORTS.find(s => s.key === homeSort) || HOME_SORTS[0]).label;
+        const chipsHtml = `<div class="hm-chips">${HOME_SORTS.map(s => `<button type="button" class="hm-chip ${s.key === homeSort ? 'on' : ''}" onclick="setHomeSort('${s.key}')">${s.label}</button>`).join('')}</div>`;
         const filterBtn = `<div class="hm-filter-wrap">
             <button type="button" class="hm-filter" aria-haspopup="true" onclick="toggleHomeMenu('sort', event)">${icon('filter')} Filter ${icon('chevronDown')}</button>
             <div class="hm-menu" id="home-sort-menu">${HOME_SORTS.map(s => `
                 <button type="button" class="${s.key === homeSort ? 'on' : ''}" onclick="setHomeSort('${s.key}')">${s.label}${s.key === homeSort ? icon('check') : ''}</button>`).join('')}</div>
         </div>`;
-        html += `<div class="home-section" id="home-all-section">${homeHead(title, (cat || q) ? '<span class="hm-bar"></span>' : icon('store', 28, 'hm-head-ico'), filterBtn)}
+        html += `<div class="home-section" id="home-all-section">${homeHead(title, '', '')}
+            ${chipsHtml}
             ${matches.length ? `<div class="hm-list">${matches.map(homeRowCard).join('')}</div>`
                              : `<div class="home-empty">No restaurants match that.<br><button onclick="clearHomeFilters()">Clear filters</button></div>`}</div>`;
 
@@ -3050,7 +3145,7 @@ let homeBrowseCache = null;
     /* ---------- location badge, filter menu, search ---------- */
     function renderHomeLocation() {
         const label = document.getElementById('home-loc-label');
-        if (label) label.textContent = homeLocation;
+        if (label) label.textContent = String(homeLocation).split(',')[0].trim();
         const menu = document.getElementById('home-loc-menu');
         if (menu) {
             menu.innerHTML = HOME_LOCATIONS.map(l => `
@@ -3091,13 +3186,93 @@ let homeBrowseCache = null;
         const input = document.getElementById('home-search-input'); if (input) input.value = '';
         renderHomeBody();
     }
-    function toggleHomeSearch(force) {
-        const box = document.getElementById('home-search');
-        const open = (typeof force === 'boolean') ? force : !box.classList.contains('open');
-        box.classList.toggle('open', open);
-        if (open) document.getElementById('home-search-input').focus();
-        else { homeQuery = ''; document.getElementById('home-search-input').value = ''; renderHomeBody(); }
+    function toggleHomeSearch() { openSearchPage(); }
+
+    /* ================= SEARCH PAGE ================= */
+    let searchQuery = '';
+    const RECENT_KEY = 'iwteat_recent_searches';
+    function getRecentSearches() { try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').filter(x => typeof x === 'string').slice(0, 6); } catch (e) { return []; } }
+    function saveRecentSearch(q) {
+        q = String(q || '').trim(); if (q.length < 2) return;
+        const list = getRecentSearches().filter(x => x.toLowerCase() !== q.toLowerCase());
+        list.unshift(q);
+        try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 6))); } catch (e) {}
     }
+    function clearRecentSearches() { try { localStorage.removeItem(RECENT_KEY); } catch (e) {} renderSearchPage(); }
+    function openSearchPage() { switchNavTab('search'); }
+    function initSearchPage(reset) {
+        const input = document.getElementById('sp-input'); if (!input) return;
+        if (reset) { searchQuery = ''; input.value = ''; }
+        renderSearchPage();
+        if (reset) setTimeout(() => { try { input.focus(); } catch (e) {} }, 120);
+    }
+    function onSearchPage(v) { searchQuery = v || ''; renderSearchPage(); }
+    function clearSearchPage() {
+        searchQuery = ''; const input = document.getElementById('sp-input'); input.value = ''; renderSearchPage(); input.focus();
+    }
+    function setSearchTerm(t) { const input = document.getElementById('sp-input'); input.value = t; onSearchPage(t); saveRecentSearch(t); }
+    function renderSearchPage() {
+        const body = document.getElementById('sp-body'); if (!body) return;
+        const clearBtn = document.getElementById('sp-clear'); if (clearBtn) clearBtn.hidden = !searchQuery;
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) {
+            const recent = getRecentSearches();
+            const chip = t => `<button type="button" class="hm-chip" data-term="${homeEsc(t)}">${homeEsc(t)}</button>`;
+            body.innerHTML = (recent.length ? `<div class="sp-label"><span>Recent searches</span><button type="button" class="sub-action" onclick="clearRecentSearches()">Clear</button></div><div class="sp-wrap">${recent.map(chip).join('')}</div>` : '')
+                + `<div class="sp-label"><span>Popular categories</span></div><div class="sp-wrap">${HOME_CATEGORIES.map(c => chip(c.label)).join('')}</div>`;
+        } else if (homeBrowseCache === null) {
+            body.innerHTML = `<div class="home-empty">Loading restaurants...</div>`;
+        } else {
+            const matches = homeBrowseCache.filter(e => homeSearchText(e).includes(q));
+            body.innerHTML = matches.length
+                ? `<div class="sp-count">${matches.length} result${matches.length === 1 ? '' : 's'}</div><div class="hm-list">${matches.map(homeRowCard).join('')}</div>`
+                : `<div class="home-empty">No restaurants or dishes match "${homeEsc(searchQuery.trim())}".</div>`;
+        }
+        hydrateIcons(body);
+    }
+    document.addEventListener('click', e => {
+        const body = document.getElementById('sp-body');
+        if (!body || !body.contains(e.target)) return;
+        const t = e.target.closest('[data-term]'); if (t) { setSearchTerm(t.dataset.term); return; }
+        if (e.target.closest('.hm-row')) saveRecentSearch(searchQuery);
+    });
+
+    /* ================= NOTIFICATIONS PAGE =================
+       Nothing sends notifications yet. When you have them, call
+         setNotifications([{ title, text, time: <ms timestamp>, icon: 'bell' }, ...])
+       and the bell badge, the Today / Earlier groups and the unread dots all update. */
+    let appNotifications = [];
+    const NT_SEEN_KEY = 'iwteat_notif_seen';
+    const ntSeen = () => { try { return Number(localStorage.getItem(NT_SEEN_KEY)) || 0; } catch (e) { return 0; } };
+    function setNotifications(list) {
+        appNotifications = Array.isArray(list) ? list : [];
+        const seen = ntSeen();
+        setHomeBellCount(appNotifications.filter(n => (n.time || 0) > seen).length);
+    }
+    function openNotificationsPage() { switchNavTab('notifications'); }
+    function renderNotificationsPage() {
+        const body = document.getElementById('nt-body'); if (!body) return;
+        const seen = ntSeen();
+        if (!appNotifications.length) {
+            body.innerHTML = `<div class="nt-empty">${icon('bell')}You're all caught up.<br>Order updates and offers will show up here.</div>`;
+        } else {
+            const start = new Date(); start.setHours(0, 0, 0, 0);
+            const sorted = appNotifications.slice().sort((a, b) => (b.time || 0) - (a.time || 0));
+            const card = n => `<div class="nt-item ${(n.time || 0) > seen ? 'unread' : ''}"><div class="nt-ico">${icon(n.icon && ICONS[n.icon] ? n.icon : 'bell')}</div><div class="nt-main"><div class="nt-title">${homeEsc(n.title || '')}</div><div class="nt-text">${homeEsc(n.text || '')}</div><div class="nt-time">${n.time ? new Date(n.time).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : ''}</div></div></div>`;
+            const today = sorted.filter(n => (n.time || 0) >= start.getTime()), earlier = sorted.filter(n => (n.time || 0) < start.getTime());
+            body.innerHTML = (today.length ? `<div class="nt-group">Today</div>${today.map(card).join('')}` : '') + (earlier.length ? `<div class="nt-group">Earlier</div>${earlier.map(card).join('')}` : '');
+        }
+        hydrateIcons(body);
+        try { localStorage.setItem(NT_SEEN_KEY, String(Date.now())); } catch (e) {}
+        setHomeBellCount(0);
+    }
+
+    // Header gets a soft shadow once the page has scrolled under it.
+    (function () {
+        const sc = document.querySelector('#home-view .home-scroll'), hd = document.getElementById('home-glass');
+        if (sc && hd) sc.addEventListener('scroll', () => hd.classList.toggle('scrolled', sc.scrollTop > 4), { passive: true });
+    })();
+
     function homeToggleCats() { homeCatsExpanded = !homeCatsExpanded; renderHomeBody(); }
     function homeSeeAllFeatured() {
         homeSort = 'rating'; homeCategory = null; renderHomeBody();
