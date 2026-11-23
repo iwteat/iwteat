@@ -2183,7 +2183,7 @@ const telegramUser = tg?.initDataUnsafe?.user || null;
             listEl.innerHTML = `<div class="order-history-empty">Loading your orders...</div>`;
         }
         try {
-            const res = await fetch(`${API_BASE}/api/orders/${telegramUser.id}`);
+            const res = await fetch(`${API_BASE}/api/orders/${telegramUser.id}`, { headers: { 'X-Telegram-Init-Data': tg?.initData || '' } });
             const result = await res.json();
             profileOrders = (result && result.orders) || [];
             profileOrdersLoaded = true;
@@ -2527,7 +2527,7 @@ async function submitFinalOrder() {
     try {
         const res = await fetch(`${SERVER_URL}/api/order`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg?.initData || '' },
             body: JSON.stringify(orderData)
         });
 
@@ -3930,6 +3930,7 @@ let homeBrowseCache = null;
             image: currentModalDish.image,
             unitPrice,
             priceSig: currentModalDish.priceSig || '',   // lets the server spot a later price/option edit
+            sel: { size: selectedSizeIndex, groups: JSON.parse(JSON.stringify(selectedGroupChoices)) },   // the exact choice: the server works the price out from it
             quantity: modalQuantityValue,
             options: optionsDetails.length ? optionsDetails.join(' | ') : 'Standard',
             restaurantId: currentRestaurantId,
@@ -4011,7 +4012,7 @@ let homeBrowseCache = null;
             createdAt: Date.now(),
             restaurantId: items[0].restaurantId,
             restaurantName: items[0].restaurantName,
-            items: items.map(i => ({ dishId: i.dishId, name: i.name, image: i.image, unitPrice: i.unitPrice, priceSig: i.priceSig || '', quantity: i.quantity, options: i.options }))
+            items: items.map(i => ({ dishId: i.dishId, name: i.name, image: i.image, unitPrice: i.unitPrice, priceSig: i.priceSig || '', sel: i.sel, quantity: i.quantity, options: i.options }))
         });
         try { localStorage.setItem(STORAGE_KEY_SAVED_CARTS, JSON.stringify(savedCarts)); } catch (e) {}
         showToast('Saved! Find it under the Saved tab.');
@@ -4053,6 +4054,7 @@ let homeBrowseCache = null;
                 image: i.image,
                 unitPrice: i.unitPrice,
                 priceSig: dish.priceSig || '',
+                sel: i.sel,
                 quantity: i.quantity,
                 options: i.options,
                 restaurantId: cart.restaurantId,
@@ -4230,7 +4232,7 @@ let homeBrowseCache = null;
         if (existingLine) {
             existingLine.quantity += 1;
         } else {
-            cartItems.push({ id: Date.now(), dishId: dish.id, name: dish.name, image: dish.image, unitPrice: Math.round(dish.price), priceSig: dish.priceSig || '', quantity: 1, options: 'Standard', restaurantId: currentRestaurantId, restaurantName: currentRestaurantName });
+            cartItems.push({ id: Date.now(), dishId: dish.id, name: dish.name, image: dish.image, unitPrice: Math.round(dish.price), priceSig: dish.priceSig || '', sel: { size: -1, groups: {} }, quantity: 1, options: 'Standard', restaurantId: currentRestaurantId, restaurantName: currentRestaurantName });
         }
 
         updateCartBadge();
@@ -4475,7 +4477,7 @@ let homeBrowseCache = null;
                 const res = await fetch(`${API_BASE}/api/cart/check`, {
                     method: 'POST',
                     cache: 'no-store',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg?.initData || '' },
                     body: JSON.stringify({ restaurantId, items: lines, deliveryMethod: deliveryMethod || undefined, telegramId: telegramUser?.id || undefined })
                 });
                 const d = await res.json();
@@ -4768,7 +4770,7 @@ let homeBrowseCache = null;
             const res = await fetch(`${API_BASE}/api/order/reserve`, {
                 method: 'POST',
                 cache: 'no-store',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg?.initData || '' },
                 body: JSON.stringify({
                     restaurantId: rid,
                     deliveryMethod: deliveryMethod,          // 'pickup' -> the number starts with IWS-, delivery -> IW-
