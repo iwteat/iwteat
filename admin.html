@@ -2694,7 +2694,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/admin/restaurant-info`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders(),        // signed Telegram identity: only the restaurant's owner may change it
         body: JSON.stringify({ restaurantId: currentRestaurantId, ...profile })
       });
       const result = await res.json();
@@ -3090,7 +3090,7 @@
       await saveMenu(); // make sure the server has the latest items before it counts them
       const res = await fetch(`${API_BASE}/api/admin/publish`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders(),
         body: JSON.stringify({ restaurantId: currentRestaurantId })
       });
       const result = await res.json();
@@ -3275,7 +3275,7 @@
     try {
       const res = await fetch(`${API_BASE}/api/admin/menu-data`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: adminHeaders(),
         body: JSON.stringify({ restaurantId: currentRestaurantId, menu: menuCategories })
       });
       const result = await res.json();
